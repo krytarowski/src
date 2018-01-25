@@ -736,6 +736,15 @@ If
 acts as
 .Sy MKCATPAGES=no MKDOC=no MKINFO=no MKHTML=no MKMAN=no MKNLS=no .
 .
+.It Sy MKSANITIZER
+Can be set to "Address", "Memory", "MemoryWithOrigins",
+"Undefined", "Thread" or "Address;Undefined". Indicates
+whether libraries and programs will be built with use
+of the sanitizers. The value indicates the type of a
+sanitizer.
+.Pp
+Default: Unset.
+.
 .It Sy MKSKEY
 .YorN
 Indicates whether the S/key infrastructure

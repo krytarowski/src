@@ -379,6 +379,13 @@ MKREPRO         If "yes", create reproducible builds. This enables
 		result in the same build results.
 		Default: no
 
+MKSANITIZER	Can be set to "Address", "Memory", "MemoryWithOrigins",
+		"Undefined", "Thread" or "Address;Undefined". Indicates
+		whether libraries and programs will be built with use
+		of the sanitizers. The value indicates the type of a
+		sanitizer.
+		Default: Unset.
+
 MKSHARE		If "no", act as "MKCATPAGES=no MKDOC=no MKHTML=no MKINFO=no
 		MKMAN=no MKNLS=no".
 		I.e, don't build catman pages, documentation, Info

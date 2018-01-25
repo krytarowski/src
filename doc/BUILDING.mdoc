@@ -685,6 +685,15 @@ will be set to
 unconditionally.
 .DFLTy
 .
+.It Sy MKSANITIZER
+Can be set to "Address", "Memory", "MemoryWithOrigins",
+"Undefined", "Thread" or "Address;Undefined". Indicates
+whether libraries and programs will be built with use
+of the sanitizers. The value indicates the type of a
+sanitizer.
+.Pp
+Default: Unset.
+.
 .It Sy MKSTRIPIDENT
 .YorN
 Indicates whether RCS IDs, for use with

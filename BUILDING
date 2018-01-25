@@ -373,6 +373,15 @@ CONFIGURATION
                  source tree timestamp using cvslatest(1) by giving build.sh
                  the -P option.
 
+     MKSANITIZER
+                 Can be set to "Address", "Memory", "MemoryWithOrigins",
+                 "Undefined", "Thread" or "Address;Undefined". Indicates
+                 whether libraries and programs will be built with use
+                 of the sanitizers. The value indicates the type of a
+                 sanitizer.
+
+                 Default: Unset.
+
      MKSHARE     Can be set to "yes" or "no".  Indicates whether files
                  destined to reside in DESTDIR/usr/share will be built and
                  installed during a build.  If set to "no", then all of

@@ -10,6 +10,9 @@ add_custom_target(FuzzerUnitTests)
 set_target_properties(FuzzerUnitTests PROPERTIES FOLDER "Compiler-RT Tests")
 
 set(LIBFUZZER_UNITTEST_LINK_FLAGS ${COMPILER_RT_UNITTEST_LINK_FLAGS})
+if (OS_NAME MATCHES "NetBSD")
+  list(APPEND LIBFUZZER_UNITTEST_LINK_FLAGS -lrt)
+endif()
 list(APPEND LIBFUZZER_UNITTEST_LINK_FLAGS --driver-mode=g++)
 
 if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")

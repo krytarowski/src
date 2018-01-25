@@ -19,6 +19,9 @@
 #include "sanitizer_procmaps.h"
 
 #include <unistd.h>
+#if SANITIZER_NETBSD
+#define sysctl _sysctl // Use an internal symbol to omit the interceptor
+#endif
 #include <sys/sysctl.h>
 #if SANITIZER_FREEBSD
 #include <sys/user.h>

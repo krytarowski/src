@@ -119,6 +119,7 @@ set(SANITIZER_HEADERS
   sanitizer_list.h
   sanitizer_mac.h
   sanitizer_mutex.h
+  sanitizer_netbsd_syscalls.inc
   sanitizer_persistent_allocator.h
   sanitizer_placement_new.h
   sanitizer_platform.h

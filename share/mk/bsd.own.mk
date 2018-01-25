@@ -1138,6 +1138,16 @@ MKSLJIT=	yes
 .endif
 
 #
+# Sanitizers work on amd64
+#
+.if ${MACHINE} == "amd64"
+MKSANITIZER?=	no
+.else
+MKSANITIZER:=	no
+.endif
+
+
+#
 # Which platforms build the xorg-server drivers (as opposed
 # to just Xnest and Xvfb.)
 #

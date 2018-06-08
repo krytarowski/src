@@ -4,6 +4,7 @@
 
 SUBDIR+=	executor
 SUBDIR+=	hello
+SUBDIR+=        kernel_map
 #SUBDIR+=	luahello		# Nothing to build here, only text files
 SUBDIR+=	luareadhappy		# Needs an additional Lua script
 SUBDIR+=	panic_string		# Crashes the system

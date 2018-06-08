@@ -22,6 +22,9 @@ defparam opt_physmem.h	PHYSMEM_MAX_ADDR PHYSMEM_MAX_SIZE
 # Enable GCC spectre V2 mitigation options
 defflag opt_spectre.h	SPECTRE_V2_GCC_MITIGATION
 
+# Enable Kernel Address Sanitizer options
+defflag opt_kasan.h KASAN
+
 #
 # XXX these are just here at the moment so that we can share files
 # with the i386 (they include the opt_*.h for these)
@@ -48,6 +51,7 @@ file	arch/amd64/amd64/db_disasm.c		ddb
 file	arch/amd64/amd64/db_interface.c		ddb
 file	arch/amd64/amd64/db_machdep.c		ddb
 file	arch/amd64/amd64/kobj_machdep.c		modular
+file    arch/amd64/amd64/kasan.c                machdep
 file	kern/subr_disk_mbr.c			disk
 file	arch/amd64/amd64/gdt.c			machdep
 file	arch/amd64/amd64/machdep.c		machdep

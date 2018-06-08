@@ -1,0 +1,6 @@
+# $NetBSD$
+
+include "arch/amd64/conf/GENERIC"
+
+makeoptions 	KASAN=1		# Kernel ASLR
+options 	KASAN

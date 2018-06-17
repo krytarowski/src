@@ -45,14 +45,14 @@ CFLAGS+=	-msoft-float
 # CFLAGS+=	-mno-fp-ret-in-387
 
 .if ${SPECTRE_V2_GCC_MITIGATION:U0} > 0 && ${HAVE_GCC:U0} > 0
-CFLAGS+=      -mindirect-branch=thunk-inline
-CFLAGS+=      -mindirect-branch-register
+CFLAGS+=	-mindirect-branch=thunk-inline
+CFLAGS+=	-mindirect-branch-register
 .endif
 
 # Kernel Address Sanitizer options
 
 .if ${KASAN:U0} > 0 && ${HAVE_GCC:U0} > 0
-	CFLAGS+=      -fsanitize=kernel-address
+CFLAGS+=	-fsanitize=kernel-address
 .endif
 
 ##

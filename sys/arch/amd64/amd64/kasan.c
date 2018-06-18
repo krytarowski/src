@@ -14,6 +14,8 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/filedesc.h>
 
 #include <sys/../kern/kasan.h>
+
+#define _RET_IP_      (unsigned long)__builtin_return_address(0)
 /*
 void kasan_enable_current(void)
 {
@@ -106,9 +108,9 @@ static __always_inline bool memory_is_poisoned_1(unsigned long addr)
 {
 	s8 shadow_value = *(s8 *)kasan_mem_to_shadow((void *)addr);
 
-	if (unlikely(shadow_value)) {
+	if (__predict_false(shadow_value)) {
 		s8 last_accessible_byte = addr & KASAN_SHADOW_MASK;
-		return unlikely(last_accessible_byte >= shadow_value);
+		return __predict_false(last_accessible_byte >= shadow_value);
 	}
 
 	return false;
@@ -123,7 +125,7 @@ static __always_inline bool memory_is_poisoned_2_4_8(unsigned long addr,
 	 * Access crosses 8(shadow size)-byte boundary. Such access maps
 	 * into 2 shadow bytes, so we need to check them both.
 	 */
-/*	if (unlikely(((addr + size - 1) & KASAN_SHADOW_MASK) < size - 1))
+/*	if (__predict_false(((addr + size - 1) & KASAN_SHADOW_MASK) < size - 1))
 		return *shadow_addr || memory_is_poisoned_1(addr + size - 1);
 
 	return memory_is_poisoned_1(addr + size - 1);
@@ -134,7 +136,7 @@ static __always_inline bool memory_is_poisoned_16(unsigned long addr)
 	u16 *shadow_addr = (u16 *)kasan_mem_to_shadow((void *)addr);
 */
 	/* Unaligned 16-bytes access maps into 3 shadow bytes. */
-/*	if (unlikely(!IS_ALIGNED(addr, KASAN_SHADOW_SCALE_SIZE)))
+/*	if (__predict_false(!IS_ALIGNED(addr, KASAN_SHADOW_SCALE_SIZE)))
 		return *shadow_addr || memory_is_poisoned_1(addr + 15);
 
 	return *shadow_addr;
@@ -144,7 +146,7 @@ static __always_inline unsigned long bytes_is_nonzero(const u8 *start,
 					size_t size)
 {
 	while (size) {
-		if (unlikely(*start))
+		if (__predict_false(*start))
 			return (unsigned long)start;
 		start++;
 		size--;
@@ -166,14 +168,14 @@ static __always_inline unsigned long memory_is_nonzero(const void *start,
 	if (prefix) {
 		prefix = 8 - prefix;
 		ret = bytes_is_nonzero(start, prefix);
-		if (unlikely(ret))
+		if (__predict_false(ret))
 			return ret;
 		start += prefix;
 	}
 
 	words = (end - start) / 8;
 	while (words) {
-		if (unlikely(*(u64 *)start))
+		if (__predict_false(*(u64 *)start))
 			return bytes_is_nonzero(start, 8);
 		start += 8;
 		words--;
@@ -190,11 +192,11 @@ static __always_inline bool memory_is_poisoned_n(unsigned long addr,
 	ret = memory_is_nonzero(kasan_mem_to_shadow((void *)addr),
 			kasan_mem_to_shadow((void *)addr + size - 1) + 1);
 
-	if (unlikely(ret)) {
+	if (__predict_false(ret)) {
 		unsigned long last_byte = addr + size - 1;
 		s8 *last_shadow = (s8 *)kasan_mem_to_shadow((void *)last_byte);
 
-		if (unlikely(ret != (unsigned long)last_shadow ||
+		if (__predict_false(ret != (unsigned long)last_shadow ||
 			((long)(last_byte & KASAN_SHADOW_MASK) >= *last_shadow)))
 			return true;
 	}
@@ -220,26 +222,29 @@ static __always_inline bool memory_is_poisoned(unsigned long addr, size_t size)
 
 	return memory_is_poisoned_n(addr, size);
 }
-
+*/
 static __always_inline void check_memory_region_inline(unsigned long addr,
 						size_t size, bool write,
 						unsigned long ret_ip)
 {
-	if (unlikely(size == 0))
+ /* 
+	if (__predict_false(size == 0))
 		return;
 
-	if (unlikely((void *)addr <
+	if (__predict_false((void *)addr <
 		kasan_shadow_to_mem((void *)KASAN_SHADOW_START))) {
 		kasan_report(addr, size, write, ret_ip);
 		return;
 	}
 
-	if (likely(!memory_is_poisoned(addr, size)))
+	if (__predict_true(!memory_is_poisoned(addr, size)))
 		return;
 
 	kasan_report(addr, size, write, ret_ip);
+ */
 }
 
+/*
 static void check_memory_region(unsigned long addr,
 				size_t size, bool write,
 				unsigned long ret_ip)
@@ -285,13 +290,13 @@ void *memcpy(void *dest, const void *src, size_t len)
 
 void kasan_alloc_pages(struct page *page, unsigned int order)
 {
-	if (likely(!PageHighMem(page)))
+	if (__predict_true(!PageHighMem(page)))
 		kasan_unpoison_shadow(page_address(page), PAGE_SIZE << order);
 }
 
 void kasan_free_pages(struct page *page, unsigned int order)
 {
-	if (likely(!PageHighMem(page)))
+	if (__predict_true(!PageHighMem(page)))
 		kasan_poison_shadow(page_address(page),
 				PAGE_SIZE << order,
 				KASAN_FREE_PAGE);
@@ -475,14 +480,14 @@ static bool __kasan_slab_free(struct kmem_cache *cache, void *object,
 	s8 shadow_byte;
 	unsigned long rounded_up_size;
 
-	if (unlikely(nearest_obj(cache, virt_to_head_page(object), object) !=
+	if (__predict_false(nearest_obj(cache, virt_to_head_page(object), object) !=
 	    object)) {
 		kasan_report_invalid_free(object, ip);
 		return true;
 	}
 */
 	/* RCU slabs could be legally used after free within the RCU period */
-/*	if (unlikely(cache->flags & SLAB_TYPESAFE_BY_RCU))
+/*	if (__predict_false(cache->flags & SLAB_TYPESAFE_BY_RCU))
 		return false;
 
 	shadow_byte = READ_ONCE(*(s8 *)kasan_mem_to_shadow(object));
@@ -494,7 +499,7 @@ static bool __kasan_slab_free(struct kmem_cache *cache, void *object,
 	rounded_up_size = round_up(cache->object_size, KASAN_SHADOW_SCALE_SIZE);
 	kasan_poison_shadow(object, rounded_up_size, KASAN_KMALLOC_FREE);
 
-	if (!quarantine || unlikely(!(cache->flags & SLAB_KASAN)))
+	if (!quarantine || __predict_false(!(cache->flags & SLAB_KASAN)))
 		return false;
 
 	set_track(&get_alloc_info(cache, object)->free_track, GFP_NOWAIT);
@@ -516,7 +521,7 @@ void kasan_kmalloc(struct kmem_cache *cache, const void *object, size_t size,
 	if (gfpflags_allow_blocking(flags))
 		quarantine_reduce();
 
-	if (unlikely(object == NULL))
+	if (__predict_false(object == NULL))
 		return;
 
 	redzone_start = round_up((unsigned long)(object + size),
@@ -541,7 +546,7 @@ void kasan_kmalloc_large(const void *ptr, size_t size, gfp_t flags)
 	if (gfpflags_allow_blocking(flags))
 		quarantine_reduce();
 
-	if (unlikely(ptr == NULL))
+	if (__predict_false(ptr == NULL))
 		return;
 
 	page = virt_to_page(ptr);
@@ -558,12 +563,12 @@ void kasan_krealloc(const void *object, size_t size, gfp_t flags)
 {
 	struct page *page;
 
-	if (unlikely(object == ZERO_SIZE_PTR))
+	if (__predict_false(object == ZERO_SIZE_PTR))
 		return;
 
 	page = virt_to_head_page(object);
 
-	if (unlikely(!PageSlab(page)))
+	if (__predict_false(!PageSlab(page)))
 		kasan_kmalloc_large(object, size, flags);
 	else
 		kasan_kmalloc(page->slab_cache, object, size, flags);
@@ -575,7 +580,7 @@ void kasan_poison_kfree(void *ptr, unsigned long ip)
 
 	page = virt_to_head_page(ptr);
 
-	if (unlikely(!PageSlab(page))) {
+	if (__predict_false(!PageSlab(page))) {
 		if (ptr != page_address(page)) {
 			kasan_report_invalid_free(ptr, ip);
 			return;
@@ -654,7 +659,9 @@ void __asan_unregister_globals(struct kasan_global *globals, size_t size)
 */
 #define DEFINE_ASAN_LOAD_STORE(size)				\
 	void __asan_load##size(unsigned long addr)		\
-	{}							\
+	{                                                       \
+        check_memory_region_inline(addr, size, false, _RET_IP_);\
+        } \
 	void __asan_load##size##_noabort(unsigned long);	\
 	void __asan_load##size##_noabort(unsigned long addr)	\
 	{}							\
@@ -734,7 +741,7 @@ void __asan_unpoison_stack_memory(const void *addr, size_t size)
 /* Emitted by compiler to unpoison alloca()ed areas when the stack unwinds. */
 /*void __asan_allocas_unpoison(const void *stack_top, const void *stack_bottom)
 {
-	if (unlikely(!stack_top || stack_top > stack_bottom))
+	if (__predict_false(!stack_top || stack_top > stack_bottom))
 		return;
 
 	kasan_unpoison_shadow(stack_top, stack_bottom - stack_top);
@@ -742,11 +749,11 @@ void __asan_unpoison_stack_memory(const void *addr, size_t size)
 */
 /* Emitted by the compiler to [un]poison local variables. */
 #define DEFINE_ASAN_SET_SHADOW(byte) \
-	void __asan_set_shadow_##byte(const void *addr, size_t size)	\
-	{}								\
-/*		__memset((void *)addr, 0x##byte, size);			\
+	void __asan_set_shadow_##byte(void *addr, size_t size)	\
+	{								\
+	        __builtin_memset((void *)addr, 0x##byte, size);		\
 	}								\
-*/
+
 DEFINE_ASAN_SET_SHADOW(00);
 DEFINE_ASAN_SET_SHADOW(f1);
 DEFINE_ASAN_SET_SHADOW(f2);

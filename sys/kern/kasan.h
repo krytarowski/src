@@ -95,28 +95,31 @@ struct kasan_alloc_meta *get_alloc_info(struct kmem_cache *cache,
 					const void *object);
 struct kasan_free_meta *get_free_info(struct kmem_cache *cache,
 					const void *object);
-
+*/
 static inline const void *kasan_shadow_to_mem(const void *shadow_addr)
 {
-	return (void *)(((unsigned long)shadow_addr - KASAN_SHADOW_OFFSET)
-		<< KASAN_SHADOW_SCALE_SHIFT);
+        return (void *)0;
+//	return (void *)(((unsigned long)shadow_addr - KASAN_SHADOW_OFFSET)
+//		<< KASAN_SHADOW_SCALE_SHIFT);
 }
-*/
-/*
+
 void kasan_report(unsigned long addr, size_t size,
 		bool is_write, unsigned long ip);
 void kasan_report_invalid_free(void *object, unsigned long ip);
-
+/*
 #if defined(CONFIG_SLAB) || defined(CONFIG_SLUB)
 void quarantine_put(struct kasan_free_meta *info, struct kmem_cache *cache);
 void quarantine_reduce(void);
+*/
 void quarantine_remove_cache(struct kmem_cache *cache);
+/*
 #else
 static inline void quarantine_put(struct kasan_free_meta *info,
 				struct kmem_cache *cache) { }
 static inline void quarantine_reduce(void) { }
+
 static inline void quarantine_remove_cache(struct kmem_cache *cache) { }
-#endif
+//#endif
 */
 /*
  * Exported functions for interfaces called from assembly or from generated
@@ -155,11 +158,11 @@ void __asan_store8_noabort(unsigned long addr);
 void __asan_load16_noabort(unsigned long addr);
 void __asan_store16_noabort(unsigned long addr);
 
-void __asan_set_shadow_00(const void *addr, size_t size);
-void __asan_set_shadow_f1(const void *addr, size_t size);
-void __asan_set_shadow_f2(const void *addr, size_t size);
-void __asan_set_shadow_f3(const void *addr, size_t size);
-void __asan_set_shadow_f5(const void *addr, size_t size);
-void __asan_set_shadow_f8(const void *addr, size_t size);
+void __asan_set_shadow_00(void *addr, size_t size);
+void __asan_set_shadow_f1(void *addr, size_t size);
+void __asan_set_shadow_f2(void *addr, size_t size);
+void __asan_set_shadow_f3(void *addr, size_t size);
+void __asan_set_shadow_f5(void *addr, size_t size);
+void __asan_set_shadow_f8(void *addr, size_t size);
 
 #endif

@@ -2,8 +2,9 @@
 #define _ASM_X86_KASAN_H
 
 #define CONFIG_KASAN_SHADOW_OFFSET 0
-#define KASAN_SHADOW_OFFSET _AC(CONFIG_KASAN_SHADOW_OFFSET, UL)
+#define KASAN_SHADOW_OFFSET 0UL
 #define KASAN_SHADOW_SCALE_SHIFT 3
+#define __VIRTUAL_MASK_SHIFT 48
 
 /*
  * Compiler uses shadow offset assuming that addresses start
@@ -12,7 +13,7 @@
  * 'kernel address space start' >> KASAN_SHADOW_SCALE_SHIFT
  */
 #define KASAN_SHADOW_START      (KASAN_SHADOW_OFFSET + \
-					((-1UL << __VIRTUAL_MASK_SHIFT) >> \
+					((~0UL << __VIRTUAL_MASK_SHIFT) >> \
 						KASAN_SHADOW_SCALE_SHIFT))
 /*
  * 47 bits for kernel address -> (47 - KASAN_SHADOW_SCALE_SHIFT) bits for shadow

@@ -1,6 +1,7 @@
 #ifndef _LINUX_KASAN_H
 #define _LINUX_KASAN_H
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 
 struct kmem_cache;
@@ -8,9 +9,10 @@ struct page;
 struct vm_struct;
 struct task_struct;
 
-#ifdef CONFIG_KASAN
-
 #include <amd64/kasan.h>
+
+//#ifdef CONFIG_KASAN
+
 /*
 extern unsigned char kasan_zero_page[PAGE_SIZE];
 extern pte_t kasan_zero_pte[PTRS_PER_PTE];
@@ -21,13 +23,13 @@ extern p4d_t kasan_zero_p4d[MAX_PTRS_PER_P4D];
 /*
 void kasan_populate_zero_shadow(const void *shadow_start,
 				const void *shadow_end);
-
+*/
 static inline void *kasan_mem_to_shadow(const void *addr)
 {
-	return (void *)((unsigned long)addr >> KASAN_SHADOW_SCALE_SHIFT)
-		+ KASAN_SHADOW_OFFSET;
+	return (void *)(((unsigned long)addr >> KASAN_SHADOW_SCALE_SHIFT)
+		+ KASAN_SHADOW_OFFSET);
 }
-*/
+
 /* Enable reporting bugs after kasan_disable_current() */
 //extern void kasan_enable_current(void);
 
@@ -77,7 +79,7 @@ size_t kasan_metadata_size(struct kmem_cache *cache);
 bool kasan_save_enable_multi_shot(void);
 void kasan_restore_multi_shot(bool enabled);
 */
-#else /* CONFIG_KASAN */
+//#else /* CONFIG_KASAN */
 /*
 static inline void kasan_unpoison_shadow(const void *address, size_t size) {}
 
@@ -126,6 +128,6 @@ static inline void kasan_free_shadow(const struct vm_struct *vm) {}
 static inline void kasan_unpoison_slab(const void *ptr) { }
 static inline size_t kasan_metadata_size(struct kmem_cache *cache) { return 0; }
 */
-#endif /* CONFIG_KASAN */
+//#endif /* CONFIG_KASAN */
 
 #endif /* LINUX_KASAN_H */

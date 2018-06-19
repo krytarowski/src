@@ -98,9 +98,8 @@ struct kasan_free_meta *get_free_info(struct kmem_cache *cache,
 */
 static inline const void *kasan_shadow_to_mem(const void *shadow_addr)
 {
-        return (void *)0;
-//	return (void *)(((unsigned long)shadow_addr - KASAN_SHADOW_OFFSET)
-//		<< KASAN_SHADOW_SCALE_SHIFT);
+	return (void *)(((unsigned long)shadow_addr - KASAN_SHADOW_OFFSET)
+		<< KASAN_SHADOW_SCALE_SHIFT);
 }
 
 void kasan_report(unsigned long addr, size_t size,

@@ -16,6 +16,40 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/../kern/kasan.h>
 
 #define _RET_IP_      (unsigned long)__builtin_return_address(0)
+
+//Typedefs for current version
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef uint8_t __u8;
+typedef uint16_t __u16;
+typedef uint32_t __u32;
+typedef uint64_t __u64;
+
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
+
+typedef int8_t __s8;
+typedef int16_t __s16;
+typedef int32_t __s32;
+typedef int64_t __s64;
+
+typedef uint16_t __le16;
+typedef uint32_t __le32;
+typedef uint64_t __le64;
+
+typedef uint16_t __be16;
+typedef uint32_t __be32;
+typedef uint64_t __be64;
+
+//End of typedefs
+
+#define IS_ALIGNED(x, a)(((x) & ((typeof(x))(a) - 1)) == 0)
+
 /*
 void kasan_enable_current(void)
 {
@@ -103,7 +137,7 @@ void kasan_unpoison_stack_above_sp_to(const void *watermark)
  * perform better optimizations in each of __asan_loadX/__assn_storeX
  * depending on memory access size X.
  */
-/*
+
 static __always_inline bool memory_is_poisoned_1(unsigned long addr)
 {
 	s8 shadow_value = *(s8 *)kasan_mem_to_shadow((void *)addr);
@@ -120,12 +154,12 @@ static __always_inline bool memory_is_poisoned_2_4_8(unsigned long addr,
 						unsigned long size)
 {
 	u8 *shadow_addr = (u8 *)kasan_mem_to_shadow((void *)addr);
-*/
+
 	/*
 	 * Access crosses 8(shadow size)-byte boundary. Such access maps
 	 * into 2 shadow bytes, so we need to check them both.
 	 */
-/*	if (__predict_false(((addr + size - 1) & KASAN_SHADOW_MASK) < size - 1))
+	if (__predict_false(((addr + size - 1) & KASAN_SHADOW_MASK) < size - 1))
 		return *shadow_addr || memory_is_poisoned_1(addr + size - 1);
 
 	return memory_is_poisoned_1(addr + size - 1);
@@ -134,9 +168,9 @@ static __always_inline bool memory_is_poisoned_2_4_8(unsigned long addr,
 static __always_inline bool memory_is_poisoned_16(unsigned long addr)
 {
 	u16 *shadow_addr = (u16 *)kasan_mem_to_shadow((void *)addr);
-*/
+
 	/* Unaligned 16-bytes access maps into 3 shadow bytes. */
-/*	if (__predict_false(!IS_ALIGNED(addr, KASAN_SHADOW_SCALE_SIZE)))
+	if (__predict_false(!IS_ALIGNED(addr, KASAN_SHADOW_SCALE_SIZE)))
 		return *shadow_addr || memory_is_poisoned_1(addr + 15);
 
 	return *shadow_addr;
@@ -160,28 +194,29 @@ static __always_inline unsigned long memory_is_nonzero(const void *start,
 {
 	unsigned int words;
 	unsigned long ret;
-	unsigned int prefix = (unsigned long)start % 8;
+	unsigned int prefix = (const unsigned long)start % 8;
 
-	if (end - start <= 16)
-		return bytes_is_nonzero(start, end - start);
+	if ((const char *)end - (const char *)start <= 16)
+		return bytes_is_nonzero(start,(unsigned long)((const char *)end - (const char *)start));
 
 	if (prefix) {
 		prefix = 8 - prefix;
 		ret = bytes_is_nonzero(start, prefix);
 		if (__predict_false(ret))
-			return ret;
-		start += prefix;
+                  return ret;
+//Errors on line 208 and 215
+                //(const char *)start = (const char *)start + prefix;
 	}
 
-	words = (end - start) / 8;
+	words = ((const char *)end - (const char *)start) / 8;
 	while (words) {
-		if (__predict_false(*(u64 *)start))
+		if (__predict_false(*(const u64 *)start))
 			return bytes_is_nonzero(start, 8);
-		start += 8;
+		//const char *)start = (const char *)start + 8;
 		words--;
 	}
 
-	return bytes_is_nonzero(start, (end - start) % 8);
+	return bytes_is_nonzero(start, (unsigned long)((const char *)end - (const char *)start) % 8);
 }
 
 static __always_inline bool memory_is_poisoned_n(unsigned long addr,
@@ -190,7 +225,7 @@ static __always_inline bool memory_is_poisoned_n(unsigned long addr,
 	unsigned long ret;
 
 	ret = memory_is_nonzero(kasan_mem_to_shadow((void *)addr),
-			kasan_mem_to_shadow((void *)addr + size - 1) + 1);
+			(char *)kasan_mem_to_shadow((void *)(addr + size - 1)) + 1);
 
 	if (__predict_false(ret)) {
 		unsigned long last_byte = addr + size - 1;
@@ -215,19 +250,19 @@ static __always_inline bool memory_is_poisoned(unsigned long addr, size_t size)
 			return memory_is_poisoned_2_4_8(addr, size);
 		case 16:
 			return memory_is_poisoned_16(addr);
-		default:
-			BUILD_BUG();
+		//default:
+			//BUILD_BUG();
 		}
 	}
 
 	return memory_is_poisoned_n(addr, size);
 }
-*/
+
 static __always_inline void check_memory_region_inline(unsigned long addr,
 						size_t size, bool write,
 						unsigned long ret_ip)
 {
- /* 
+
 	if (__predict_false(size == 0))
 		return;
 
@@ -241,7 +276,7 @@ static __always_inline void check_memory_region_inline(unsigned long addr,
 		return;
 
 	kasan_report(addr, size, write, ret_ip);
- */
+
 }
 
 /*

@@ -204,15 +204,25 @@ static __always_inline unsigned long memory_is_nonzero(const void *start,
 		ret = bytes_is_nonzero(start, prefix);
 		if (__predict_false(ret))
                   return ret;
-//Errors on line 208 and 215
-                //(const char *)start = (const char *)start + prefix;
+		//Lines Still erroring
+/*
+                                        ^
+/home/r3x/repos/src.export/sys/arch/amd64/amd64/kasan.c:207:37: error: lvalue required as left operand of assignment
+                 (const char *)start += (const char *)prefix;
+                                     ^~
+/home/r3x/repos/src.export/sys/arch/amd64/amd64/kasan.c:214:45: error: invalid operands to binary + (have 'const char *' and 'const char *')
+   (const char *)start = (const char *)start + (const char *)8;
+                         ~~~~~~~~~~~~~~~~~~~ ^
+
+*/
+                //(const char *)start += (const char *)prefix;
 	}
 
 	words = ((const char *)end - (const char *)start) / 8;
 	while (words) {
 		if (__predict_false(*(const u64 *)start))
 			return bytes_is_nonzero(start, 8);
-		//const char *)start = (const char *)start + 8;
+		//(const char *)start = (const char *)start + (const char *)8;
 		words--;
 	}
 
@@ -250,8 +260,8 @@ static __always_inline bool memory_is_poisoned(unsigned long addr, size_t size)
 			return memory_is_poisoned_2_4_8(addr, size);
 		case 16:
 			return memory_is_poisoned_16(addr);
-		//default:
-			//BUILD_BUG();
+		default:
+			KASSERT(0 && "Not reached");
 		}
 	}
 
@@ -279,7 +289,7 @@ static __always_inline void check_memory_region_inline(unsigned long addr,
 
 }
 
-/*
+
 static void check_memory_region(unsigned long addr,
 				size_t size, bool write,
 				unsigned long ret_ip)
@@ -287,24 +297,26 @@ static void check_memory_region(unsigned long addr,
 	check_memory_region_inline(addr, size, write, ret_ip);
 }
 
+void kasan_check_read(const volatile void *, unsigned int);
 void kasan_check_read(const volatile void *p, unsigned int size)
 {
 	check_memory_region((unsigned long)p, size, false, _RET_IP_);
 }
 
+void kasan_check_write(const volatile void *, unsigned int);
 void kasan_check_write(const volatile void *p, unsigned int size)
 {
 	check_memory_region((unsigned long)p, size, true, _RET_IP_);
 }
-
+/*
+MULTIPLE DEFINITION errors while linking here
 #undef memset
 void *memset(void *addr, int c, size_t len)
 {
 	check_memory_region((unsigned long)addr, len, true, _RET_IP_);
 
-	return __memset(addr, c, len);
+	return __builtin_memset(addr, c, len);
 }
-
 #undef memmove
 void *memmove(void *dest, const void *src, size_t len)
 {
@@ -320,9 +332,10 @@ void *memcpy(void *dest, const void *src, size_t len)
 	check_memory_region((unsigned long)src, len, false, _RET_IP_);
 	check_memory_region((unsigned long)dest, len, true, _RET_IP_);
 
-	return __memcpy(dest, src, len);
+	return __builtin_memcpy(dest, src, len);
 }
-
+*/
+/*
 void kasan_alloc_pages(struct page *page, unsigned int order)
 {
 	if (__predict_true(!PageHighMem(page)))
@@ -501,7 +514,7 @@ void kasan_init_slab_obj(struct kmem_cache *cache, const void *object)
 		return;
 
 	alloc_info = get_alloc_info(cache, object);
-	__memset(alloc_info, 0, sizeof(*alloc_info));
+	__builtin_memset(alloc_info, 0, sizeof(*alloc_info));
 }
 
 void kasan_slab_alloc(struct kmem_cache *cache, void *object, gfp_t flags)
@@ -699,12 +712,18 @@ void __asan_unregister_globals(struct kasan_global *globals, size_t size)
         } \
 	void __asan_load##size##_noabort(unsigned long);	\
 	void __asan_load##size##_noabort(unsigned long addr)	\
-	{}							\
+	{\
+        check_memory_region_inline(addr, size, false, _RET_IP_);\
+        }							\
 	void __asan_store##size(unsigned long addr)		\
-	{}							\
+	{\
+check_memory_region_inline(addr, size, true, _RET_IP_);\
+        }							\
 	void __asan_store##size##_noabort(unsigned long);	\
 	void __asan_store##size##_noabort(unsigned long addr)	\
-	{}							\
+	{\
+        check_memory_region_inline(addr, size, true, _RET_IP_);\
+        }							\
 
 
 DEFINE_ASAN_LOAD_STORE(1);

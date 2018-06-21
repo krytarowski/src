@@ -34,6 +34,8 @@
 #define KASAN_ABI_VERSION 1
 #endif
 
+//int kasan_depth;
+
 struct kasan_access_info {
 	const void *access_addr;
 	const void *first_bad_addr;
@@ -124,7 +126,8 @@ static inline void quarantine_remove_cache(struct kmem_cache *cache) { }
  * Exported functions for interfaces called from assembly or from generated
  * code. Declarations here to avoid warning about missing declarations.
  */
-//asmlinkage void kasan_unpoison_task_stack_below(const void *watermark);
+//asmlinkage 
+void kasan_unpoison_task_stack_below(const void *watermark);
 void __asan_register_globals(struct kasan_global *globals, size_t size);
 void __asan_unregister_globals(struct kasan_global *globals, size_t size);
 void __asan_loadN(unsigned long addr, size_t size);

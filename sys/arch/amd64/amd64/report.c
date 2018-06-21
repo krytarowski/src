@@ -21,7 +21,6 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #define SHADOW_BYTES_PER_ROW (SHADOW_BLOCKS_PER_ROW * SHADOW_BYTES_PER_BLOCK)
 #define SHADOW_ROWS_AROUND_ADDR 2
 #define _RET_IP_      (unsigned long)__builtin_return_address(0)
-
 /*
 static const void *find_first_bad_addr(const void *addr, size_t size)
 {
@@ -370,7 +369,7 @@ __setup("kasan_multi_shot", kasan_set_multi_shot);
 
 static inline bool kasan_report_enabled(void)
 {
-	if (current->kasan_depth)
+	if (kasan_depth)
 		return false;
 	if (test_bit(KASAN_BIT_MULTI_SHOT, &kasan_flags))
 		return true;

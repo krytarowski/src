@@ -31,15 +31,14 @@ static inline void *kasan_mem_to_shadow(const void *addr)
 }
 
 /* Enable reporting bugs after kasan_disable_current() */
-//extern void kasan_enable_current(void);
+extern void kasan_enable_current(void);
 
 /* Disable reporting bugs for current task */
-//extern void kasan_disable_current(void);
-/*
+extern void kasan_disable_current(void);
 void kasan_unpoison_shadow(const void *address, size_t size);
 
-void kasan_unpoison_task_stack(struct task_struct *task);
-void kasan_unpoison_stack_above_sp_to(const void *watermark);
+void kasan_unpoison_task_stack(struct lwp *task);
+/*void kasan_unpoison_stack_above_sp_to(const void *watermark);
 
 void kasan_alloc_pages(struct page *page, unsigned int order);
 void kasan_free_pages(struct page *page, unsigned int order);

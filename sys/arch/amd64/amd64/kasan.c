@@ -4,7 +4,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/param.h>
 #include <sys/device.h>
 #include <sys/kernel.h>
-#include <sys/module.h>
+ #include <sys/module.h>
 #include <sys/param.h>
 #include <sys/conf.h>
 #include <sys/cprng.h>
@@ -49,31 +49,35 @@ typedef uint64_t __be64;
 //End of typedefs
 
 #define IS_ALIGNED(x, a)(((x) & ((typeof(x))(a) - 1)) == 0)
-
+#define THREAD_SIZE 4086
 /*
 void kasan_enable_current(void)
 {
-	current->kasan_depth++;
+	kasan_depth++;
 }
 
 void kasan_disable_current(void)
 {
-	current->kasan_depth--;
+	kasan_depth--;
 }
 */
+void * task_stack_page(struct lwp * );
+void * task_stack_page(struct lwp *task) {
+        return (void *)0;
+}
 /*
  * Poisons the shadow memory for 'size' bytes starting from 'addr'.
  * Memory addresses should be aligned to KASAN_SHADOW_SCALE_SIZE.
  */
-/*
+
 static void kasan_poison_shadow(const void *address, size_t size, u8 value)
 {
 	void *shadow_start, *shadow_end;
 
 	shadow_start = kasan_mem_to_shadow(address);
-	shadow_end = kasan_mem_to_shadow(address + size);
+	shadow_end = kasan_mem_to_shadow((void *)((uintptr_t)address + size));
 
-	memset(shadow_start, value, shadow_end - shadow_start);
+	__builtin_memset(shadow_start, value, (char *)shadow_end - (char *)shadow_start);
 }
 
 void kasan_unpoison_shadow(const void *address, size_t size)
@@ -81,41 +85,41 @@ void kasan_unpoison_shadow(const void *address, size_t size)
 	kasan_poison_shadow(address, size, 0);
 
 	if (size & KASAN_SHADOW_MASK) {
-		u8 *shadow = (u8 *)kasan_mem_to_shadow(address + size);
+		u8 *shadow = (u8 *)kasan_mem_to_shadow((void *)((uintptr_t)address + size));
 		*shadow = size & KASAN_SHADOW_MASK;
 	}
 }
 
-static void __kasan_unpoison_stack(struct task_struct *task, const void *sp)
+static void __kasan_unpoison_stack(struct lwp *task, const void *sp)
 {
 	void *base = task_stack_page(task);
-	size_t size = sp - base;
+	size_t size = (const char *)sp - (const char *)base;
 
 	kasan_unpoison_shadow(base, size);
 }
-*/
+
 /* Unpoison the entire stack for a task. */
-/*
-void kasan_unpoison_task_stack(struct task_struct *task)
+
+void kasan_unpoison_task_stack(struct lwp *task)
 {
-	__kasan_unpoison_stack(task, task_stack_page(task) + THREAD_SIZE);
+	__kasan_unpoison_stack(task,(void *) ((uintptr_t)task_stack_page(task) + THREAD_SIZE));
 }
-*/
+
 /* Unpoison the stack for the current task beyond a watermark sp value. */
-/*
-asmlinkage void kasan_unpoison_task_stack_below(const void *watermark)
+//asmlinkage -> to
+void kasan_unpoison_task_stack_below(const void *watermark)
 {
-*/
+
 	/*
 	 * Calculate the task stack base address.  Avoid using 'current'
 	 * because this function is called by early resume code which hasn't
 	 * yet set up the percpu register (%gs).
 	 */
-/*	void *base = (void *)((unsigned long)watermark & ~(THREAD_SIZE - 1));
+	void *base = (void *)((unsigned long)watermark & ~(THREAD_SIZE - 1));
 
-	kasan_unpoison_shadow(base, watermark - base);
+	kasan_unpoison_shadow(base, (const char *)watermark - (char *)base);
 }
-*/
+
 /*
  * Clear all poison for the region between the current SP and a provided
  * watermark value, as is sometimes required prior to hand-crafted asm function
@@ -204,26 +208,15 @@ static __always_inline unsigned long memory_is_nonzero(const void *start,
 		ret = bytes_is_nonzero(start, prefix);
 		if (__predict_false(ret))
                   return ret;
-		//Lines Still erroring
-/*
-                                        ^
-/home/r3x/repos/src.export/sys/arch/amd64/amd64/kasan.c:207:37: error: lvalue required as left operand of assignment
-                 (const char *)start += (const char *)prefix;
-                                     ^~
-/home/r3x/repos/src.export/sys/arch/amd64/amd64/kasan.c:214:45: error: invalid operands to binary + (have 'const char *' and 'const char *')
-   (const char *)start = (const char *)start + (const char *)8;
-                         ~~~~~~~~~~~~~~~~~~~ ^
-
-*/
-                //(const char *)start += (const char *)prefix;
-	}
+	        start =(void *)((uintptr_t)start + (uintptr_t)prefix);
+        }
 
 	words = ((const char *)end - (const char *)start) / 8;
 	while (words) {
 		if (__predict_false(*(const u64 *)start))
 			return bytes_is_nonzero(start, 8);
-		//(const char *)start = (const char *)start + (const char *)8;
-		words--;
+		start =(void *)((uintptr_t)start + (uintptr_t)8);
+                words--;
 	}
 
 	return bytes_is_nonzero(start, (unsigned long)((const char *)end - (const char *)start) % 8);

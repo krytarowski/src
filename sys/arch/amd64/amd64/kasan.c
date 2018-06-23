@@ -12,7 +12,9 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 #include <sys/types.h>
 #include <sys/filedesc.h>
+#include <sys/lwp.h>
 
+#include <amd64/pcb.h>
 #include <sys/../kern/kasan.h>
 
 #define _RET_IP_      (unsigned long)__builtin_return_address(0)
@@ -49,6 +51,8 @@ typedef uint64_t __be64;
 //End of typedefs
 
 #define IS_ALIGNED(x, a)(((x) & ((typeof(x))(a) - 1)) == 0)
+#define __round_mask(x, y) ((__typeof__(x))((y)-1))
+#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
 #define THREAD_SIZE 4086
 /*
 void kasan_enable_current(void)
@@ -61,10 +65,37 @@ void kasan_disable_current(void)
 	kasan_depth--;
 }
 */
-void * task_stack_page(struct lwp * );
-void * task_stack_page(struct lwp *task) {
+
+/*
+ * Dummy functions for timebeing
+ */
+
+bool PageHighMem(struct page *);
+bool PageHighMem(struct page *Page) {
+        return true;
+}
+
+void * page_address(struct page *);
+void * page_address(struct page *Page) {
         return (void *)0;
 }
+
+
+/*
+ * End of Dummy functions
+ */
+
+void * task_stack_page(struct lwp * );
+/*
+ * Used to return the page mapping the stack of a lwp
+ */
+void * task_stack_page(struct lwp *task) {
+        struct pcb *pb = lwp_getpcb(task);
+        return (void *)pb->pcb_rbp;
+}
+
+
+
 /*
  * Poisons the shadow memory for 'size' bytes starting from 'addr'.
  * Memory addresses should be aligned to KASAN_SHADOW_SCALE_SIZE.
@@ -125,17 +156,18 @@ void kasan_unpoison_task_stack_below(const void *watermark)
  * watermark value, as is sometimes required prior to hand-crafted asm function
  * returns in the middle of functions.
  */
-/*
+
 void kasan_unpoison_stack_above_sp_to(const void *watermark)
 {
 	const void *sp = __builtin_frame_address(0);
-	size_t size = watermark - sp;
+	size_t size = (const char *)watermark - (const char *)sp;
 
-	if (WARN_ON(sp > watermark))
-		return;
+//        if (KASSERT(sp <= watermark))
+//        if (KASSERT((int64_t)size < 0 ))
+//                return;
 	kasan_unpoison_shadow(sp, size);
 }
-*/
+
 /*
  * All functions below always inlined so compiler could
  * perform better optimizations in each of __asan_loadX/__assn_storeX
@@ -328,7 +360,7 @@ void *memcpy(void *dest, const void *src, size_t len)
 	return __builtin_memcpy(dest, src, len);
 }
 */
-/*
+
 void kasan_alloc_pages(struct page *page, unsigned int order)
 {
 	if (__predict_true(!PageHighMem(page)))
@@ -342,12 +374,12 @@ void kasan_free_pages(struct page *page, unsigned int order)
 				PAGE_SIZE << order,
 				KASAN_FREE_PAGE);
 }
-*/
+
 /*
  * Adaptive redzone policy taken from the userspace AddressSanitizer runtime.
  * For larger allocations larger redzones are used.
  */
-/*
+/* Need to learn about the cache before this
 static unsigned int optimal_redzone(unsigned int object_size)
 {
 	return
@@ -358,8 +390,8 @@ static unsigned int optimal_redzone(unsigned int object_size)
 		object_size <= (1 << 14) - 256  ? 256 :
 		object_size <= (1 << 15) - 512  ? 512 :
 		object_size <= (1 << 16) - 1024 ? 1024 : 2048;
-}
-
+}*/
+/*
 void kasan_cache_create(struct kmem_cache *cache, unsigned int *size,
 			slab_flags_t *flags)
 {
@@ -674,14 +706,14 @@ void kasan_free_shadow(const struct vm_struct *vm)
 	if (vm->flags & VM_KASAN)
 		vfree(kasan_mem_to_shadow(vm->addr));
 }
-
+*/
 static void register_global(struct kasan_global *global)
 {
 	size_t aligned_size = round_up(global->size, KASAN_SHADOW_SCALE_SIZE);
 
 	kasan_unpoison_shadow(global->beg, global->size);
 
-	kasan_poison_shadow(global->beg + aligned_size,
+	kasan_poison_shadow((void *)((uintptr_t)global->beg + aligned_size),
 		global->size_with_redzone - aligned_size,
 		KASAN_GLOBAL_REDZONE);
 }
@@ -697,7 +729,7 @@ void __asan_register_globals(struct kasan_global *globals, size_t size)
 void __asan_unregister_globals(struct kasan_global *globals, size_t size)
 {
 }
-*/
+
 #define DEFINE_ASAN_LOAD_STORE(size)				\
 	void __asan_load##size(unsigned long addr)		\
 	{                                                       \

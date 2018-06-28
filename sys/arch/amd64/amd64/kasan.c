@@ -53,6 +53,7 @@ typedef uint64_t __be64;
 #define IS_ALIGNED(x, a)(((x) & ((typeof(x))(a) - 1)) == 0)
 #define __round_mask(x, y) ((__typeof__(x))((y)-1))
 #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+#define round_down(x, y) ((x) & ~__round_mask(x, y))
 #define THREAD_SIZE 4086
 /*
 void kasan_enable_current(void)
@@ -776,26 +777,26 @@ void __asan_storeN_noabort(unsigned long addr, size_t size)
 void __asan_handle_no_return(void) {}
 
 /* Emitted by compiler to poison large objects when they go out of scope. */
-/*void __asan_poison_stack_memory(const void *addr, size_t size)
+void __asan_poison_stack_memory(const void *addr, size_t size)
 {
-*/
+
 	/*
 	 * Addr is KASAN_SHADOW_SCALE_SIZE-aligned and the object is surrounded
 	 * by redzones, so we simply round up size to simplify logic.
 	 */
-/*	kasan_poison_shadow(addr, round_up(size, KASAN_SHADOW_SCALE_SIZE),
+	kasan_poison_shadow(addr, round_up(size, KASAN_SHADOW_SCALE_SIZE),
 			    KASAN_USE_AFTER_SCOPE);
 }
-*/
+
 /* Emitted by compiler to unpoison large objects when they go into scope. */
-/*
+
 void __asan_unpoison_stack_memory(const void *addr, size_t size)
 {
 	kasan_unpoison_shadow(addr, size);
 }
-*/
+
 /* Emitted by compiler to poison alloca()ed objects. */
-/*void __asan_alloca_poison(unsigned long addr, size_t size)
+void __asan_alloca_poison(unsigned long addr, size_t size)
 {
 	size_t rounded_up_size = round_up(size, KASAN_SHADOW_SCALE_SIZE);
 	size_t padding_size = round_up(size, KASAN_ALLOCA_REDZONE_SIZE) -
@@ -806,7 +807,7 @@ void __asan_unpoison_stack_memory(const void *addr, size_t size)
 			KASAN_ALLOCA_REDZONE_SIZE);
 	const void *right_redzone = (const void *)(addr + rounded_up_size);
 
-	WARN_ON(!IS_ALIGNED(addr, KASAN_ALLOCA_REDZONE_SIZE));
+	//WARN_ON(!IS_ALIGNED(addr, KASAN_ALLOCA_REDZONE_SIZE));
 
 	kasan_unpoison_shadow((const void *)(addr + rounded_down_size),
 			      size - rounded_down_size);
@@ -816,16 +817,16 @@ void __asan_unpoison_stack_memory(const void *addr, size_t size)
 			padding_size + KASAN_ALLOCA_REDZONE_SIZE,
 			KASAN_ALLOCA_RIGHT);
 }
-*/
+
 /* Emitted by compiler to unpoison alloca()ed areas when the stack unwinds. */
-/*void __asan_allocas_unpoison(const void *stack_top, const void *stack_bottom)
+void __asan_allocas_unpoison(const void *stack_top, const void *stack_bottom)
 {
 	if (__predict_false(!stack_top || stack_top > stack_bottom))
 		return;
 
-	kasan_unpoison_shadow(stack_top, stack_bottom - stack_top);
+	kasan_unpoison_shadow(stack_top, (const char *)stack_bottom - (const char *)stack_top);
 }
-*/
+
 /* Emitted by the compiler to [un]poison local variables. */
 #define DEFINE_ASAN_SET_SHADOW(byte) \
 	void __asan_set_shadow_##byte(void *addr, size_t size)	\

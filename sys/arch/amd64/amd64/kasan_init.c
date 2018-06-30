@@ -16,6 +16,51 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/../kern/kasan.h>
 
 /*
+ *  Linux definitions
+ */
+
+#define PGDIR_SHIFT 39
+#define PTRS_PER_PGD 512
+// Need to reconfirm these
+
+/*
+ * the pgd page can be thought of an array like this: pgd_t[PTRS_PER_PGD]
+ *
+ * this macro returns the index of the entry in the pgd page which would
+ * control the given virtual address
+ */
+#define pgd_index(address) (((address) >> PGDIR_SHIFT) & (PTRS_PER_PGD - 1))
+
+/*
+ * pgd_offset() returns a (pgd_t *)
+ * pgd_index() is used get the offset into the pgd page's array of pgd_t's;
+ */
+#define pgd_offset_pgd(pgd, address) (pgd + pgd_index((address)))
+/*
+ * a shortcut to get a pgd_t in a given mm
+ */
+#define pgd_offset(mm, address) pgd_offset_pgd((mm)->pgd, (address))
+/*
+ * a shortcut which implies the use of the kernel's pgd, instead
+ * of a process's
+ */
+#define pgd_offset_k(address) pgd_offset(&init_mm, (address))
+
+/*
+ * End of Linux Definitions
+ */
+
+/*
+ * Function definitions - need to move this somewhere
+ */
+
+void kasan_populate_zero_shadow(const void *, const void *);
+
+/*
+ * End of Function definitions
+ */
+
+/*
  * This page serves two purposes:
  *   - It used as early shadow memory. The entire shadow region populated
  *     with this page, before we will be able to setup normal shadow memory.
@@ -140,11 +185,11 @@ static void __init zero_p4d_populate(pgd_t *pgd, unsigned long addr,
  * @shadow_start - start of the memory range to populate
  * @shadow_end   - end of the memory range to populate
  */
-/*
-void __init kasan_populate_zero_shadow(const void *shadow_start,
+
+void kasan_populate_zero_shadow(const void *shadow_start,
 				const void *shadow_end)
 {
-	unsigned long addr = (unsigned long)shadow_start;
+/*	unsigned long addr = (unsigned long)shadow_start;
 	unsigned long end = (unsigned long)shadow_end;
 	pgd_t *pgd = pgd_offset_k(addr);
 	unsigned long next;
@@ -192,4 +237,5 @@ void __init kasan_populate_zero_shadow(const void *shadow_start,
 		}
 		zero_p4d_populate(pgd, addr, next);
 	} while (pgd++, addr = next, addr != end);
-}*/
+*/
+}

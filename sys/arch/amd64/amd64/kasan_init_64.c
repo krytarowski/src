@@ -35,8 +35,16 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 #include <sys/types.h>
 #include <sys/filedesc.h>
+#include <sys/proc.h>
 
 #include <sys/../kern/kasan.h>
+
+#include <uvm/uvm.h>
+
+//#include <x86/pmap.h>
+#include <amd64/pmap.h>
+#include <amd64/vmparam.h>
+
 
 /*
 extern struct range pfn_mapped[E820_MAX_ENTRIES];
@@ -184,7 +192,6 @@ static void __init map_range(struct range *range)
 
 	kasan_populate_shadow(start, end, early_pfn_to_nid(range->start));
 }
-
 static void __init clear_pgds(unsigned long start,
 			unsigned long end)
 {
@@ -201,8 +208,9 @@ static void __init clear_pgds(unsigned long start,
 /*		if (pgtable_l5_enabled())
 			pgd_clear(pgd);
 		else
-			p4d_clear(p4d_offset(pgd, start));
-	}
+*/
+/*                p4d_clear(p4d_offset(pgd, start));
+	*}
 
 	pgd = pgd_offset_k(start);
 	for (; start < end; start += P4D_SIZE)
@@ -247,7 +255,7 @@ static void __init kasan_early_p4d_populate(pgd_t *pgd,
 }
 
 static void __init kasan_map_early_shadow(pgd_t *pgd)
-{
+ {
 	unsigned long addr = KASAN_SHADOW_START & PGDIR_MASK;
 	unsigned long end = KASAN_SHADOW_END;
 	unsigned long next;
@@ -276,8 +284,8 @@ static struct notifier_block kasan_die_notifier = {
 };
 #endif
 */
-void kasan_early_init(void)
-{
+//void kasan_early_init(void)
+//{
 /*	int i;
 	pteval_t pte_val = __pa_nodebug(kasan_zero_page) | __PAGE_KERNEL | _PAGE_ENC;
 	pmdval_t pmd_val = __pa_nodebug(kasan_zero_pte) | _KERNPG_TABLE;
@@ -303,20 +311,20 @@ void kasan_early_init(void)
 
 	kasan_map_early_shadow(early_top_pgt);
 	kasan_map_early_shadow(init_top_pgt);
-*/
+ 
 }
 
 void kasan_init(void)
 {
-//	int i;
-//	void *shadow_cpu_entry_begin, *shadow_cpu_entry_end;
-/*
+	int i;
+	void *shadow_cpu_entry_begin, *shadow_cpu_entry_end;
+
 #ifdef CONFIG_KASAN_INLINE
 	register_die_notifier(&kasan_die_notifier);
 #endif
-*/
-//	__builtin_memcpy(early_top_pgt, init_top_pgt, sizeof(early_top_pgt));
 
+	__builtin_memcpy(early_top_pgt, init_top_pgt, sizeof(early_top_pgt));
+*/
 	/*
 	 * We use the same shadow offset for 4- and 5-level paging to
 	 * facilitate boot-time switching between paging modes.
@@ -341,8 +349,8 @@ void kasan_init(void)
 				__pgd(__pa(tmp_p4d_table) | _KERNPG_TABLE));
 	}
         */
-/*	load_cr3(early_top_pgt);
-	__flush_tlb_all();
+/*	lcr3(early_top_pgt);
+	tlbflush();
 
 	clear_pgds(KASAN_SHADOW_START & PGDIR_MASK, KASAN_SHADOW_END);
 
@@ -408,5 +416,58 @@ void kasan_init(void)
 
 	init_task.kasan_depth = 0;
 	pr_info("KernelAddressSanitizer initialized\n");
+        }
 */
+
+struct seg_details {
+        int64_t * vaddr;
+        int64_t size;
+};
+
+static struct seg_details kmap[4];
+
+void DumpSegments(void);
+extern struct bootspace bootspace;
+
+void
+DumpSegments(void)
+{
+	size_t i;
+
+        // Copy the addresses of the bootspace structure into our kernel structure
+
+	for (i = 0; i < BTSPACE_NSEGS; i++) {
+		if (bootspace.segs[i].type == BTSEG_NONE) {
+			continue;
+		}
+	        kmap[bootspace.segs[i].type].vaddr = (void *)bootspace.segs[i].va;
+                kmap[bootspace.segs[i].type].size = bootspace.segs[i].sz;
+	}
+}
+
+
+void
+kasan_init(void)
+{
+        struct pmap *kernmap;
+        /*
+        void *shadow_begin, *shadow_end;
+	void *text_begin, *text_end;
+*/
+	/* clearing page table entries for the shadow region */
+        kernmap = pmap_kernel();
+        pmap_remove(kernmap, KASAN_SHADOW_START, KASAN_SHADOW_END);
+        pmap_update(kernmap);
+
+
+	/*  Text Section and main shadow offsets */
+	DumpSegments();
+/*	text_begin = (void *)kmap[1].vaddr;
+	text_end = (void *)(kmap[1].vaddr + kmap[1].size);
+        
+	shadow_begin = (void *)VM_MIN_KERNEL_ADDRESS;
+        shadow_end = (void *); //Temp Need to update
+*/
+	/* Allocate zero pages for the shadow region */
+        //uvm_km_alloc(kernel_map, (void *)KASAN_SHADOW_START,  UVM_KMF_WIRED|UVM_KMF_ZERO);
 }

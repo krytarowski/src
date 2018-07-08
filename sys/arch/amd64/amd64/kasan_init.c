@@ -18,7 +18,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 /*
  *  Linux definitions
  */
-
+#define IS_ALIGNED(x, a)(((x) & ((typeof(x))(a) - 1)) == 0)
 #define PGDIR_SHIFT 39
 #define PTRS_PER_PGD 512
 // Need to reconfirm these

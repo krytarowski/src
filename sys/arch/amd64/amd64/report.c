@@ -21,17 +21,50 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #define SHADOW_BYTES_PER_ROW (SHADOW_BLOCKS_PER_ROW * SHADOW_BYTES_PER_BLOCK)
 #define SHADOW_ROWS_AROUND_ADDR 2
 #define _RET_IP_      (unsigned long)__builtin_return_address(0)
-/*
+
+#define TASK_SIZE 30 //Temp
+
+//Typedefs for current version
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef uint8_t __u8;
+typedef uint16_t __u16;
+typedef uint32_t __u32;
+typedef uint64_t __u64;
+
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
+
+typedef int8_t __s8;
+typedef int16_t __s16;
+typedef int32_t __s32;
+typedef int64_t __s64;
+
+typedef uint16_t __le16;
+typedef uint32_t __le32;
+typedef uint64_t __le64;
+
+typedef uint16_t __be16;
+typedef uint32_t __be32;
+typedef uint64_t __be64;
+
+//End of typedefs
+
 static const void *find_first_bad_addr(const void *addr, size_t size)
 {
-	u8 shadow_val = *(u8 *)kasan_mem_to_shadow(addr);
+	//u8 shadow_val = *(u8 *)kasan_mem_to_shadow(addr);
 	const void *first_bad_addr = addr;
 
-	while (!shadow_val && first_bad_addr < addr + size) {
-		first_bad_addr += KASAN_SHADOW_SCALE_SIZE;
+/*	while (!shadow_val && first_bad_addr < (const char *)addr + size) {
+		(const char *)first_bad_addr += KASAN_SHADOW_SCALE_SIZE;
 		shadow_val = *(u8 *)kasan_mem_to_shadow(first_bad_addr);
 	}
-	return first_bad_addr;
+*/	return first_bad_addr;
 }
 
 static bool addr_has_shadow(struct kasan_access_info *info)
@@ -49,21 +82,21 @@ static const char *get_shadow_bug_type(struct kasan_access_info *info)
 						info->access_size);
 
 	shadow_addr = (u8 *)kasan_mem_to_shadow(info->first_bad_addr);
-*/
+
 	/*
 	 * If shadow byte value is in [0, KASAN_SHADOW_SCALE_SIZE) we can look
 	 * at the next shadow byte to determine the type of the bad access.
 	 */
-/*	if (*shadow_addr > 0 && *shadow_addr <= KASAN_SHADOW_SCALE_SIZE - 1)
-		shadow_addr++;
+	if (*shadow_addr > 0 && *shadow_addr <= KASAN_SHADOW_SCALE_SIZE - 1)
+	shadow_addr++;
 
 	switch (*shadow_addr) {
 	case 0 ... KASAN_SHADOW_SCALE_SIZE - 1:
-*/		/*
+		/*
 		 * In theory it's still possible to see these shadow values
 		 * due to a data race in the kernel code.
 		 */
-/*		bug_type = "out-of-bounds";
+		bug_type = "out-of-bounds";
 		break;
 	case KASAN_PAGE_REDZONE:
 	case KASAN_KMALLOC_REDZONE:
@@ -119,13 +152,15 @@ static void print_error_description(struct kasan_access_info *info)
 {
 	const char *bug_type = get_bug_type(info);
 
-	pr_err("BUG: KASAN: %s in %pS\n",
+	aprint_error("BUG: KASAN: %s in %pS\n",
 		bug_type, (void *)info->ip);
-	pr_err("%s of size %zu at addr %px by task %s/%d\n",
+/*	aprint_error("%s of size %zu at addr %px by task %s/%d\n",
 		info->is_write ? "Write" : "Read", info->access_size,
 		info->access_addr, current->comm, task_pid_nr(current));
+replace current here
+*/
 }
-
+/*
 static inline bool kernel_or_module_addr(const void *addr)
 {
 	if (addr >= (void *)_stext && addr < (void *)_end)
@@ -143,27 +178,27 @@ static inline bool init_task_stack_addr(const void *addr)
 }
 
 static DEFINE_SPINLOCK(report_lock);
-
+*/
 static void kasan_start_report(unsigned long *flags)
 {
-*/	/*
+	/*
 	 * Make sure we don't end up in loop.
 	 */
-/*	kasan_disable_current();
-	spin_lock_irqsave(&report_lock, *flags);
-	pr_err("==================================================================\n");
+//	kasan_disable_current();
+//	spin_lock_irqsave(&report_lock, *flags);
+	aprint_error("==================================================================\n");
 }
 
 static void kasan_end_report(unsigned long *flags)
 {
-	pr_err("==================================================================\n");
-	add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
-	spin_unlock_irqrestore(&report_lock, *flags);
-	if (panic_on_warn)
-		panic("panic_on_warn set ...\n");
-	kasan_enable_current();
+	aprint_error("==================================================================\n");
+	//add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
+//	spin_unlock_irqrestore(&report_lock, *flags);
+//	if (panic_on_warn)
+//		panic("panic_on_warn set ...\n");
+//	kasan_enable_current();
 }
-
+/*
 static void print_track(struct kasan_track *track, const char *prefix)
 {
 	pr_err("%s by task %u:\n", prefix, track->pid);
@@ -321,7 +356,7 @@ void kasan_report_invalid_free(void *object, unsigned long ip)
 	print_shadow_for_address(object);
 	kasan_end_report(&flags);
 }
-
+*/
 static void kasan_report_error(struct kasan_access_info *info)
 {
 	unsigned long flags;
@@ -329,37 +364,38 @@ static void kasan_report_error(struct kasan_access_info *info)
 	kasan_start_report(&flags);
 
 	print_error_description(info);
-	pr_err("\n");
+//	pr_err("\n");
 
 	if (!addr_has_shadow(info)) {
-		dump_stack();
+//		dump_stack();
 	} else {
-		print_address_description((void *)info->access_addr);
-		pr_err("\n");
-		print_shadow_for_address(info->first_bad_addr);
+//		print_address_description((void *)info->access_addr);
+//		pr_err("\n");
+//		print_shadow_for_address(info->first_bad_addr);
 	}
 
 	kasan_end_report(&flags);
 }
 
-static unsigned long kasan_flags;
+//static unsigned long kasan_flags;
 
 #define KASAN_BIT_REPORTED	0
 #define KASAN_BIT_MULTI_SHOT	1
 
+bool kasan_save_enable_multi_shot(void);
 bool kasan_save_enable_multi_shot(void)
 {
-	return test_and_set_bit(KASAN_BIT_MULTI_SHOT, &kasan_flags);
+//	return test_and_set_bit(KASAN_BIT_MULTI_SHOT, &kasan_flags);
+        return true;
 }
-EXPORT_SYMBOL_GPL(kasan_save_enable_multi_shot);
 
+void kasan_restore_multi_shot(bool);
 void kasan_restore_multi_shot(bool enabled)
 {
-	if (!enabled)
-		clear_bit(KASAN_BIT_MULTI_SHOT, &kasan_flags);
+//	if (!enabled)
+//		clear_bit(KASAN_BIT_MULTI_SHOT, &kasan_flags);
 }
-EXPORT_SYMBOL_GPL(kasan_restore_multi_shot);
-
+/*
 static int __init kasan_set_multi_shot(char *str)
 {
 	set_bit(KASAN_BIT_MULTI_SHOT, &kasan_flags);
@@ -379,12 +415,13 @@ static inline bool kasan_report_enabled(void)
 void kasan_report(unsigned long addr, size_t size,
 		bool is_write, unsigned long ip)
 {
-/*	struct kasan_access_info info;
+	struct kasan_access_info info;
 
-	if (likely(!kasan_report_enabled()))
-		return;
-
-	disable_trace_on_warning();
+/*	if (likely(!kasan_report_enabled()))
+                return;
+Not necessary maybe
+*/
+//	disable_trace_on_warning();
 
 	info.access_addr = (void *)addr;
 	info.first_bad_addr = (void *)addr;
@@ -392,7 +429,7 @@ void kasan_report(unsigned long addr, size_t size,
 	info.is_write = is_write;
 	info.ip = ip;
 
-	kasan_report_error(&info);*/
+	kasan_report_error(&info);
 }
 
 

@@ -222,3 +222,4 @@ file	miscfs/specfs/spec_vnops.c	vfs
 define kasan
 defflag	opt_kubsan.h	KASAN
 file	kern/kern_asan.c	kasan
+file	kern/kern_asan_report.c	kasan

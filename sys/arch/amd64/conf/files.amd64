@@ -50,7 +50,6 @@ file	arch/amd64/amd64/db_machdep.c		ddb
 file	arch/amd64/amd64/kobj_machdep.c		modular
 file    arch/amd64/amd64/kasan_init.c                kasan
 file    arch/amd64/amd64/kasan_init_64.c                kasan
-file    arch/amd64/amd64/report.c                kasan
 file    arch/amd64/amd64/quarantine.c                kasan
 file	kern/subr_disk_mbr.c			disk
 file	arch/amd64/amd64/gdt.c			machdep

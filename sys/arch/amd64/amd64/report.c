@@ -13,7 +13,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/types.h>
 #include <sys/filedesc.h>
 
-#include <sys/../kern/kasan.h>
+#include <sys/kasan.h>
 
 /* Shadow layout customization. */
 #define SHADOW_BYTES_PER_BLOCK 1

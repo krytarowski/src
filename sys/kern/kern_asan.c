@@ -15,7 +15,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/lwp.h>
 
 #include <amd64/pcb.h>
-#include <sys/../kern/kasan.h>
+#include <sys/kasan.h>
 
 #define _RET_IP_      (unsigned long)__builtin_return_address(0)
 

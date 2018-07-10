@@ -37,7 +37,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/filedesc.h>
 #include <sys/proc.h>
 
-#include <sys/../kern/kasan.h>
+#include <sys/kasan.h>
 
 #include <uvm/uvm.h>
 

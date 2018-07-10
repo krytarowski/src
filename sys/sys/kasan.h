@@ -9,7 +9,30 @@ struct page;
 struct vm_struct;
 struct task_struct;
 
-#include <amd64/kasan.h>
+#define CONFIG_KASAN_SHADOW_OFFSET 0
+#define KASAN_SHADOW_OFFSET 0UL
+#define KASAN_SHADOW_SCALE_SHIFT 3
+#define __VIRTUAL_MASK_SHIFT 48
+
+/*
+ * Compiler uses shadow offset assuming that addresses start
+ * from 0. Kernel addresses don't start from 0, so shadow
+ * for kernel really starts from compiler's shadow offset +
+ * 'kernel address space start' >> KASAN_SHADOW_SCALE_SHIFT
+ */
+#define KASAN_SHADOW_START      (KASAN_SHADOW_OFFSET + \
+					((~0UL << __VIRTUAL_MASK_SHIFT) >> \
+						KASAN_SHADOW_SCALE_SHIFT))
+/*
+ * 47 bits for kernel address -> (47 - KASAN_SHADOW_SCALE_SHIFT) bits for shadow
+ * 56 bits for kernel address -> (56 - KASAN_SHADOW_SCALE_SHIFT) bits for shadow
+ */
+#define KASAN_SHADOW_END        (KASAN_SHADOW_START + \
+					(1ULL << (__VIRTUAL_MASK_SHIFT - \
+						  KASAN_SHADOW_SCALE_SHIFT)))
+
+void kasan_early_init(void);
+void kasan_init(void);
 
 //#ifdef CONFIG_KASAN
 

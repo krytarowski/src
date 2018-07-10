@@ -108,6 +108,11 @@ CFLAGS+=	-fno-strict-aliasing
 CFLAGS+=	-fno-common
 .endif
 
+# Kernel Undefined Behavior Sanitizer options
+.if defined(KUBSAN) && ${ACTIVE_CC} == "gcc"
+CFLAGS+=       -fsanitize=kernel-address
+.endif
+
 # Use the per-source COPTS variables to add -g to just those
 # files that match the shell patterns given in ${DEBUGLIST}
 #

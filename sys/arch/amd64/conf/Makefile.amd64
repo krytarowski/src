@@ -49,12 +49,6 @@ CFLAGS+=	-mindirect-branch=thunk-inline
 CFLAGS+=	-mindirect-branch-register
 .endif
 
-# Kernel Address Sanitizer options
-
-.if ${KASAN:U0} > 0 && ${HAVE_GCC:U0} > 0
-CFLAGS+=	-fsanitize=kernel-address
-.endif
-
 ##
 ## (3) libkern and compat
 ##

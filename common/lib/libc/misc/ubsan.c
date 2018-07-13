@@ -27,6 +27,10 @@
  */
 
 
+/*
+ * The micro UBSan implementation for the userland (uUBSan) and kernel (kUBSan).
+ */
+
 #include <sys/cdefs.h>
 __RCSID("$NetBSD$");
 
@@ -34,28 +38,34 @@ __RCSID("$NetBSD$");
 #include <sys/types.h>
 #include <sys/stdarg.h>
 #elif defined(_LIBC)
+#include "namespace.h"
 #include <signal.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
+#include "extern.h"
 #endif
 
 #ifdef _LIBC
-static bool initialized;
-static bool halt_on_error;
-static char exe_name[PATH_MAX];
-static bool log_exe_name;
-static bool log_to_syslog;
+static int	ubsan_flags = -1;
+
+enum {
+	UBSAN_ABORT	=	1<<0,
+	UBSAN_STDOUT	=	1<<1,
+	UBSAN_STDERR	=	1<<2,
+	UBSAN_SYSLOG	=	1<<3
+};
 #endif
 
-static void print_report(const char *);
+static void report(const char *);
 
 
 
 
 static void
-print_report(const char *fmt, ...)
+report(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -66,34 +76,59 @@ print_report(const char *fmt, ...)
 	else
 		vprintf(fmt, ap);
 #elif defined(_LIBC)
-	vfprintf(stderr, fmt, ap);
-	if (log_to_syslog) {
+	if (ubsan_flags == -1) {
+		char buf[1024];
+		char *p;
+
+		ubsan_flags = UBSAN_STDERR;
+
+		for (p = getenv_r("LIBC_UBSAN", buf, sizeof(buf));
+		     p && *p; p++) {
+			switch (*p) {
+			case 'a':
+				ubsan_flags |= UBSAN_ABORT;
+				break;
+			case 'A':
+				ubsan_flags &= ~UBSAN_ABORT;
+				break;
+			case 'e':
+				ubsan_flags |= UBSAN_STDERR;
+				break;
+			case 'E':
+				ubsan_flags &= ~UBSAN_STDERR;
+				break;
+			case 'l':
+				ubsan_flags |= UBSAN_SYSLOG;
+				break;
+			case 'L':
+				ubsan_flags &= ~UBSAN_SYSLOG;
+				break;
+			case 'o':
+				ubsan_flags |= UBSAN_STDOUT;
+				break;
+			case 'O':
+				ubsan_flags &= ~UBSAN_STDOUT;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	if (ubsan_flags & UBSAN_STDOUT) {
+		vprintf(fmt, ap);
+		fflush(stdout);
+	}
+	if (ubsan_flags & UBSAN_STDERR) {
+		vfprintf(stderr, fmt, ap);
+		fflush(stderr);
+	}
+	if (ubsan_flags & UBSAN_SYSLOG) {
 		struct syslog_data sdata = SYSLOG_DATA_INIT;
-		vsyslog(halt_on_error ? LOG_ERR : LOG_WARNING, &sdata, msg, ap);
+		vsyslog_ss(LOG_DEBUG | LOG_USER, &sdata, msg, ap);
 	}
-	if (halt_on_error) {
-		struct sigaction sa;
-		sigset_t mask;
-
-		(void)sigfillset(&mask);
-		(void)sigdelset(&mask, SIGABRT);
-		(void)sigprocmask(SIG_BLOCK, &mask, NULL);
-
-		(void)memset(&sa, 0, sizeof(sa));
-		(void)sigemptyset(&sa.sa_mask);
-		sa.sa_flags = 0;
-		sa.sa_handler = SIG_DFL;
-		(void)sigaction(SIGABRT, &sa, NULL);
-		(void)raise(SIGABRT);
-		_exit(127);
-	}
+	if (ubsan_flags & UBSAN_ABORT)
+		abort();
 #endif
 	va_end(ap);
 }
-
-#ifdef _LIBC
-void __section(".text.startup")
-__libc_ubsan_init(void)
-{
-}
-#endif

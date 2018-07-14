@@ -34,15 +34,17 @@
 #include <sys/cdefs.h>
 #if defined(_KERNEL)
 __KERNEL_RCSID(0, "$NetBSD$");
-#elif defined(_LIBC)
+#else
 __RCSID("$NetBSD$");
 #endif
 
 #if defined(_KERNEL)
 #include <sys/types.h>
 #include <sys/stdarg.h>
-#elif defined(_LIBC)
+#else
+#if defined(_LIBC)
 #include "namespace.h"
+#endif
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -52,10 +54,15 @@ __RCSID("$NetBSD$");
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
+#if defined(_LIBC)
 #include "extern.h"
+#define ubsan_vsyslog vsyslog_ss
+#else
+#define ubsan_vsyslog vsyslog_r
+#endif
 #endif
 
-#ifdef _LIBC
+#ifndef _KERNEL
 static int ubsan_flags = -1;
 
 #define UBSAN_ABORT	__BIT(0)
@@ -212,42 +219,43 @@ report(const char *fmt, ...)
 	va_start(ap, fmt);
 #if defined(_KERNEL)
 	vprintf(fmt, ap);
-#elif defined(_LIBC)
+#else
 	if (ubsan_flags == -1) {
 		char buf[1024];
 		char *p;
 
 		ubsan_flags = UBSAN_STDERR;
 
-		for (p = getenv_r("LIBC_UBSAN", buf, sizeof(buf));
-		     p && *p; p++) {
-			switch (*p) {
-			case 'a':
-				ubsan_flags |= UBSAN_ABORT;
-				break;
-			case 'A':
-				ubsan_flags &= ~UBSAN_ABORT;
-				break;
-			case 'e':
-				ubsan_flags |= UBSAN_STDERR;
-				break;
-			case 'E':
-				ubsan_flags &= ~UBSAN_STDERR;
-				break;
-			case 'l':
-				ubsan_flags |= UBSAN_SYSLOG;
-				break;
-			case 'L':
-				ubsan_flags &= ~UBSAN_SYSLOG;
-				break;
-			case 'o':
-				ubsan_flags |= UBSAN_STDOUT;
-				break;
-			case 'O':
-				ubsan_flags &= ~UBSAN_STDOUT;
-				break;
-			default:
-				break;
+		if (getenv_r("LIBC_UBSAN", buf, sizeof(buf)) != -1) {
+			for (p = buf; *p; p++) {
+				switch (*p) {
+				case 'a':
+					ubsan_flags |= UBSAN_ABORT;
+					break;
+				case 'A':
+					ubsan_flags &= ~UBSAN_ABORT;
+					break;
+				case 'e':
+					ubsan_flags |= UBSAN_STDERR;
+					break;
+				case 'E':
+					ubsan_flags &= ~UBSAN_STDERR;
+					break;
+				case 'l':
+					ubsan_flags |= UBSAN_SYSLOG;
+					break;
+				case 'L':
+					ubsan_flags &= ~UBSAN_SYSLOG;
+					break;
+				case 'o':
+					ubsan_flags |= UBSAN_STDOUT;
+					break;
+				case 'O':
+					ubsan_flags &= ~UBSAN_STDOUT;
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
@@ -262,7 +270,7 @@ report(const char *fmt, ...)
 	}
 	if (ubsan_flags & UBSAN_SYSLOG) {
 		struct syslog_data sdata = SYSLOG_DATA_INIT;
-		vsyslog_ss(LOG_DEBUG | LOG_USER, &sdata, msg, ap);
+		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &sdata, fmt, ap);
 	}
 	if (ubsan_flags & UBSAN_ABORT)
 		abort();

@@ -46,6 +46,7 @@ __RCSID("$NetBSD$");
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -92,6 +93,12 @@ struct CUnreachableData {
 	struct CSourceLocation mLocation;
 };
 
+struct CCFICheckFailData {
+	uint8_t mCheckKind;
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+};
+
 struct CDynamicTypeCacheMissData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mType;
@@ -134,11 +141,6 @@ struct CShiftOutOfBoundsData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mLHSType;
 	struct CTypeDescriptor *mRHSType;
-};
-
-struct COverflowData {
-	struct CSourceLocation mLocation;
-	struct CTypeDescriptor *mType;
 };
 
 struct TypeMismatchData {
@@ -208,10 +210,7 @@ report(const char *fmt, ...)
 
 	va_start(ap, fmt);
 #if defined(_KERNEL)
-	if (halt_on_error)
-		vpanic(fmt, ap);
-	else
-		vprintf(fmt, ap);
+	vprintf(fmt, ap);
 #elif defined(_LIBC)
 	if (ubsan_flags == -1) {
 		char buf[1024];

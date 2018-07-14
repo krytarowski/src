@@ -47,6 +47,7 @@ __RCSID("$NetBSD$");
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -64,7 +65,7 @@ static int ubsan_flags = -1;
 #endif
 
 /* Local utility functions */
-static void report(const char *);
+static void report(const char *, ...);
 
 /* Undefined Behavior specific defines and structures */
 
@@ -177,8 +178,8 @@ void __ubsan_handle_load_invalid_value_abort(struct CInvalidValueData *pData, un
 void __ubsan_handle_missing_return(struct CUnreachableData *pData);
 void __ubsan_handle_mul_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
 void __ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
-void __ubsan_handle_negate_overflow(struct OverflowData *pData, unsigned long ulOldVal);
-void __ubsan_handle_negate_overflow_abort(struct OverflowData *pData, unsigned long ulOldVal);
+void __ubsan_handle_negate_overflow(struct COverflowData *pData, unsigned long ulOldVal);
+void __ubsan_handle_negate_overflow_abort(struct COverflowData *pData, unsigned long ulOldVal);
 void __ubsan_handle_nonnull_arg(struct CNonNullArgData *pData);
 void __ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData);
 void __ubsan_handle_nonnull_return_v1(struct CNonNullArgData *pData);

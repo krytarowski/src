@@ -169,6 +169,13 @@ struct TypeMismatchData {
 struct CTypeMismatchData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mType;
+	unsigned long mLogAlignment;
+	uint8_t mTypeCheckKind;
+};
+
+struct CTypeMismatchData_v1 {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
 	uint8_t mLogAlignment;
 	uint8_t mTypeCheckKind;
 };
@@ -218,8 +225,10 @@ void __ubsan_handle_shift_out_of_bounds(struct CShiftOutOfBoundsData *pData, uns
 void __ubsan_handle_shift_out_of_bounds_abort(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS);
 void __ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
 void __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
-void __ubsan_handle_type_mismatch_v1(struct CTypeMismatchData *pData, unsigned long ulPointer);
-void __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData *pData, unsigned long ulPointer);
+void __ubsan_handle_type_mismatch(struct CTypeMismatchData *pData, unsigned long ulPointer);
+void __ubsan_handle_type_mismatch_abort(struct CTypeMismatchData *pData, unsigned long ulPointer);
+void __ubsan_handle_type_mismatch_v1(struct CTypeMismatchData_v1 *pData, unsigned long ulPointer);
+void __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData_v1 *pData, unsigned long ulPointer);
 void __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
@@ -421,12 +430,22 @@ __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulL
 }
 
 void
-__ubsan_handle_type_mismatch_v1(struct CTypeMismatchData *pData, unsigned long ulPointer)
+__ubsan_handle_type_mismatch(struct CTypeMismatchData *pData, unsigned long ulPointer)
 {
 }
 
 void
-__ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData *pData, unsigned long ulPointer)
+__ubsan_handle_type_mismatch_abort(struct CTypeMismatchData *pData, unsigned long ulPointer)
+{
+}
+
+void
+__ubsan_handle_type_mismatch_v1(struct CTypeMismatchData_v1 *pData, unsigned long ulPointer)
+{
+}
+
+void
+__ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData_v1 *pData, unsigned long ulPointer)
 {
 }
 

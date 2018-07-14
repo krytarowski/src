@@ -68,7 +68,7 @@ static void report(const char *);
 
 #define KIND_INTEGER	0
 #define KIND_FLOAT	1
-#define	KIND_UNKNOWN	255
+#define KIND_UNKNOWN	255
 
 
 

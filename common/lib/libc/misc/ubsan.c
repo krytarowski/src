@@ -60,6 +60,10 @@ __RCSID("$NetBSD$");
 #else
 #define ubsan_vsyslog vsyslog_r
 #endif
+/* These macros are available in _KERNEL only */
+#define SET(t, f)	((t) |= (f))
+#define ISSET(t, f)	((t) & (f))
+#define CLR(t, f)	((t) &= ~(f))
 #endif
 
 #ifndef _KERNEL
@@ -221,6 +225,226 @@ void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, un
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
 
 
+void
+__ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_add_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_builtin_unreachable(struct CUnreachableData *pData)
+{
+}
+
+void
+__ubsan_handle_cfi_bad_type(struct CCFICheckFailData *pData, unsigned long ulVtable, bool bValidVtable, bool FromUnrecoverableHandler, unsigned long ProgramCounter, unsigned long FramePointer)
+{
+}
+
+void
+__ubsan_handle_cfi_check_fail(struct CCFICheckFailData *pData, unsigned long ulValue, unsigned long ulValidVtable)
+{
+}
+
+void
+__ubsan_handle_cfi_check_fail_abort(struct CCFICheckFailData *pData, unsigned long ulValue, unsigned long ulValidVtable)
+{
+}
+
+void
+__ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_dynamic_type_cache_miss(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash)
+{
+}
+
+void
+__ubsan_handle_dynamic_type_cache_miss_abort(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash)
+{
+}
+
+void
+__ubsan_handle_float_cast_overflow(void *pData, unsigned long ulFrom)
+{
+}
+
+void
+__ubsan_handle_float_cast_overflow_abort(void *pData, unsigned long ulFrom)
+{
+}
+
+void
+__ubsan_handle_function_type_mismatch(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction)
+{
+}
+
+void
+__ubsan_handle_function_type_mismatch_abort(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction)
+{
+}
+
+void
+__ubsan_handle_invalid_builtin(struct CInvalidBuiltinData *pData)
+{
+}
+
+void
+__ubsan_handle_invalid_builtin_abort(struct CInvalidBuiltinData *pData)
+{
+}
+
+void
+__ubsan_handle_load_invalid_value(struct CInvalidValueData *pData, unsigned long ulVal)
+{
+}
+
+void
+__ubsan_handle_load_invalid_value_abort(struct CInvalidValueData *pData, unsigned long ulVal)
+{
+}
+
+void
+__ubsan_handle_missing_return(struct CUnreachableData *pData)
+{
+}
+
+void
+__ubsan_handle_mul_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_negate_overflow(struct COverflowData *pData, unsigned long ulOldVal)
+{
+}
+
+void
+__ubsan_handle_negate_overflow_abort(struct COverflowData *pData, unsigned long ulOldVal)
+{
+}
+
+void
+__ubsan_handle_nonnull_arg(struct CNonNullArgData *pData)
+{
+}
+
+void
+__ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData)
+{
+}
+
+void
+__ubsan_handle_nonnull_return_v1(struct CNonNullArgData *pData)
+{
+}
+
+void
+__ubsan_handle_nonnull_return_v1_abort(struct CNonNullArgData *pData)
+{
+}
+
+void
+__ubsan_handle_nullability_arg(struct CNonNullArgData *pData)
+{
+}
+
+void
+__ubsan_handle_nullability_arg_abort(struct CNonNullArgData *pData)
+{
+}
+
+void
+__ubsan_handle_nullability_return_v1(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
+{
+}
+
+void
+__ubsan_handle_nullability_return_v1_abort(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
+{
+}
+
+void
+__ubsan_handle_out_of_bounds(struct COutOfBoundsData *pData, unsigned long ulIndex)
+{
+}
+
+void
+__ubsan_handle_out_of_bounds_abort(struct COutOfBoundsData *pData, unsigned long ulIndex)
+{
+}
+
+void
+__ubsan_handle_pointer_overflow(struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult)
+{
+}
+
+void
+__ubsan_handle_pointer_overflow_abort(struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult)
+{
+}
+
+void
+__ubsan_handle_shift_out_of_bounds(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_shift_out_of_bounds_abort(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+}
+
+void
+__ubsan_handle_type_mismatch_v1(struct CTypeMismatchData *pData, unsigned long ulPointer)
+{
+}
+
+void
+__ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData *pData, unsigned long ulPointer)
+{
+}
+
+void
+__ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long ulBound)
+{
+}
+
+void
+__ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound)
+{
+}
+
+void
+__ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr)
+{
+}
+
 
 static void
 report(const char *fmt, ...)
@@ -241,28 +465,28 @@ report(const char *fmt, ...)
 			for (p = buf; *p; p++) {
 				switch (*p) {
 				case 'a':
-					ubsan_flags |= UBSAN_ABORT;
+					SET(ubsan_flags, UBSAN_ABORT);
 					break;
 				case 'A':
-					ubsan_flags &= ~UBSAN_ABORT;
+					CLR(ubsan_flags, UBSAN_ABORT);
 					break;
 				case 'e':
-					ubsan_flags |= UBSAN_STDERR;
+					SET(ubsan_flags, UBSAN_STDERR);
 					break;
 				case 'E':
-					ubsan_flags &= ~UBSAN_STDERR;
+					CLR(ubsan_flags, UBSAN_STDERR);
 					break;
 				case 'l':
-					ubsan_flags |= UBSAN_SYSLOG;
+					SET(ubsan_flags, UBSAN_SYSLOG);
 					break;
 				case 'L':
-					ubsan_flags &= ~UBSAN_SYSLOG;
+					CLR(ubsan_flags, UBSAN_SYSLOG);
 					break;
 				case 'o':
-					ubsan_flags |= UBSAN_STDOUT;
+					SET(ubsan_flags, UBSAN_STDOUT);
 					break;
 				case 'O':
-					ubsan_flags &= ~UBSAN_STDOUT;
+					CLR(ubsan_flags, UBSAN_STDOUT);
 					break;
 				default:
 					break;
@@ -271,19 +495,19 @@ report(const char *fmt, ...)
 		}
 	}
 
-	if (ubsan_flags & UBSAN_STDOUT) {
+	if (ISSET(ubsan_flags, UBSAN_STDOUT)) {
 		vprintf(fmt, ap);
 		fflush(stdout);
 	}
-	if (ubsan_flags & UBSAN_STDERR) {
+	if (ISSET(ubsan_flags, UBSAN_STDERR)) {
 		vfprintf(stderr, fmt, ap);
 		fflush(stderr);
 	}
-	if (ubsan_flags & UBSAN_SYSLOG) {
+	if (ISSET(ubsan_flags, UBSAN_SYSLOG)) {
 		struct syslog_data sdata = SYSLOG_DATA_INIT;
 		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &sdata, fmt, ap);
 	}
-	if (ubsan_flags & UBSAN_ABORT)
+	if (ISSET(ubsan_flags, UBSAN_ABORT))
 		abort();
 #endif
 	va_end(ap);

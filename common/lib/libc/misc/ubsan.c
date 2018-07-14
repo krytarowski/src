@@ -32,7 +32,11 @@
  */
 
 #include <sys/cdefs.h>
+#if defined(_KERNEL)
+__KERNEL_RCSID(0, "$NetBSD$");
+#elif defined(_LIBC)
 __RCSID("$NetBSD$");
+#endif
 
 #if defined(_KERNEL)
 #include <sys/types.h>
@@ -49,18 +53,158 @@ __RCSID("$NetBSD$");
 #endif
 
 #ifdef _LIBC
-static int	ubsan_flags = -1;
+static int ubsan_flags = -1;
 
-enum {
-	UBSAN_ABORT	=	1<<0,
-	UBSAN_STDOUT	=	1<<1,
-	UBSAN_STDERR	=	1<<2,
-	UBSAN_SYSLOG	=	1<<3
-};
+#define UBSAN_ABORT	__BIT(0)
+#define UBSAN_STDOUT	__BIT(1)
+#define UBSAN_STDERR	__BIT(2)
+#define UBSAN_SYSLOG	__BIT(3)
 #endif
 
+/* Local utility functions */
 static void report(const char *);
 
+/* Undefined Behavior specific defines and structures */
+
+#define KIND_INTEGER	0
+#define KIND_FLOAT	1
+#define	KIND_UNKNOWN	255
+
+
+
+struct CSourceLocation {
+	const char *mFilename;
+	uint32_t mLine;
+	uint32_t mColumn;
+};
+
+struct CTypeDescriptor {
+	uint16_t mTypeKind;
+	uint16_t mTypeInfo;
+	char mTypeName[1];
+};
+
+struct COverflowData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+};
+
+struct CUnreachableData {
+	struct CSourceLocation mLocation;
+};
+
+struct CDynamicTypeCacheMissData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+	void *mTypeInfo;
+	unsigned char mTypeCheckKind;
+};
+
+struct CFunctionTypeMismatchData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+};
+
+struct CInvalidBuiltinData {
+	struct CSourceLocation mLocation;
+	unsigned char mKind;
+};
+
+struct CInvalidValueData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+};
+
+struct CNonNullArgData {
+	struct CSourceLocation mLocation;
+	struct CSourceLocation mAttributeLocation;
+	int mArgIndex;
+};
+
+struct COutOfBoundsData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mArrayType;
+	struct CTypeDescriptor *mIndexType;
+};
+
+struct CPointerOverflowData {
+	struct CSourceLocation mLocation;
+};
+
+struct CShiftOutOfBoundsData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mLHSType;
+	struct CTypeDescriptor *mRHSType;
+};
+
+struct COverflowData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+};
+
+struct TypeMismatchData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+	unsigned char mLogAlignment;
+	unsigned char mTypeCheckKind;
+};
+
+struct CVLABoundData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+};
+
+/* Public symbols used in the instrumentation of the code generation part */
+void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_add_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_builtin_unreachable(struct CUnreachableData *pData); // ok
+#if 0 /* Not implemented in this version */
+void __ubsan_handle_cfi_bad_type(void *Data, unsigned long ulVtable, bool bValidVtable, CReportOptions Opts); // ok
+void __ubsan_handle_cfi_check_fail(void *Data, unsigned long ulValue, unsigned long ulValidVtable);
+void __ubsan_handle_cfi_check_fail_abort(void *Data, unsigned long ulValue, unsigned long ulValidVtable);
+#endif
+void __ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_dynamic_type_cache_miss(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash); // ok
+void __ubsan_handle_dynamic_type_cache_miss_abort(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash); // ok
+void __ubsan_handle_float_cast_overflow(void *pData, unsigned long ulFrom); // ok
+void __ubsan_handle_float_cast_overflow_abort(void *pData, unsigned long ulFrom); // ok
+void __ubsan_handle_function_type_mismatch(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction); // ok
+void __ubsan_handle_function_type_mismatch_abort(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction); // ok
+void __ubsan_handle_invalid_builtin(struct CInvalidBuiltinData *pData); // ok
+void __ubsan_handle_invalid_builtin_abort(struct CInvalidBuiltinData *pData); // ok
+void __ubsan_handle_load_invalid_value(struct CInvalidValueData *pData, unsigned long ulVal); // ok
+void __ubsan_handle_load_invalid_value_abort(struct CInvalidValueData *pData, unsigned long ulVal); // ok
+void __ubsan_handle_missing_return(struct CUnreachableData *pData); // ok
+void __ubsan_handle_mul_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_negate_overflow(struct OverflowData *pData, unsigned long ulOldVal); // ok
+void __ubsan_handle_negate_overflow_abort(struct OverflowData *pData, unsigned long ulOldVal); // ok
+void __ubsan_handle_nonnull_arg(struct CNonNullArgData *pData); // ok
+void __ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData); // ok
+void __ubsan_handle_nonnull_return_v1(struct CNonNullArgData *pData); // ok
+void __ubsan_handle_nonnull_return_v1_abort(struct CNonNullArgData *pData); // ok
+void __ubsan_handle_nullability_arg(struct CNonNullArgData *pData); // ok
+void __ubsan_handle_nullability_arg_abort(struct CNonNullArgData *pData); // ok
+void __ubsan_handle_nullability_return_v1(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer); // ok
+void __ubsan_handle_nullability_return_v1_abort(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer); // ok
+void __ubsan_handle_out_of_bounds(struct COutOfBoundsData *pData, unsigned long ulIndex); // ok
+void __ubsan_handle_out_of_bounds_abort(struct COutOfBoundsData *pData, unsigned long ulIndex); // ok
+void __ubsan_handle_pointer_overflow(struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult); // ok
+void __ubsan_handle_pointer_overflow_abort(struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult); // ok
+void __ubsan_handle_shift_out_of_bounds(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_shift_out_of_bounds_abort(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS); // ok
+void __ubsan_handle_type_mismatch_v1(struct CTypeMismatchData *pData, unsigned long ulPointer); // ok
+void __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData *pData, unsigned long ulPointer); // ok
+void __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long ulBound);
+void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound);
+#if 0 /* Not implemented in this version */
+void __ubsan_on_report(void);
+void __ubsan_get_current_report_data(void *, void *, void *, void *, void *, void *);
+char *__ubsan_default_options(void);
+#endif
 
 
 

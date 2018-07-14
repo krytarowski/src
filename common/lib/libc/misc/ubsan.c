@@ -135,6 +135,10 @@ struct CNonNullArgData {
 	int mArgIndex;
 };
 
+struct CNonNullReturnData {
+	struct CSourceLocation mAttributeLocation;
+};
+
 struct COutOfBoundsData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mArrayType;
@@ -152,6 +156,13 @@ struct CShiftOutOfBoundsData {
 };
 
 struct TypeMismatchData {
+	struct CSourceLocation mLocation;
+	struct CTypeDescriptor *mType;
+	uint8_t mLogAlignment;
+	uint8_t mTypeCheckKind;
+};
+
+struct CTypeMismatchData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mType;
 	uint8_t mLogAlignment;

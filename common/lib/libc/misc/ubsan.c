@@ -44,6 +44,7 @@ __RCSID("$NetBSD$");
 #if defined(_KERNEL)
 #include <sys/types.h>
 #include <sys/stdarg.h>
+
 #else
 #if defined(_LIBC)
 #include "namespace.h"
@@ -69,7 +70,11 @@ __RCSID("$NetBSD$");
 #define CLR(t, f)	((t) &= ~(f))
 #endif
 
-#define ACK_CHARACTER 0x06
+#define ACK_CHARACTER	0x06
+#define MUL_CHARACTER	0x2a
+#define PLUS_CHARACTER	0x2b
+#define MINUS_CHARACTER	0x2d
+#define DIV_CHARACTER	0x2f
 
 #ifndef _KERNEL
 static int ubsan_flags = -1;
@@ -239,6 +244,7 @@ HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, u
 {
 
 	if (isAlreadyReported())
+		return;
 
 	report(isFatal, "UBSan: \n");
 }
@@ -249,12 +255,14 @@ void
 __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
 
-	;
+	HandleOverflow(false, pData, ulLHS, ulRHS, PLUS_CHARACTER);
 }
 
 void
 __ubsan_handle_add_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	HandleOverflow(true, pData, ulLHS, ulRHS, PLUS_CHARACTER);
 }
 
 void

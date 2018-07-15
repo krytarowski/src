@@ -29,9 +29,13 @@
 
 /*
  * The micro UBSan implementation for the userland (uUBSan) and kernel (kUBSan).
+ * The uBSSan versions is suitable for inclusion into libc or used standalone
+ * with ATF tests.
  *
  * This file due to long symbol names and licensing reasons does not fully
- * follow the KNF style.
+ * follow the KNF style with 80-column limit. Hungarian style variables
+ * and function names are on the same purpose (LLVM uses Pascal style names,
+ * Linux uses Snake style names).
  */
 
 #include <sys/cdefs.h>
@@ -44,11 +48,12 @@ __RCSID("$NetBSD$");
 #if defined(_KERNEL)
 #include <sys/types.h>
 #include <sys/stdarg.h>
-
+#define ASSERT(x) KASSERT(x)
 #else
 #if defined(_LIBC)
 #include "namespace.h"
 #endif
+#include <assert.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -61,8 +66,10 @@ __RCSID("$NetBSD$");
 #if defined(_LIBC)
 #include "extern.h"
 #define ubsan_vsyslog vsyslog_ss
+#define ASSERT(x) _DIAGASSERT(x)
 #else
 #define ubsan_vsyslog vsyslog_r
+#define ASSERT(x) assert(x)
 #endif
 /* These macros are available in _KERNEL only */
 #define SET(t, f)	((t) |= (f))
@@ -75,6 +82,8 @@ __RCSID("$NetBSD$");
 #define PLUS_CHARACTER	0x2b
 #define MINUS_CHARACTER	0x2d
 #define DIV_CHARACTER	0x2f
+
+#define NUMBER_MAXLEN	64
 
 #ifndef _KERNEL
 static int ubsan_flags = -1;
@@ -186,9 +195,9 @@ struct CVLABoundData {
 
 
 /* Local utility functions */
-static void Report(bool isFatal, const char *, ...);
-static bool isAlreadyReported(struct CSourceLocation *Location);
-
+static void Report(bool, const char *, ...);
+static bool isAlreadyReported(struct CSourceLocation *);
+static int iDeserializeNumber(char *, size_t, 
 
 /* Public symbols used in the instrumentation of the code generation part */
 void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
@@ -242,6 +251,9 @@ void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **p
 static void
 HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, int iOperation)
 {
+	char szLHS[]
+
+	ASSERT(pData);
 
 	if (isAlreadyReported())
 		return;
@@ -255,6 +267,8 @@ void
 __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
 
+	ASSERT(pData);
+
 	HandleOverflow(false, pData, ulLHS, ulRHS, PLUS_CHARACTER);
 }
 
@@ -262,222 +276,312 @@ void
 __ubsan_handle_add_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
 
+	ASSERT(pData);
+
 	HandleOverflow(true, pData, ulLHS, ulRHS, PLUS_CHARACTER);
 }
 
 void
 __ubsan_handle_builtin_unreachable(struct CUnreachableData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_cfi_bad_type(struct CCFICheckFailData *pData, unsigned long ulVtable, bool bValidVtable, bool FromUnrecoverableHandler, unsigned long ProgramCounter, unsigned long FramePointer)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_cfi_check_fail(struct CCFICheckFailData *pData, unsigned long ulValue, unsigned long ulValidVtable)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_cfi_check_fail_abort(struct CCFICheckFailData *pData, unsigned long ulValue, unsigned long ulValidVtable)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_dynamic_type_cache_miss(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_dynamic_type_cache_miss_abort(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_float_cast_overflow(void *pData, unsigned long ulFrom)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_float_cast_overflow_abort(void *pData, unsigned long ulFrom)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_function_type_mismatch(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_function_type_mismatch_abort(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_invalid_builtin(struct CInvalidBuiltinData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_invalid_builtin_abort(struct CInvalidBuiltinData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_load_invalid_value(struct CInvalidValueData *pData, unsigned long ulVal)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_load_invalid_value_abort(struct CInvalidValueData *pData, unsigned long ulVal)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_missing_return(struct CUnreachableData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_mul_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_negate_overflow(struct COverflowData *pData, unsigned long ulOldVal)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_negate_overflow_abort(struct COverflowData *pData, unsigned long ulOldVal)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nonnull_arg(struct CNonNullArgData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nonnull_return_v1(struct CNonNullArgData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nonnull_return_v1_abort(struct CNonNullArgData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nullability_arg(struct CNonNullArgData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nullability_arg_abort(struct CNonNullArgData *pData)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_nullability_return_v1(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
 {
+
+	ASSERT(pData);
+	ASSERT(pLocationPointer);
 }
 
 void
 __ubsan_handle_nullability_return_v1_abort(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
 {
+
+	ASSERT(pData);
+	ASSERT(pLocationPointer);
 }
 
 void
 __ubsan_handle_out_of_bounds(struct COutOfBoundsData *pData, unsigned long ulIndex)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_out_of_bounds_abort(struct COutOfBoundsData *pData, unsigned long ulIndex)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_pointer_overflow(struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_pointer_overflow_abort(struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_shift_out_of_bounds(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_shift_out_of_bounds_abort(struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_type_mismatch(struct CTypeMismatchData *pData, unsigned long ulPointer)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_type_mismatch_abort(struct CTypeMismatchData *pData, unsigned long ulPointer)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_type_mismatch_v1(struct CTypeMismatchData_v1 *pData, unsigned long ulPointer)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData_v1 *pData, unsigned long ulPointer)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long ulBound)
 {
+
+	ASSERT(pData);
 }
 
 void
 __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound)
 {
+
+	ASSERT(pData);
 }
 
 void
@@ -490,6 +594,8 @@ static void
 report(bool isFatal, const char *pFormat, ...)
 {
 	va_list ap;
+
+	ASSERT(pFormat);
 
 	va_start(ap, pFormat);
 #if defined(_KERNEL)
@@ -565,7 +671,11 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 	 */
 
 	char cOldValue;
-	char *pCharacter = &pLocation->mFilename[0];
+	char *pCharacter;
+
+	ASSERT(pLocation);
+
+	pCharacter = &pLocation->mFilename[0];
 
 	do {
 		cOldValue = *pCharacter;

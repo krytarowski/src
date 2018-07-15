@@ -29,6 +29,9 @@
 
 /*
  * The micro UBSan implementation for the userland (uUBSan) and kernel (kUBSan).
+ *
+ * This file due to long symbol names and licensing reasons does not fully
+ * follow the KNF style.
  */
 
 #include <sys/cdefs.h>
@@ -66,17 +69,15 @@ __RCSID("$NetBSD$");
 #define CLR(t, f)	((t) &= ~(f))
 #endif
 
+#define ACK_CHARACTER 0x06
+
 #ifndef _KERNEL
 static int ubsan_flags = -1;
-
 #define UBSAN_ABORT	__BIT(0)
 #define UBSAN_STDOUT	__BIT(1)
 #define UBSAN_STDERR	__BIT(2)
 #define UBSAN_SYSLOG	__BIT(3)
 #endif
-
-/* Local utility functions */
-static void report(const char *, ...);
 
 /* Undefined Behavior specific defines and structures */
 
@@ -159,13 +160,6 @@ struct CShiftOutOfBoundsData {
 	struct CTypeDescriptor *mRHSType;
 };
 
-struct TypeMismatchData {
-	struct CSourceLocation mLocation;
-	struct CTypeDescriptor *mType;
-	uint8_t mLogAlignment;
-	uint8_t mTypeCheckKind;
-};
-
 struct CTypeMismatchData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mType;
@@ -184,6 +178,12 @@ struct CVLABoundData {
 	struct CSourceLocation mLocation;
 	struct CTypeDescriptor *mType;
 };
+
+
+/* Local utility functions */
+static void Report(bool isFatal, const char *, ...);
+static bool isAlreadyReported(struct CSourceLocation *Location);
+
 
 /* Public symbols used in the instrumentation of the code generation part */
 void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
@@ -233,10 +233,23 @@ void __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned
 void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
 
+/*  */
+static void
+HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, int iOperation)
+{
+
+	if (isAlreadyReported())
+
+	report(isFatal, "UBSan: \n");
+}
+
+/* Definions of public symbols emitted by the instrumentation code */
 
 void
 __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
+
+	;
 }
 
 void
@@ -466,13 +479,16 @@ __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutM
 
 
 static void
-report(const char *fmt, ...)
+report(bool isFatal, const char *pFormat, ...)
 {
 	va_list ap;
 
-	va_start(ap, fmt);
+	va_start(ap, pFormat);
 #if defined(_KERNEL)
-	vprintf(fmt, ap);
+	if (ifFatal)
+		vpanic(pFormat, ap);
+	else
+		vprintf(pFormat, ap);
 #else
 	if (ubsan_flags == -1) {
 		char buf[1024];
@@ -515,19 +531,35 @@ report(const char *fmt, ...)
 	}
 
 	if (ISSET(ubsan_flags, UBSAN_STDOUT)) {
-		vprintf(fmt, ap);
+		vprintf(pFormat, ap);
 		fflush(stdout);
 	}
 	if (ISSET(ubsan_flags, UBSAN_STDERR)) {
-		vfprintf(stderr, fmt, ap);
+		vfprintf(stderr, pFormat, ap);
 		fflush(stderr);
 	}
 	if (ISSET(ubsan_flags, UBSAN_SYSLOG)) {
-		struct syslog_data sdata = SYSLOG_DATA_INIT;
-		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &sdata, fmt, ap);
+		struct syslog_data SyslogData = SYSLOG_DATA_INIT;
+		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &SyslogData, pFormat, ap);
 	}
-	if (ISSET(ubsan_flags, UBSAN_ABORT))
+	if (isFatal || ISSET(ubsan_flags, UBSAN_ABORT))
 		abort();
 #endif
 	va_end(ap);
+}
+
+static bool
+isAlreadyReported(struct CSourceLocation *pLocation)
+{
+	/*
+	 * This code is shared between libc, kernel and standalone usage.
+	 * It shall work in early bootstrap phase of both of them.
+	 */
+
+	char cOldValue;
+	char *pCharacter = &pLocation->mFilename[0];
+
+	do {
+		cOldValue = *pCharacter;
+	} while (__sync_val_compare_and_swap_1(pCharacter, cOldValue, ACK_CHARACTER) != cOldValue);
 }

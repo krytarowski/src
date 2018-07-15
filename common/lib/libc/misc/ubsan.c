@@ -34,8 +34,8 @@
  *
  * This file due to long symbol names and licensing reasons does not fully
  * follow the KNF style with 80-column limit. Hungarian style variables
- * and function names are on the same purpose (LLVM uses Pascal style names,
- * Linux uses Snake style names).
+ * and function names are on the same purpose (Pascal and Snake style names,
+ * are used in different implementations).
  */
 
 #include <sys/cdefs.h>
@@ -84,6 +84,7 @@ __RCSID("$NetBSD$");
 #define DIV_CHARACTER	0x2f
 
 #define NUMBER_MAXLEN	64
+#define LOCATION_MAXLEN	(PATH_MAX + 32 /* ':LINE:COLUMN' */)
 
 #ifndef _KERNEL
 static int ubsan_flags = -1;
@@ -97,7 +98,7 @@ static int ubsan_flags = -1;
 
 #define KIND_INTEGER	0
 #define KIND_FLOAT	1
-#define KIND_UNKNOWN	UCHAR_MAX
+#define KIND_UNKNOWN	UINT16_MAX
 
 struct CSourceLocation {
 	const char *mFilename;
@@ -197,7 +198,8 @@ struct CVLABoundData {
 /* Local utility functions */
 static void Report(bool, const char *, ...);
 static bool isAlreadyReported(struct CSourceLocation *);
-static int iDeserializeNumber(char *, size_t, 
+static void DeserializeLocation(char *, size_t, struct CSourceLocation *, unsigned long);
+static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 
 /* Public symbols used in the instrumentation of the code generation part */
 void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
@@ -251,12 +253,18 @@ void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **p
 static void
 HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, int iOperation)
 {
-	char szLHS[]
+	char szLocation[LOCATION_MAXLEN];
+	char szLHS[NUMBER_MAXLEN];
+	char szRHS[NUMBER_MAXLEN];
 
 	ASSERT(pData);
 
-	if (isAlreadyReported())
+	if (isAlreadyReported(pData->mLocation))
 		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mType, ulLHS);
+	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mType, ulRHS);
 
 	report(isFatal, "UBSan: \n");
 }
@@ -680,4 +688,45 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 	do {
 		cOldValue = *pCharacter;
 	} while (__sync_val_compare_and_swap_1(pCharacter, cOldValue, ACK_CHARACTER) != cOldValue);
+}
+
+static size_t
+DeserializeTypeWidth(struct CTypeDescriptor *pType)
+{
+
+	return __BIT(__SHIFTOUT(pType->mTypeInfo, ~1U));
+}
+
+static void
+DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation *pLocation, unsigned long ulNumber)
+{
+
+	ASSERT(pLocation);
+	ASSERT(pLocation->mFilename);
+	ASSERT(pLocation->mFilename[0] != ACK_CHARACTER);
+
+	snprintf(pBuffer, zBUfferLength, "%s:%" PRIu32 ":%" PRIu32, pLocation->mFilename, pLocation->mLine, pLocation->mColumn);
+}
+
+static void
+DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
+{
+
+	ASSERT(pBuffer);
+	ASSERT(pType);
+
+	switch(pType->mTypeKind) {
+	case KIND_INTEGER:
+		
+		break;
+	case KIND_FLOAT:
+#ifdef _KERNEL
+		Report(true, "UBSan: Unexpected Float Type in %s\n", szLocation);
+#else
+#endif
+		break;
+	case KIND_UNKNOWN:
+		Report(true, "UBSan: Unknown Type in %s\n", szLocation);
+		break;
+	}
 }

@@ -86,6 +86,20 @@ __RCSID("$NetBSD$");
 #define NUMBER_MAXLEN	64
 #define LOCATION_MAXLEN	(PATH_MAX + 32 /* ':LINE:COLUMN' */)
 
+#define WIDTH_8		8
+#define WIDTH_16	16
+#define WIDTH_32	32
+#define WIDTH_64	64
+#define WIDTH_128	128
+
+#if __SIZEOF_INT128__
+typedef __int128 longest;
+typedef unsigned __int128 ulongest;
+#else
+typedef int64_t longest;
+typedef uint64_t ulongest;
+#endif
+
 #ifndef _KERNEL
 static int ubsan_flags = -1;
 #define UBSAN_ABORT	__BIT(0)
@@ -691,10 +705,16 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 }
 
 static size_t
-DeserializeTypeWidth(struct CTypeDescriptor *pType)
+zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 {
+	size_t zWidth;
 
-	return __BIT(__SHIFTOUT(pType->mTypeInfo, ~1U));
+	zWidth = __BIT(__SHIFTOUT(pType->mTypeInfo, ~1U));
+
+	/* Invalid width will be transformed to 0 */
+	ASSERT(zWidth > 0);
+
+	return zWidth;
 }
 
 static void
@@ -711,13 +731,24 @@ DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation 
 static void
 DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
+	size_t zNumberWidth;
 
+	ASSERT(szLocation);
+	ASSERT(pLocation->mFilename);
+	ASSERT(pLocation->mFilename[0] != ACK_CHARACTER);
 	ASSERT(pBuffer);
 	ASSERT(pType);
 
 	switch(pType->mTypeKind) {
 	case KIND_INTEGER:
-		
+		zNumberWidth = zDeserializeTypeWidth(pType);
+		switch (zNumberWidth) {
+		case WIDTH_128:
+#ifndef __SIZEOF_INT128__
+			Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
+#endif
+			
+		}
 		break;
 	case KIND_FLOAT:
 #ifdef _KERNEL

@@ -90,6 +90,8 @@ __RCSID("$NetBSD$");
 #define WIDTH_16	16
 #define WIDTH_32	32
 #define WIDTH_64	64
+#define WIDTH_80	80
+#define WIDTH_96	96
 #define WIDTH_128	128
 
 #define NUMBER_SIGNED_BIT	1U
@@ -215,8 +217,10 @@ static void DeserializeLocation(char *, size_t, struct CSourceLocation *, unsign
 #ifdef __SIZEOF_INT128__
 static void DeserializeLongest(char *, size_t, ulongest *);
 #endif
-static void DeserializeNumberOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
-static void DeserializeNumberInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
+static void DeserializeIntegerOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
+static void DeserializeIntegerInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
+static void DeserializeFloatOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
+static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 
 /* Public symbols used in the instrumentation of the code generation part */
@@ -682,8 +686,10 @@ report(bool isFatal, const char *pFormat, ...)
 		struct syslog_data SyslogData = SYSLOG_DATA_INIT;
 		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &SyslogData, pFormat, ap);
 	}
-	if (isFatal || ISSET(ubsan_flags, UBSAN_ABORT))
+	if (isFatal || ISSET(ubsan_flags, UBSAN_ABORT)) {
 		abort();
+		/* NOTREACHED */
+	}
 #endif
 	va_end(ap);
 }
@@ -713,7 +719,17 @@ zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 {
 	size_t zWidth;
 
-	zWidth = __BIT(__SHIFTOUT(pType->mTypeInfo, ~NUMBER_SIGNED_BIT));
+	ASSERT(pType);
+
+	switch (pType->mTypeKind) {
+	case KIND_INTEGER:
+		zWidth = __BIT(__SHIFTOUT(pType->mTypeInfo, ~NUMBER_SIGNED_BIT));
+	case KIND_FLOAT:
+		zWidth = pType->mTypeInfo;
+	default:
+		Report(true, "UBSan: Unknown variable type 0x%04" PRIx16 "\n", pType->mTypeKind);
+		/* NOTREACHED */
+	}
 
 	/* Invalid width will be transformed to 0 */
 	ASSERT(zWidth > 0);
@@ -751,7 +767,7 @@ DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
 #endif
 
 static void
-DeserializeNumberOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber)
+DeserializeIntegerOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber)
 {
 
 	ASSERT(pBuffer);
@@ -772,7 +788,7 @@ DeserializeNumberOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDe
 }
 
 static void
-DeserializeNumberInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
+DeserializeIntegerInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
 
 	ASSERT(pBuffer);
@@ -801,6 +817,16 @@ DeserializeNumberInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescri
 }
 
 static void
+DeserializeFloatOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber)
+{
+}
+
+static void
+DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
+{
+}
+
+static void
 DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
 	size_t zNumberWidth;
@@ -818,33 +844,54 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		switch (zNumberWidth) {
 		default:
 			Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+			/* NOTREACHED */
 		case WIDTH_128:
 #ifdef __SIZEOF_INT128__
 			DeserializeLongest(pBuffer, zBUfferLength, (ulongest *)ulNumber);
 #else
 			Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
+			/* NOTREACHED */
 #endif
 			break;
 		case WIDTH_64:
 			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-				DeserializeNumberOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+				DeserializeIntegerOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
 				break;
 			}
 		case WIDTH_32:
 		case WIDTH_16:
 		case WIDTH_8:
-			DeserializeNumberInlined(pBuffer, zBUfferLength, pType, ulNumber);
+			DeserializeIntegerInlined(pBuffer, zBUfferLength, pType, ulNumber);
 			break;
 		}
 		break;
 	case KIND_FLOAT:
 #ifdef _KERNEL
 		Report(true, "UBSan: Unexpected Float Type in %s\n", szLocation);
+		/* NOTREACHED */
 #else
+		zNumberWidth = zDeserializeTypeWidth(pType);
+		switch (zNumberWidth) {
+		default:
+			Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+			/* NOTREACHED */
+		case WIDTH_128:
+		case WIDTH_96:
+		case WIDTH_80:
+			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+		case WIDTH_64:
+			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+				DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+				break;
+			}
+		case WIDTH_32:
+		case WIDTH_16:
+			DeserializeFloatInlined(pBuffer, zBUfferLength, pType, ulNumber);
 #endif
 		break;
 	case KIND_UNKNOWN:
 		Report(true, "UBSan: Unknown Type in %s\n", szLocation);
+		/* NOTREACHED */
 		break;
 	}
 }

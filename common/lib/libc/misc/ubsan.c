@@ -92,6 +92,8 @@ __RCSID("$NetBSD$");
 #define WIDTH_64	64
 #define WIDTH_128	128
 
+#define NUMBER_SIGNED_BIT	1U
+
 #if __SIZEOF_INT128__
 typedef __int128 longest;
 typedef unsigned __int128 ulongest;
@@ -711,7 +713,7 @@ zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 {
 	size_t zWidth;
 
-	zWidth = __BIT(__SHIFTOUT(pType->mTypeInfo, ~1U));
+	zWidth = __BIT(__SHIFTOUT(pType->mTypeInfo, ~NUMBER_SIGNED_BIT));
 
 	/* Invalid width will be transformed to 0 */
 	ASSERT(zWidth > 0);
@@ -749,13 +751,42 @@ DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
 #endif
 
 static void
-DeserializeNumberOverPointer(char *pBuffer, size_t zBUfferLength, unsigned long *pNumber)
+DeserializeNumberOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber)
 {
+
+	ASSERT(pBuffer);
+	ASSERT(zBUfferLength > 0);
+	ASSERT(pType);
+	ASSERT(pNumber);
 }
 
 static void
-DeserializeNumberInlined(char *pBuffer, size_t zBUfferLength, unsigned long *pNumber)
+DeserializeNumberInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
+
+	ASSERT(pBuffer);
+	ASSERT(zBUfferLength > 0);
+	ASSERT(pType);
+
+	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
+		/* The serialized number is zero-extended */
+		switch (zDeserializeTypeWidth(pType)) {
+		case WIDTH_64:
+			snprintf(pBuffer, zBUfferLength, "%" PRId64, (int64_t)(uint64_t)ulNumber);
+			break;
+		case WIDTH_32:
+			snprintf(pBuffer, zBUfferLength, "%" PRId32, (int32_t)(uint32_t)ulNumber);
+			break;
+		case WIDTH_16:
+			snprintf(pBuffer, zBUfferLength, "%" PRId16, (int16_t)(uint16_t)ulNumber);
+			break;
+		case WIDTH_8:
+			snprintf(pBuffer, zBUfferLength, "%" PRId8, (int8_t)(uint8_t)ulNumber);
+			break;
+		}
+	} else {
+		snprintf(pBuffer, zBUfferLength, "%lu", ulNumber);
+	}
 }
 
 static void
@@ -763,10 +794,11 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 {
 	size_t zNumberWidth;
 
+	ASSERT(pBuffer);
 	ASSERT(szLocation);
+	ASSERT(zBUfferLength > 0);
 	ASSERT(pLocation->mFilename);
 	ASSERT(pLocation->mFilename[0] != ACK_CHARACTER);
-	ASSERT(pBuffer);
 	ASSERT(pType);
 
 	switch(pType->mTypeKind) {
@@ -784,13 +816,13 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 			break;
 		case WIDTH_64:
 			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-				DeserializeNumberOverPointer(pBuffer, zBUfferLength, (unsigned long *)ulNumber);
+				DeserializeNumberOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
 				break;
 			}
 		case WIDTH_32:
 		case WIDTH_16:
 		case WIDTH_8:
-			DeserializeNumberInlined(pBuffer, zBUfferLength, ulNumber);
+			DeserializeNumberInlined(pBuffer, zBUfferLength, pType, ulNumber);
 			break;
 		}
 		break;

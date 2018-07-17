@@ -95,9 +95,6 @@ __RCSID("$NetBSD$");
 #if __SIZEOF_INT128__
 typedef __int128 longest;
 typedef unsigned __int128 ulongest;
-#else
-typedef int64_t longest;
-typedef uint64_t ulongest;
 #endif
 
 #ifndef _KERNEL
@@ -213,6 +210,11 @@ struct CVLABoundData {
 static void Report(bool, const char *, ...);
 static bool isAlreadyReported(struct CSourceLocation *);
 static void DeserializeLocation(char *, size_t, struct CSourceLocation *, unsigned long);
+#ifdef __SIZEOF_INT128__
+static void DeserializeLongest(char *, size_t, ulongest *);
+#endif
+static void DeserializeNumberOverPointer(char *, size_t, unsigned long *);
+static void DeserializeNumberInlined(char *, size_t, unsigned long *);
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 
 /* Public symbols used in the instrumentation of the code generation part */
@@ -728,6 +730,34 @@ DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation 
 	snprintf(pBuffer, zBUfferLength, "%s:%" PRIu32 ":%" PRIu32, pLocation->mFilename, pLocation->mLine, pLocation->mColumn);
 }
 
+#ifdef __SIZEOF_INT128__
+static void
+DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
+{
+	char szBuf[3]; /* 'XX\0' */
+	char rgNumber[sizeof(ulongest)];
+	size_t zI;
+
+	memcpy(rgNumber, llliNumber, sizeof(ulongest));
+
+	strlcpy(pBuffer, "0x", zBUfferLength);
+	for (zI = 0; zI < sizeof(ulongest); zI++) {
+		snprintf(szBuf, sizeof(buf), "%02" PRIx8, rgNumber[zI]);
+		strlcat(pBuffer, szBuf, zBUfferLength);
+	}
+}
+#endif
+
+static void
+DeserializeNumberOverPointer(char *pBuffer, size_t zBUfferLength, unsigned long *pNumber)
+{
+}
+
+static void
+DeserializeNumberInlined(char *pBuffer, size_t zBUfferLength, unsigned long *pNumber)
+{
+}
+
 static void
 DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
@@ -743,11 +773,25 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 	case KIND_INTEGER:
 		zNumberWidth = zDeserializeTypeWidth(pType);
 		switch (zNumberWidth) {
+		default:
+			Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
 		case WIDTH_128:
-#ifndef __SIZEOF_INT128__
+#ifdef __SIZEOF_INT128__
+			DeserializeLongest(pBuffer, zBUfferLength, (ulongest *)ulNumber);
+#else
 			Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
 #endif
-			
+			break;
+		case WIDTH_64:
+			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+				DeserializeNumberOverPointer(pBuffer, zBUfferLength, (unsigned long *)ulNumber);
+				break;
+			}
+		case WIDTH_32:
+		case WIDTH_16:
+		case WIDTH_8:
+			DeserializeNumberInlined(pBuffer, zBUfferLength, ulNumber);
+			break;
 		}
 		break;
 	case KIND_FLOAT:

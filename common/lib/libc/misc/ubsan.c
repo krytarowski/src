@@ -118,7 +118,7 @@ static int ubsan_flags = -1;
 #define KIND_UNKNOWN	UINT16_MAX
 
 struct CSourceLocation {
-	const char *mFilename;
+	char *mFilename;
 	uint32_t mLine;
 	uint32_t mColumn;
 };
@@ -716,15 +716,17 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 	 */
 
 	char cOldValue;
-	char *pCharacter;
+	volatile char *pCharacter;
 
 	ASSERT(pLocation);
 
-	pCharacter = __UNCONST(&pLocation->mFilename[0]);
+	pCharacter = &pLocation->mFilename[0];
 
 	do {
 		cOldValue = *pCharacter;
 	} while (__sync_val_compare_and_swap_1(pCharacter, cOldValue, ACK_CHARACTER) != cOldValue);
+
+	return cOldValue != ACK_CHARACTER;
 }
 
 static size_t

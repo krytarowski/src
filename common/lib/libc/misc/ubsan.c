@@ -79,7 +79,8 @@ __RCSID("$NetBSD$");
 #define CLR(t, f)	((t) &= ~(f))
 #endif
 
-#define ACK_CHARACTER	0x06
+#define ACK_REPORTED	__BIT(31)
+
 #define MUL_CHARACTER	0x2a
 #define PLUS_CHARACTER	0x2b
 #define MINUS_CHARACTER	0x2d
@@ -715,18 +716,18 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 	 * It shall work in early bootstrap phase of both of them.
 	 */
 
-	char cOldValue;
-	volatile char *pCharacter;
+	uint32_t siOldValue;
+	volatile uint32_t *pLine;
 
 	ASSERT(pLocation);
 
-	pCharacter = &pLocation->mFilename[0];
+	pLine = &pLocation->mLine;
 
 	do {
-		cOldValue = *pCharacter;
-	} while (__sync_val_compare_and_swap_1(pCharacter, cOldValue, ACK_CHARACTER) != cOldValue);
+		siOldValue = *pLine;
+	} while (__sync_val_compare_and_swap(pLine, siOldValue, siOldValue | ACK_REPORTED) != siOldValue);
 
-	return cOldValue != ACK_CHARACTER;
+	return ISSET(siOldValue, ACK_REPORTED);
 }
 
 static size_t
@@ -739,8 +740,10 @@ zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 	switch (pType->mTypeKind) {
 	case KIND_INTEGER:
 		zWidth = __BIT(__SHIFTOUT(pType->mTypeInfo, ~NUMBER_SIGNED_BIT));
+		break;
 	case KIND_FLOAT:
 		zWidth = pType->mTypeInfo;
+		break;
 	default:
 		Report(true, "UBSan: Unknown variable type %#04" PRIx16 "\n", pType->mTypeKind);
 		/* NOTREACHED */
@@ -758,9 +761,8 @@ DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation 
 
 	ASSERT(pLocation);
 	ASSERT(pLocation->mFilename);
-	ASSERT(pLocation->mFilename[0] != ACK_CHARACTER);
 
-	snprintf(pBuffer, zBUfferLength, "%s:%" PRIu32 ":%" PRIu32, pLocation->mFilename, pLocation->mLine, pLocation->mColumn);
+	snprintf(pBuffer, zBUfferLength, "%s:%" PRIu32 ":%" PRIu32, pLocation->mFilename, pLocation->mLine & ~ACK_REPORTED, pLocation->mColumn);
 }
 
 #ifdef __SIZEOF_INT128__

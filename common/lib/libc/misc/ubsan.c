@@ -54,6 +54,7 @@ __RCSID("$NetBSD$");
 #include "namespace.h"
 #endif
 #include <assert.h>
+#include <inttypes.h>
 #include <math.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -214,7 +215,7 @@ struct CVLABoundData {
 /* Local utility functions */
 static void Report(bool, const char *, ...);
 static bool isAlreadyReported(struct CSourceLocation *);
-static void DeserializeLocation(char *, size_t, struct CSourceLocation *, unsigned long);
+static void DeserializeLocation(char *, size_t, struct CSourceLocation *);
 #ifdef __SIZEOF_INT128__
 static void DeserializeLongest(char *, size_t, ulongest *);
 #endif
@@ -284,15 +285,15 @@ HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, u
 
 	ASSERT(pData);
 
-	if (isAlreadyReported(pData->mLocation))
+	if (isAlreadyReported(&pData->mLocation))
 		return;
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mType, ulRHS);
 
-	report(isFatal, "UBSan: Undefined Behavior in %s: %s integer overflow: %s %c %s cannot be represented in type %s\n",
-	       szLocation, ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT) ? "signed" : "unsigned", szLHS, iOperation, szRHS, pType->mTypeName);
+	Report(isFatal, "UBSan: Undefined Behavior in %s: %s integer overflow: %s %c %s cannot be represented in type %s\n",
+	       szLocation, ISSET(pData->mType->mTypeInfo, NUMBER_SIGNED_BIT) ? "signed" : "unsigned", szLHS, iOperation, szRHS, pData->mType->mTypeName);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -572,7 +573,7 @@ __ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, un
 
 	ASSERT(pData);
 
-	HandleOverflow(false, pData, ulLHS, ulRHS, SUB_CHARACTER);
+	HandleOverflow(false, pData, ulLHS, ulRHS, MINUS_CHARACTER);
 }
 
 void
@@ -581,7 +582,7 @@ __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulL
 
 	ASSERT(pData);
 
-	HandleOverflow(true, pData, ulLHS, ulRHS, SUB_CHARACTER);
+	HandleOverflow(true, pData, ulLHS, ulRHS, MINUS_CHARACTER);
 }
 
 void
@@ -633,7 +634,7 @@ __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutM
 
 
 static void
-report(bool isFatal, const char *pFormat, ...)
+Report(bool isFatal, const char *pFormat, ...)
 {
 	va_list ap;
 
@@ -719,7 +720,7 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 
 	ASSERT(pLocation);
 
-	pCharacter = &pLocation->mFilename[0];
+	pCharacter = __UNCONST(&pLocation->mFilename[0]);
 
 	do {
 		cOldValue = *pCharacter;
@@ -750,7 +751,7 @@ zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 }
 
 static void
-DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation *pLocation, unsigned long ulNumber)
+DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation *pLocation)
 {
 
 	ASSERT(pLocation);
@@ -772,7 +773,7 @@ DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
 
 	strlcpy(pBuffer, "Undecoded-128-bit-Integer-Type (0x", zBUfferLength);
 	for (zI = 0; zI < sizeof(ulongest); zI++) {
-		snprintf(szBuf, sizeof(buf), "%02" PRIx8, rgNumber[zI]);
+		snprintf(szBuf, sizeof(szBuf), "%02" PRIx8, rgNumber[zI]);
 		strlcat(pBuffer, szBuf, zBUfferLength);
 	}
 	strlcat(pBuffer, ")", zBUfferLength);
@@ -791,7 +792,7 @@ DeserializeIntegerOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeD
 	 * This function handles 64-bit number over a pointer on 32-bit CPUs.
 	 * 128-bit number are handled in DeserializeLongest().
 	 */
-	ASSERT((sizeof(ulNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
+	ASSERT((sizeof(*pNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
 
 	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
 		snprintf(pBuffer, zBUfferLength, "%" PRId64, *(int64_t *)pNumber);
@@ -845,7 +846,7 @@ DeserializeFloatOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDes
 	/*
 	 * This function handles 64-bit number over a pointer on 32-bit CPUs.
 	 */
-	ASSERT((sizeof(ulNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
+	ASSERT((sizeof(*pNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
 	ASSERT(sizeof(D) == sizeof(uint64_t));
 #ifdef __HAVE_LONG_DOUBLE
 	ASSERT(sizeof(LD) > sizeof(uint64_t));
@@ -882,7 +883,7 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 
 	switch (zDeserializeTypeWidth(pType)) {
 	case WIDTH_64:
-		memcpy(&D, &pNumber, sizeof(double));
+		memcpy(&D, &ulNumber, sizeof(double));
 		snprintf(pBuffer, zBUfferLength, "%g", D);
 		break;
 	case WIDTH_32:
@@ -892,11 +893,11 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		 * value in order to call memcpy(3) in an Endian-aware way.
 		 */
 		U32 = (uint32_t)ulNumber;
-		memcpy(&F, &pNumber, sizeof(float));
+		memcpy(&F, &U32, sizeof(float));
 		snprintf(pBuffer, zBUfferLength, "%g", D);
 		break;
 	case WIDTH_16:
-		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type (%#04" PRIx16 ")", *(uint16_t *)pNumber);
+		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type (%#04" PRIx16 ")", (uint16_t)ulNumber);
 		break;
 	}
 }
@@ -910,8 +911,6 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 	ASSERT(pBuffer);
 	ASSERT(szLocation);
 	ASSERT(zBUfferLength > 0);
-	ASSERT(pLocation->mFilename);
-	ASSERT(pLocation->mFilename[0] != ACK_CHARACTER);
 	ASSERT(pType);
 
 	switch(pType->mTypeKind) {
@@ -966,6 +965,7 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		case WIDTH_16:
 			DeserializeFloatInlined(pBuffer, zBUfferLength, pType, ulNumber);
 #endif
+		}
 		break;
 	case KIND_UNKNOWN:
 		Report(true, "UBSan: Unknown Type in %s\n", szLocation);

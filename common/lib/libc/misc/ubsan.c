@@ -291,7 +291,8 @@ HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, u
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mType, ulRHS);
 
-	report(isFatal, "UBSan: \n");
+	report(isFatal, "UBSan: Undefined Behavior in %s: %s integer overflow: %s %c %s cannot be represented in type %s\n",
+	       szLocation, ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT) ? "signed" : "unsigned", szLHS, iOperation, szRHS, pType->mTypeName);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -438,6 +439,8 @@ __ubsan_handle_mul_overflow(struct COverflowData *pData, unsigned long ulLHS, un
 {
 
 	ASSERT(pData);
+
+	HandleOverflow(false, pData, ulLHS, ulRHS, MUL_CHARACTER);
 }
 
 void
@@ -445,6 +448,8 @@ __ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulL
 {
 
 	ASSERT(pData);
+
+	HandleOverflow(true, pData, ulLHS, ulRHS, MUL_CHARACTER);
 }
 
 void
@@ -566,6 +571,8 @@ __ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, un
 {
 
 	ASSERT(pData);
+
+	HandleOverflow(false, pData, ulLHS, ulRHS, SUB_CHARACTER);
 }
 
 void
@@ -573,6 +580,8 @@ __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulL
 {
 
 	ASSERT(pData);
+
+	HandleOverflow(true, pData, ulLHS, ulRHS, SUB_CHARACTER);
 }
 
 void

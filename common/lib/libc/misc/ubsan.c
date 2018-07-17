@@ -276,7 +276,6 @@ void __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned
 void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
 
-/*  */
 static void
 HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, int iOperation)
 {
@@ -293,8 +292,26 @@ HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, u
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mType, ulRHS);
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s: %s integer overflow: %s %c %s cannot be represented in type %s\n",
+	Report(isFatal, "UBSan: Undefined Behavior in %s, %s integer overflow: %s %c %s cannot be represented in type %s\n",
 	       szLocation, ISSET(pData->mType->mTypeInfo, NUMBER_SIGNED_BIT) ? "signed" : "unsigned", szLHS, iOperation, szRHS, pData->mType->mTypeName);
+}
+
+static void
+HandleNegateOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulOldValue)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szOldValue[NUMBER_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szOldValue, NUMBER_MAXLEN, pData->mType, ulOldValue);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, negation of %s cannot be represented in type %s\n",
+	       szLocation, szOldValue, pData->mType->mTypeName);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -455,17 +472,21 @@ __ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulL
 }
 
 void
-__ubsan_handle_negate_overflow(struct COverflowData *pData, unsigned long ulOldVal)
+__ubsan_handle_negate_overflow(struct COverflowData *pData, unsigned long ulOldValue)
 {
 
 	ASSERT(pData);
+
+	HandleNegateOverflow(false, pData, ulOldValue);
 }
 
 void
-__ubsan_handle_negate_overflow_abort(struct COverflowData *pData, unsigned long ulOldVal)
+__ubsan_handle_negate_overflow_abort(struct COverflowData *pData, unsigned long ulOldValue)
 {
 
 	ASSERT(pData);
+
+	HandleNegateOverflow(true, pData, ulOldValue);
 }
 
 void

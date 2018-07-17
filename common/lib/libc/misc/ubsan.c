@@ -84,7 +84,7 @@ __RCSID("$NetBSD$");
 #define MINUS_CHARACTER	0x2d
 #define DIV_CHARACTER	0x2f
 
-#define NUMBER_MAXLEN	64
+#define NUMBER_MAXLEN	128
 #define LOCATION_MAXLEN	(PATH_MAX + 32 /* ':LINE:COLUMN' */)
 
 #define WIDTH_8		8
@@ -730,7 +730,7 @@ zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 	case KIND_FLOAT:
 		zWidth = pType->mTypeInfo;
 	default:
-		Report(true, "UBSan: Unknown variable type 0x%04" PRIx16 "\n", pType->mTypeKind);
+		Report(true, "UBSan: Unknown variable type %#04" PRIx16 "\n", pType->mTypeKind);
 		/* NOTREACHED */
 	}
 
@@ -761,11 +761,12 @@ DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
 
 	memcpy(rgNumber, llliNumber, sizeof(ulongest));
 
-	strlcpy(pBuffer, "0x", zBUfferLength);
+	strlcpy(pBuffer, "Undecoded-128-bit-Integer-Type (0x", zBUfferLength);
 	for (zI = 0; zI < sizeof(ulongest); zI++) {
 		snprintf(szBuf, sizeof(buf), "%02" PRIx8, rgNumber[zI]);
 		strlcat(pBuffer, szBuf, zBUfferLength);
 	}
+	strlcat(pBuffer, ")", zBUfferLength);
 }
 #endif
 
@@ -886,10 +887,7 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		snprintf(pBuffer, zBUfferLength, "%g", D);
 		break;
 	case WIDTH_16:
-#ifdef notyet
-		/* NEON 16-bit type */
-#endif
-		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type");
+		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type (%#04" PRIx16 ")", *(uint16_t *)pNumber);
 		break;
 	}
 }

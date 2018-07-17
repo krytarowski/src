@@ -215,8 +215,8 @@ static void DeserializeLocation(char *, size_t, struct CSourceLocation *, unsign
 #ifdef __SIZEOF_INT128__
 static void DeserializeLongest(char *, size_t, ulongest *);
 #endif
-static void DeserializeNumberOverPointer(char *, size_t, unsigned long *);
-static void DeserializeNumberInlined(char *, size_t, unsigned long *);
+static void DeserializeNumberOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
+static void DeserializeNumberInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 
 /* Public symbols used in the instrumentation of the code generation part */
@@ -758,6 +758,17 @@ DeserializeNumberOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDe
 	ASSERT(zBUfferLength > 0);
 	ASSERT(pType);
 	ASSERT(pNumber);
+	/*
+	 * This function handles 64-bit number over a pointer on 32-bit CPUs.
+	 * 128-bit number are handled in DeserializeLongest().
+	 */
+	ASSERT((sizeof(ulNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
+
+	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
+		snprintf(pBuffer, zBUfferLength, "%" PRId64, *(int64_t *)pNumber);
+	} else {
+		snprintf(pBuffer, zBUfferLength, "%" PRIu64, *(uint64_t *)pNumber);
+	}
 }
 
 static void

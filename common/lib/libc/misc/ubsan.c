@@ -54,6 +54,7 @@ __RCSID("$NetBSD$");
 #include "namespace.h"
 #endif
 #include <assert.h>
+#include <math.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -219,8 +220,10 @@ static void DeserializeLongest(char *, size_t, ulongest *);
 #endif
 static void DeserializeIntegerOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
 static void DeserializeIntegerInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
+#ifndef _KERNEL
 static void DeserializeFloatOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
 static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
+#endif
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 
 /* Public symbols used in the instrumentation of the code generation part */
@@ -816,15 +819,81 @@ DeserializeIntegerInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescr
 	}
 }
 
+#ifndef _KERNEL
 static void
 DeserializeFloatOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber)
 {
+	double D;
+#ifdef __HAVE_LONG_DOUBLE
+	long double LD;
+#endif
+
+	ASSERT(pBuffer);
+	ASSERT(zBUfferLength > 0);
+	ASSERT(pType);
+	ASSERT(pNumber);
+	/*
+	 * This function handles 64-bit number over a pointer on 32-bit CPUs.
+	 */
+	ASSERT((sizeof(ulNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
+	ASSERT(sizeof(D) == sizeof(uint64_t));
+#ifdef __HAVE_LONG_DOUBLE
+	ASSERT(sizeof(LD) > sizeof(uint64_t));
+#endif
+
+	switch (zDeserializeTypeWidth(pType)) {
+#ifdef __HAVE_LONG_DOUBLE
+	case WIDTH_128:
+	case WIDTH_96:
+	case WIDTH_80:
+		memcpy(&LD, pNumber, sizeof(long double));
+		snprintf(pBuffer, zBUfferLength, "%Lg", LD);
+		break;
+#endif
+	case WIDTH_64:
+		memcpy(&D, pNumber, sizeof(double));
+		snprintf(pBuffer, zBUfferLength, "%g", D);
+		break;
+	}
 }
 
 static void
 DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
+	float F;
+	double D;
+	uint32_t U32;
+
+	ASSERT(pBuffer);
+	ASSERT(zBUfferLength > 0);
+	ASSERT(pType);
+	ASSERT(sizeof(F) == sizeof(uint32_t));
+	ASSERT(sizeof(D) == sizeof(uint64_t));
+
+	switch (zDeserializeTypeWidth(pType)) {
+	case WIDTH_64:
+		memcpy(&D, &pNumber, sizeof(double));
+		snprintf(pBuffer, zBUfferLength, "%g", D);
+		break;
+	case WIDTH_32:
+		/*
+		 * On supported platforms sizeof(float)==sizeof(uint32_t)
+		 * unsigned long is either 32 or 64-bit, cast it to 32-bit
+		 * value in order to call memcpy(3) in an Endian-aware way.
+		 */
+		U32 = (uint32_t)ulNumber;
+		memcpy(&F, &pNumber, sizeof(float));
+		snprintf(pBuffer, zBUfferLength, "%g", D);
+		break;
+	case WIDTH_16:
+#ifdef notyet
+		/* NEON 16-bit type */
+#endif
+		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type");
+		break;
+	}
 }
+#endif
 
 static void
 DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
@@ -875,10 +944,12 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		default:
 			Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
 			/* NOTREACHED */
+#ifdef __HAVE_LONG_DOUBLE
 		case WIDTH_128:
 		case WIDTH_96:
 		case WIDTH_80:
 			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+#endif
 		case WIDTH_64:
 			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
 				DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);

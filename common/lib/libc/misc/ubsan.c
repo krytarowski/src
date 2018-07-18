@@ -356,6 +356,24 @@ HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CType
 	}
 }
 
+static void
+HandleVlaBoundNotPositive(bool isFatal, struct CVLABoundData *pData, unsigned long ulBound)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szBound[NUMBER_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szBound, NUMBER_MAXLEN, pData->mType, ulBound);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, variable length array bound value %s <= 0\n",
+	       szLocation, szBound);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -696,6 +714,8 @@ __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long
 {
 
 	ASSERT(pData);
+
+	HandleVlaBoundNotPositive(false, pData, ulBound);
 }
 
 void
@@ -703,6 +723,8 @@ __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigne
 {
 
 	ASSERT(pData);
+
+	HandleVlaBoundNotPositive(true, pData, ulBound);
 }
 
 void

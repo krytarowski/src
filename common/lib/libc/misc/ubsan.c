@@ -314,6 +314,22 @@ HandleNegateOverflow(bool isFatal, struct COverflowData *pData, unsigned long ul
 	       szLocation, szOldValue, pData->mType->mTypeName);
 }
 
+static void
+HandleBuiltinUnreachable(bool isFatal, struct CUnreachableData *pData)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, calling __builtin_unreachable()\n",
+	       szLocation);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -339,6 +355,8 @@ __ubsan_handle_builtin_unreachable(struct CUnreachableData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleBuiltinUnreachable(true, pData);
 }
 
 void
@@ -367,6 +385,8 @@ __ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long ulLHS,
 {
 
 	ASSERT(pData);
+
+	HandleOverflow(false, pData, ulLHS, ulRHS);
 }
 
 void
@@ -374,6 +394,8 @@ __ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long 
 {
 
 	ASSERT(pData);
+
+	HandleOverflow(true, pData, ulLHS, ulRHS);
 }
 
 void

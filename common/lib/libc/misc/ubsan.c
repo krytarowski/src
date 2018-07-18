@@ -377,8 +377,40 @@ HandleVlaBoundNotPositive(bool isFatal, struct CVLABoundData *pData, unsigned lo
 static void
 HandleOutOfBounds(bool isFatal, struct COutOfBoundsData *pData, unsigned long ulIndex)
 {
+	char szLocation[LOCATION_MAXLEN];
+	char szIndex[NUMBER_MAXLEN];
 
 	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szIndex, NUMBER_MAXLEN, pData->mIndexType, ulIndex);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, index %s is out of range for type %s\n",
+	       szLocation, ulIndex, pData->mArrayType->mTypeName);
+}
+
+static void
+HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szLHS[NUMBER_MAXLEN];
+	char szRHS[NUMBER_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mLHSType, ulLHS);
+	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mRHSType, ulRHS);
+
+	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT))
+	Report(isFatal, "UBSan: Undefined Behavior in %s, index %s is out of range for type %s\n",
+	       szLocation, ulIndex, pData->mArrayType->mTypeName);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -625,6 +657,8 @@ __ubsan_handle_out_of_bounds(struct COutOfBoundsData *pData, unsigned long ulInd
 {
 
 	ASSERT(pData);
+
+	HandleOutOfBounds(false, pData, ulIndex);
 }
 
 void
@@ -632,6 +666,8 @@ __ubsan_handle_out_of_bounds_abort(struct COutOfBoundsData *pData, unsigned long
 {
 
 	ASSERT(pData);
+
+	HandleOutOfBounds(true, pData, ulIndex);
 }
 
 void
@@ -653,6 +689,8 @@ __ubsan_handle_shift_out_of_bounds(struct CShiftOutOfBoundsData *pData, unsigned
 {
 
 	ASSERT(pData);
+
+	HandleShiftOutOfBounds(false, pData, ulLHS, ulRHS);
 }
 
 void
@@ -660,6 +698,8 @@ __ubsan_handle_shift_out_of_bounds_abort(struct CShiftOutOfBoundsData *pData, un
 {
 
 	ASSERT(pData);
+
+	HandleShiftOutOfBounds(true, pData, ulLHS, ulRHS);
 }
 
 void

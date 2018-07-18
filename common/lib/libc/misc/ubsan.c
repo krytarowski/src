@@ -374,6 +374,13 @@ HandleVlaBoundNotPositive(bool isFatal, struct CVLABoundData *pData, unsigned lo
 	       szLocation, szBound);
 }
 
+static void
+HandleOutOfBounds(bool isFatal, struct COutOfBoundsData *pData, unsigned long ulIndex)
+{
+
+	ASSERT(pData);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void

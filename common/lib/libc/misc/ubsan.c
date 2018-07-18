@@ -1076,5 +1076,7 @@ DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
 		"dynamic operation on"
 	};
 
+	ASSERT(__arraycount(rgczTypeCheckKinds) > mTypeCheckKind);
+
 	return rgczTypeCheckKinds[mTypeCheckKind];
 }

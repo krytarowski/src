@@ -1002,6 +1002,7 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		case WIDTH_96:
 		case WIDTH_80:
 			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+			break;
 #endif
 		case WIDTH_64:
 			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
@@ -1011,6 +1012,7 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		case WIDTH_32:
 		case WIDTH_16:
 			DeserializeFloatInlined(pBuffer, zBUfferLength, pType, ulNumber);
+			break;
 #endif
 		}
 		break;

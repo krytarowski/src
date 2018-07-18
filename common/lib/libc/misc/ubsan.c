@@ -330,6 +330,25 @@ HandleBuiltinUnreachable(bool isFatal, struct CUnreachableData *pData)
 	       szLocation);
 }
 
+static void
+HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CTypeDescriptor *mType, unsigned long mLogAlignment, uint8_t mTypeCheckKind, unsigned long ulPointer)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	ASSERT(mLocation);
+	ASSERT(mType);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, mLocation);
+
+	if (ulPointer == NULL) {
+		Report(isFatal, "UBSan: Undefined Behavior in %s,  %s null pointer of type %s\n",
+		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), mType->mTypeName);
+	}
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -634,6 +653,8 @@ __ubsan_handle_type_mismatch(struct CTypeMismatchData *pData, unsigned long ulPo
 {
 
 	ASSERT(pData);
+
+	HandleTypeMismatch(false, &pData->mLocation, pData->mType, pData->mLogAlignment, pData->mTypeCheckKind, ulPointer);
 }
 
 void
@@ -641,6 +662,8 @@ __ubsan_handle_type_mismatch_abort(struct CTypeMismatchData *pData, unsigned lon
 {
 
 	ASSERT(pData);
+
+	HandleTypeMismatch(true, &pData->mLocation, pData->mType, pData->mLogAlignment, pData->mTypeCheckKind, ulPointer);
 }
 
 void
@@ -648,6 +671,8 @@ __ubsan_handle_type_mismatch_v1(struct CTypeMismatchData_v1 *pData, unsigned lon
 {
 
 	ASSERT(pData);
+
+	HandleTypeMismatch(false, &pData->mLocation, pData->mType, __BIT(pData->mLogAlignment), pData->mTypeCheckKind, ulPointer);
 }
 
 void
@@ -655,6 +680,8 @@ __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData_v1 *pData, unsign
 {
 
 	ASSERT(pData);
+
+	HandleTypeMismatch(true, &pData->mLocation, pData->mType, __BIT(pData->mLogAlignment), pData->mTypeCheckKind, ulPointer);
 }
 
 void

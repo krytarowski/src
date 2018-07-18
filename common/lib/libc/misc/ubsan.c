@@ -227,6 +227,7 @@ static void DeserializeFloatOverPointer(char *, size_t, struct CTypeDescriptor *
 static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
 #endif
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
+static const char *DeserializeTypeCheckKind(uint8_t mTypeCheckKind);
 
 /* Public symbols used in the instrumentation of the code generation part */
 void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
@@ -344,8 +345,14 @@ HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CType
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, mLocation);
 
 	if (ulPointer == NULL) {
-		Report(isFatal, "UBSan: Undefined Behavior in %s,  %s null pointer of type %s\n",
+		Report(isFatal, "UBSan: Undefined Behavior in %s, %s null pointer of type %s\n",
 		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), mType->mTypeName);
+	} else if (ulPointer & __BITS(0, mLogAlignment - 1)) {
+		Report(isFatal, "UBSan: Undefined Behavior in %s, %s misaligned address %p for type %s which requires %ld byte alignment\n",
+		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), (void *)ulPointer, mType->mTypeName, mLogAlignment);
+	} else {
+		Report(isFatal, "UBSan: Undefined Behavior in %s, %s address %p with insufficient space for an object of type %s\n",
+		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), (void *)ulPointer, mType->mTypeName);
 	}
 }
 
@@ -1048,4 +1055,26 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		/* NOTREACHED */
 		break;
 	}
+}
+
+
+static const char *
+DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
+{
+	const char *rgczTypeCheckKinds[] = {
+		"load of",
+		"store to",
+		reference binding to",
+		"member access within",
+		"member call on",
+		"constructor call on",
+		"downcast of",
+		"downcast of",
+		"upcast of",
+		"cast to virtual base of",
+		"_Nonnull binding to",
+		"dynamic operation on"
+	};
+
+	return rgczTypeCheckKinds[mTypeCheckKind];
 }

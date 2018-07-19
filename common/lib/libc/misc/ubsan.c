@@ -235,6 +235,7 @@ static void DeserializeNumberFloat(char *, char *, size_t, struct CTypeDescripto
 #endif
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 static const char *DeserializeTypeCheckKind(uint8_t mTypeCheckKind);
+static const char *DeserializeBuiltinCheckKind(uint8_t hhuBuiltinCheckKind);
 static bool isNegativeNumber(char *, struct CTypeDescriptor *, unsigned long);
 static bool isShiftExponentTooLarge(char *, struct CTypeDescriptor *, unsigned long, size_t);
 
@@ -449,6 +450,22 @@ HandleLoadInvalidValue(bool isFatal, struct CInvalidValueData *pData, unsigned l
 	       szLocation, szValue, pData->mType->mTypeName);
 }
 
+static void
+HandleInvalidBuiltin(bool isFatal, struct CInvalidBuiltinData *pData)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, passing zero to %s, which is not a valid argument\n",
+	       szLocation, DeserializeBuiltinCheckKind(pData->mKind));
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -564,6 +581,8 @@ __ubsan_handle_invalid_builtin(struct CInvalidBuiltinData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleInvalidBuiltin(true, pData);
 }
 
 void
@@ -571,6 +590,8 @@ __ubsan_handle_invalid_builtin_abort(struct CInvalidBuiltinData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleInvalidBuiltin(true, pData);
 }
 
 void
@@ -819,6 +840,7 @@ __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutM
 {
 }
 
+/* Local utility functions */
 
 static void
 Report(bool isFatal, const char *pFormat, ...)
@@ -1250,9 +1272,8 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 	}
 }
 
-
 static const char *
-DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
+DeserializeTypeCheckKind(uint8_t hhuTypeCheckKind)
 {
 	const char *rgczTypeCheckKinds[] = {
 		"load of",
@@ -1269,9 +1290,22 @@ DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
 		"dynamic operation on"
 	};
 
-	ASSERT(__arraycount(rgczTypeCheckKinds) > mTypeCheckKind);
+	ASSERT(__arraycount(rgczTypeCheckKinds) > hhuTypeCheckKind);
 
-	return rgczTypeCheckKinds[mTypeCheckKind];
+	return rgczTypeCheckKinds[hhuTypeCheckKind];
+}
+
+static const char *
+DeserializeBuiltinCheckKind(uint8_t hhuBuiltinCheckKind)
+{
+	const char *rgczBuiltinCheckKinds[] = {
+		"ctz()",
+		"clz()"
+	};
+
+	ASSERT(__arraycount(rgczBuiltinCheckKinds) > hhuBuiltinCheckKind);
+
+	return rgczBuiltinCheckKinds[hhuBuiltinCheckKind];
 }
 
 static bool

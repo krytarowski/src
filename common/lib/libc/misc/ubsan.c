@@ -929,13 +929,13 @@ DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation 
 
 #ifdef __SIZEOF_INT128__
 static void
-DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
+DeserializeUINT128(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, __uint128_t U128)
 {
 	char szBuf[3]; /* 'XX\0' */
 	char rgNumber[sizeof(ulongest)];
 	size_t zI;
 
-	memcpy(rgNumber, llliNumber, sizeof(ulongest));
+	memcpy(rgNumber, U128, sizeof(U128));
 
 	strlcpy(pBuffer, "Undecoded-128-bit-Integer-Type (0x", zBUfferLength);
 	for (zI = 0; zI < sizeof(ulongest); zI++) {
@@ -947,52 +947,56 @@ DeserializeLongest(char *pBuffer, size_t zBUfferLength, ulongest *llliNumber)
 #endif
 
 static void
-DeserializeIntegerOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber)
+DeserializeNumberSigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, longest L)
 {
 
 	ASSERT(pBuffer);
 	ASSERT(zBUfferLength > 0);
 	ASSERT(pType);
-	ASSERT(pNumber);
-	/*
-	 * This function handles 64-bit number over a pointer on 32-bit CPUs.
-	 * 128-bit number are handled in DeserializeLongest().
-	 */
-	ASSERT((sizeof(*pNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
+	ASSERT(ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT));
 
-	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
-		snprintf(pBuffer, zBUfferLength, "%" PRId64, *(int64_t *)pNumber);
-	} else {
-		snprintf(pBuffer, zBUfferLength, "%" PRIu64, *(uint64_t *)pNumber);
+	switch (zDeserializeTypeWidth(pType)) {
+	default:
+		ASSERT(0 && "Invalid codepath");
+		/* NOTREACHED */
+#ifdef __SIZEOF_INT128__
+	case WIDTH_128:
+		DeserializeU128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
+		break;
+#endif
+	case WIDTH_64:
+	case WIDTH_32:
+	case WIDTH_16:
+	case WIDTH_8:
+		snprintf(pBuffer, zBUfferLength, "%" PRId64, (int64_t)L);
+		break;
 	}
 }
 
 static void
-DeserializeIntegerInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
+DeserializeNumberUnsigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, ulongest L)
 {
 
 	ASSERT(pBuffer);
 	ASSERT(zBUfferLength > 0);
 	ASSERT(pType);
+	ASSERT(!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT));
 
-	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
-		/* The serialized number is zero-extended */
-		switch (zDeserializeTypeWidth(pType)) {
-		case WIDTH_64:
-			snprintf(pBuffer, zBUfferLength, "%" PRId64, (int64_t)(uint64_t)ulNumber);
-			break;
-		case WIDTH_32:
-			snprintf(pBuffer, zBUfferLength, "%" PRId32, (int32_t)(uint32_t)ulNumber);
-			break;
-		case WIDTH_16:
-			snprintf(pBuffer, zBUfferLength, "%" PRId16, (int16_t)(uint16_t)ulNumber);
-			break;
-		case WIDTH_8:
-			snprintf(pBuffer, zBUfferLength, "%" PRId8, (int8_t)(uint8_t)ulNumber);
-			break;
-		}
-	} else {
-		snprintf(pBuffer, zBUfferLength, "%lu", ulNumber);
+	switch (zDeserializeTypeWidth(pType)) {
+	default:
+		ASSERT(0 && "Invalid codepath");
+		/* NOTREACHED */
+#ifdef __SIZEOF_INT128__
+	case WIDTH_128:
+		DeserializeU128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
+		break;
+#endif
+	case WIDTH_64:
+	case WIDTH_32:
+	case WIDTH_16:
+	case WIDTH_8:
+		snprintf(pBuffer, zBUfferLength, "%" PRIu64, (uint64_t)L);
+		break;
 	}
 }
 
@@ -1201,10 +1205,10 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 	case KIND_INTEGER:
 		if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
 			longest L = llliGetNumber(szLocation, pType, ulNumber);
-			DeserializeNumberLongest(pBuffer, zBUfferLength, pType, L);
+			DeserializeNumberSigned(pBuffer, zBUfferLength, pType, L);
 		} else {
 			ulongest UL = llluGetNumber(szLocation, pType, ulNumber);
-			DeserializeNumberUlongest(pBuffer, zBUfferLength, pType, UL);
+			DeserializeNumberUnsigned(pBuffer, zBUfferLength, pType, UL);
 		}
 		break;
 	case KIND_FLOAT:

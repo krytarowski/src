@@ -219,6 +219,7 @@ struct CVLABoundData {
 /* Local utility functions */
 static void Report(bool, const char *, ...);
 static bool isAlreadyReported(struct CSourceLocation *);
+static size_t zDeserializeTypeWidth(struct CTypeDescriptor *pType);
 static void DeserializeLocation(char *, size_t, struct CSourceLocation *);
 #ifdef __SIZEOF_INT128__
 static void DeserializeLongest(char *, size_t, ulongest *);
@@ -228,6 +229,7 @@ static void DeserializeIntegerInlined(char *, size_t, struct CTypeDescriptor *, 
 #ifndef _KERNEL
 static void DeserializeFloatOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
 static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
+static void DeserializeNumberFloat(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 #endif
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 static const char *DeserializeTypeCheckKind(uint8_t mTypeCheckKind);
@@ -483,7 +485,7 @@ __ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long ulLHS,
 
 	ASSERT(pData);
 
-	HandleOverflow(false, pData, ulLHS, ulRHS);
+	HandleOverflow(false, pData, ulLHS, ulRHS, DIV_CHARACTER);
 }
 
 void
@@ -492,7 +494,7 @@ __ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long 
 
 	ASSERT(pData);
 
-	HandleOverflow(true, pData, ulLHS, ulRHS);
+	HandleOverflow(true, pData, ulLHS, ulRHS, DIV_CHARACTER);
 }
 
 void
@@ -1091,7 +1093,7 @@ llliGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 		break;
 	case WIDTH_64:
 		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			L = *(int64_t *)pNumber;
+			L = *(int64_t *)ulNumber;
 		} else {
 			L = (int64_t)(uint64_t)ulNumber;
 		}
@@ -1133,7 +1135,7 @@ llluGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 #endif
 	case WIDTH_64:
 		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			UL = *(uint64_t *)pNumber;
+			UL = *(uint64_t *)ulNumber;
 			break;
 		}
 		/* FALLTHROUGH */
@@ -1149,7 +1151,7 @@ llluGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 	return UL;
 }
 
-#ifdef _KERNEL
+#ifndef _KERNEL
 static void
 DeserializeNumberFloat(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
@@ -1210,7 +1212,7 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		Report(true, "UBSan: Unexpected Float Type in %s\n", szLocation);
 		/* NOTREACHED */
 #else
-		DeserializeNumberFloat(pBuffer, zBUfferLength, pType, ulNumber);
+		DeserializeNumberFloat(szLocation, pBuffer, zBUfferLength, pType, ulNumber);
 #endif
 		break;
 	case KIND_UNKNOWN:

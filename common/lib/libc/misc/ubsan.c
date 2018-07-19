@@ -431,6 +431,24 @@ HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsign
 		       szLocation, szLHS, szRHS, pData->mLHSType->mTypeName);
 }
 
+static void
+HandleLoadInvalidValue(bool isFatal, struct CInvalidValueData *pData, unsigned long ulValue)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szValue[NUMBER_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szValue, NUMBER_MAXLEN, pData->mType, ulValue);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, load of value %s is not a valid value for type %s\n",
+	       szLocation, szValue, pData->mType->mTypeName);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -556,17 +574,21 @@ __ubsan_handle_invalid_builtin_abort(struct CInvalidBuiltinData *pData)
 }
 
 void
-__ubsan_handle_load_invalid_value(struct CInvalidValueData *pData, unsigned long ulVal)
+__ubsan_handle_load_invalid_value(struct CInvalidValueData *pData, unsigned long ulValue)
 {
 
 	ASSERT(pData);
+
+	HandleLoadInvalidValue(false, pData, ulValue);
 }
 
 void
-__ubsan_handle_load_invalid_value_abort(struct CInvalidValueData *pData, unsigned long ulVal)
+__ubsan_handle_load_invalid_value_abort(struct CInvalidValueData *pData, unsigned long ulValue)
 {
 
 	ASSERT(pData);
+
+	HandleLoadInvalidValue(true, pData, ulValue);
 }
 
 void

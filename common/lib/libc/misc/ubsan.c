@@ -411,13 +411,13 @@ HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsign
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mLHSType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mRHSType, ulRHS);
 
-	if (isNegativeNumber(pType->mRHSType, ulRHS))
+	if (isNegativeNumber(szLocation, pType->mRHSType, ulRHS))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is negative\n",
 		       szLocation, szRHS);
-	else if (isShiftExponentTooLarge(pType->mRHSType, ulRHS, zDeserializeTypeWidth(pType->mLHSType)))
+	else if (isShiftExponentTooLarge(szLocation, pType->mRHSType, ulRHS, zDeserializeTypeWidth(pType->mLHSType)))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is too large for %u-bit type %s\n",
 		       szLocation, szRHS, zDeserializeTypeWidth(pType->mLHSType), pType->mLHSType->mTypeName);
-	else if (isNegativeNumber(pType->mLHSType, ulLHS))
+	else if (isNegativeNumber(szLocation, pType->mLHSType, ulLHS))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, left shift of negative value %s\n",
 		       szLocation, szLHS);
 	else
@@ -1262,58 +1262,11 @@ isNegativeNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long 
 static bool
 isShiftExponentTooLarge(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber, size_t zWidth)
 {
-	size_t zNumberWidth;
 
 	ASSERT(szLocation);
 	ASSERT(pType);
 	ASSERT(pType->mTypeKind == KIND_INTEGER);
 	ASSERT(!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT));
 
-
-
-	zNumberWidth = zDeserializeTypeWidth(pType);
-	switch (zNumberWidth) {
-	default:
-		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
-		/* NOTREACHED */
-#ifdef __SIZEOF_INT128__
-	case WIDTH_128:
-		if (*(longest *)ulNumber < 0)
-			return true;
-		else
-			return false;
-		/* NOTREACHED */
-#endif
-	case WIDTH_64:
-		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			if (*(int64_t *)ulNumber < 0)
-				return true;
-			else
-				return false;
-		} else {
-			if ((int64_t)(uint64_t)ulNumber < 0)
-				return true;
-			else
-				return false;
-		}
-		/* NOTREACHED */
-	case WIDTH_32:
-		if ((int32_t)(uint32_t)ulNumber < 0)
-			return true
-		else
-			return false;
-		/* NOTREACHED */
-	case WIDTH_16:
-		if ((int16_t)(uint16_t)ulNumber < 0)
-			return true
-		else
-			return false;
-		/* NOTREACHED */
-	case WIDTH_8:
-		if ((int8_t)(uint8_t)ulNumber < 0)
-			return true
-		else
-			return false;
-		/* NOTREACHED */
-	}	
+	return llluGetNumber(szLocation, pType, ulNumber) >= zWidth;
 }

@@ -411,7 +411,7 @@ HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsign
 	if (isNegativeNumber(pType->mRHSType, ulRHS))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is negative\n",
 		       szLocation, szRHS);
-	else if (isShift())
+	else if (isShiftExponentTooLarge(pType->mRHSType, ulRHS, zDeserializeTypeWidth(pType->mLHSType)))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is too large for %u-bit type %s\n",
 		       szLocation, szRHS, zDeserializeTypeWidth(pType->mLHSType), pType->mLHSType->mTypeName);
 	else if (isNegativeNumber(pType->mLHSType, ulLHS))
@@ -1215,4 +1215,60 @@ isNegativeNumber(struct CTypeDescriptor *pType, unsigned long ulNumber)
 			return false;
 		/* NOTREACHED */
 	}
+}
+
+static bool
+isShiftExponentTooLarge(struct CTypeDescriptor *pType, unsigned long ulNumber, size_t zWidth)
+{
+	size_t zNumberWidth;
+
+	ASSERT(pType);
+	ASSERT(pType->mTypeKind == KIND_INTEGER);
+	ASSERT(!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT));
+
+	zNumberWidth = zDeserializeTypeWidth(pType);
+	switch (zNumberWidth) {
+	default:
+		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+		/* NOTREACHED */
+#ifdef __SIZEOF_INT128__
+	case WIDTH_128:
+		if (*(longest *)ulNumber < 0)
+			return true;
+		else
+			return false;
+		/* NOTREACHED */
+#endif
+	case WIDTH_64:
+		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+			if (*(int64_t *)ulNumber < 0)
+				return true;
+			else
+				return false;
+		} else {
+			if ((int64_t)(uint64_t)ulNumber < 0)
+				return true;
+			else
+				return false;
+		}
+		/* NOTREACHED */
+	case WIDTH_32:
+		if ((int32_t)(uint32_t)ulNumber < 0)
+			return true
+		else
+			return false;
+		/* NOTREACHED */
+	case WIDTH_16:
+		if ((int16_t)(uint16_t)ulNumber < 0)
+			return true
+		else
+			return false;
+		/* NOTREACHED */
+	case WIDTH_8:
+		if ((int8_t)(uint8_t)ulNumber < 0)
+			return true
+		else
+			return false;
+		/* NOTREACHED */
+	}	
 }

@@ -102,6 +102,9 @@ __RCSID("$NetBSD$");
 #if __SIZEOF_INT128__
 typedef __int128 longest;
 typedef unsigned __int128 ulongest;
+#else
+typedef int64_t longest;
+typedef uint64_t ulongest;
 #endif
 
 #ifndef _KERNEL
@@ -1062,41 +1065,142 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 }
 #endif
 
+static longest
+llliGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber)
+{
+	size_t zNumberWidth;
+	longest L = 0;
+
+	ASSERT(szLocation);
+	ASSERT(pType);
+
+	zNumberWidth = zDeserializeTypeWidth(pType);
+	switch (zNumberWidth) {
+	default:
+		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+		/* NOTREACHED */
+	case WIDTH_128:
+#ifdef __SIZEOF_INT128__
+		memcpy(&L, (longest *)ulNumber, sizeof(longest));
+#else
+		Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
+		/* NOTREACHED */
+#endif
+		break;
+	case WIDTH_64:
+		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+			L = *(int64_t *)pNumber;
+		} else {
+			L = (int64_t)(uint64_t)ulNumber;
+		}
+		break;
+	case WIDTH_32:
+		L = (int32_t)(uint32_t)ulNumber;
+		break;
+	case WIDTH_16:
+		L = (int16_t)(uint16_t)ulNumber;
+		break;
+	case WIDTH_8:
+		L = (int8_t)(uint8_t)ulNumber;
+		break;
+	}
+
+	return L;
+}
+
+static ulongest
+llluGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber)
+{
+	size_t zNumberWidth;
+	ulongest UL = 0;
+
+	ASSERT(pType);
+
+	zNumberWidth = zDeserializeTypeWidth(pType);
+	switch (zNumberWidth) {
+	default:
+		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+		/* NOTREACHED */
+	case WIDTH_128:
+#ifdef __SIZEOF_INT128__
+		memcpy(&UL, (ulongest *)ulNumber, sizeof(ulongest));
+		break;
+#else
+		Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
+		/* NOTREACHED */
+#endif
+	case WIDTH_64:
+		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+			UL = *(uint64_t *)pNumber;
+			break;
+		}
+		/* FALLTHROUGH */
+	case WIDTH_32:
+		/* FALLTHROUGH */
+	case WIDTH_16:
+		/* FALLTHROUGH */
+	case WIDTH_8:
+		UL = ulNumber;
+		break;
+	}
+
+	return UL;
+}
+
+#ifdef _KERNEL
 static void
-DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
+DeserializeNumberFloat(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
 	size_t zNumberWidth;
 
-	ASSERT(pBuffer);
 	ASSERT(szLocation);
+	ASSERT(pBuffer);
+	ASSERT(zBUfferLength > 0);
+	ASSERT(pType);
+	ASSERT(pType->mTypeKind == KIND_FLOAT);
+
+	zNumberWidth = zDeserializeTypeWidth(pType);
+	switch (zNumberWidth) {
+	default:
+		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+		/* NOTREACHED */
+#ifdef __HAVE_LONG_DOUBLE
+	case WIDTH_128:
+	case WIDTH_96:
+	case WIDTH_80:
+		DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+		break;
+#endif
+	case WIDTH_64:
+		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+			break;
+		}
+	case WIDTH_32:
+	case WIDTH_16:
+		DeserializeFloatInlined(pBuffer, zBUfferLength, pType, ulNumber);
+		break;
+	}
+}
+#endif
+
+static void
+DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber)
+{
+
+	ASSERT(szLocation);
+	ASSERT(pBuffer);
 	ASSERT(zBUfferLength > 0);
 	ASSERT(pType);
 
 	switch(pType->mTypeKind) {
 	case KIND_INTEGER:
-		zNumberWidth = zDeserializeTypeWidth(pType);
-		switch (zNumberWidth) {
-		default:
-			Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
-			/* NOTREACHED */
-		case WIDTH_128:
-#ifdef __SIZEOF_INT128__
-			DeserializeLongest(pBuffer, zBUfferLength, (ulongest *)ulNumber);
-#else
-			Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
-			/* NOTREACHED */
-#endif
-			break;
-		case WIDTH_64:
-			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-				DeserializeIntegerOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
-				break;
-			}
-		case WIDTH_32:
-		case WIDTH_16:
-		case WIDTH_8:
-			DeserializeIntegerInlined(pBuffer, zBUfferLength, pType, ulNumber);
-			break;
+		if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT)) {
+			longest L = llliGetNumber(szLocation, pType, ulNumber);
+			DeserializeNumberLongest(pBuffer, zBUfferLength, pType, L);
+		} else {
+			ulongest UL = llluGetNumber(szLocation, pType, ulNumber);
+			DeserializeNumberUlongest(pBuffer, zBUfferLength, pType, UL);
 		}
 		break;
 	case KIND_FLOAT:
@@ -1104,29 +1208,8 @@ DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct 
 		Report(true, "UBSan: Unexpected Float Type in %s\n", szLocation);
 		/* NOTREACHED */
 #else
-		zNumberWidth = zDeserializeTypeWidth(pType);
-		switch (zNumberWidth) {
-		default:
-			Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
-			/* NOTREACHED */
-#ifdef __HAVE_LONG_DOUBLE
-		case WIDTH_128:
-		case WIDTH_96:
-		case WIDTH_80:
-			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
-			break;
+		DeserializeNumberFloat(pBuffer, zBUfferLength, pType, ulNumber);
 #endif
-		case WIDTH_64:
-			if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-				DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
-				break;
-			}
-		case WIDTH_32:
-		case WIDTH_16:
-			DeserializeFloatInlined(pBuffer, zBUfferLength, pType, ulNumber);
-			break;
-#endif
-		}
 		break;
 	case KIND_UNKNOWN:
 		Report(true, "UBSan: Unknown Type in %s\n", szLocation);
@@ -1142,7 +1225,7 @@ DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
 	const char *rgczTypeCheckKinds[] = {
 		"load of",
 		"store to",
-		reference binding to",
+		"reference binding to",
 		"member access within",
 		"member call on",
 		"constructor call on",
@@ -1160,71 +1243,33 @@ DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
 }
 
 static bool
-isNegativeNumber(struct CTypeDescriptor *pType, unsigned long ulNumber)
+isNegativeNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
-	size_t zNumberWidth;
+	longest L;
 
+	ASSERT(szLocation);
 	ASSERT(pType);
 	ASSERT(pType->mTypeKind == KIND_INTEGER);
 
 	if (!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT))
 		return false;
 
-	zNumberWidth = zDeserializeTypeWidth(pType);
-	switch (zNumberWidth) {
-	default:
-		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
-		/* NOTREACHED */
-#ifdef __SIZEOF_INT128__
-	case WIDTH_128:
-		if (*(longest *)ulNumber < 0)
-			return true;
-		else
-			return false;
-		/* NOTREACHED */
-#endif
-	case WIDTH_64:
-		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			if (*(int64_t *)ulNumber < 0)
-				return true;
-			else
-				return false;
-		} else {
-			if ((int64_t)(uint64_t)ulNumber < 0)
-				return true;
-			else
-				return false;
-		}
-		/* NOTREACHED */
-	case WIDTH_32:
-		if ((int32_t)(uint32_t)ulNumber < 0)
-			return true
-		else
-			return false;
-		/* NOTREACHED */
-	case WIDTH_16:
-		if ((int16_t)(uint16_t)ulNumber < 0)
-			return true
-		else
-			return false;
-		/* NOTREACHED */
-	case WIDTH_8:
-		if ((int8_t)(uint8_t)ulNumber < 0)
-			return true
-		else
-			return false;
-		/* NOTREACHED */
-	}
+	L = llliGetNumber(szLocation, pType, ulNumber);
+
+	return L < 0;
 }
 
 static bool
-isShiftExponentTooLarge(struct CTypeDescriptor *pType, unsigned long ulNumber, size_t zWidth)
+isShiftExponentTooLarge(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber, size_t zWidth)
 {
 	size_t zNumberWidth;
 
+	ASSERT(szLocation);
 	ASSERT(pType);
 	ASSERT(pType->mTypeKind == KIND_INTEGER);
 	ASSERT(!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT));
+
+
 
 	zNumberWidth = zDeserializeTypeWidth(pType);
 	switch (zNumberWidth) {

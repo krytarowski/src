@@ -408,9 +408,18 @@ HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsign
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mLHSType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mRHSType, ulRHS);
 
-	if (ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT))
-	Report(isFatal, "UBSan: Undefined Behavior in %s, index %s is out of range for type %s\n",
-	       szLocation, ulIndex, pData->mArrayType->mTypeName);
+	if (isNegativeNumber(pType->mRHSType, ulRHS))
+		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is negative\n",
+		       szLocation, szRHS);
+	else if (isShift())
+		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is too large for %u-bit type %s\n",
+		       szLocation, szRHS, zDeserializeTypeWidth(pType->mLHSType), pType->mLHSType->mTypeName);
+	else if (isNegativeNumber(pType->mLHSType, ulLHS))
+		Report(isFatal, "UBSan: Undefined Behavior in %s, left shift of negative value %s\n",
+		       szLocation, szLHS);
+	else
+		Report(isFatal, "UBSan: Undefined Behavior in %s, left shift of %s by %s places cannot be represented in type %s\n",
+		       szLocation, szLHS, szRHS, pData->mLHSType->mTypeName);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -1148,4 +1157,62 @@ DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
 	ASSERT(__arraycount(rgczTypeCheckKinds) > mTypeCheckKind);
 
 	return rgczTypeCheckKinds[mTypeCheckKind];
+}
+
+static bool
+isNegativeNumber(struct CTypeDescriptor *pType, unsigned long ulNumber)
+{
+	size_t zNumberWidth;
+
+	ASSERT(pType);
+	ASSERT(pType->mTypeKind == KIND_INTEGER);
+
+	if (!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT))
+		return false;
+
+	zNumberWidth = zDeserializeTypeWidth(pType);
+	switch (zNumberWidth) {
+	default:
+		Report(true, "UBSan: Unexpected %zu-Bit Type in %s\n", zNumberWidth, szLocation);
+		/* NOTREACHED */
+#ifdef __SIZEOF_INT128__
+	case WIDTH_128:
+		if (*(longest *)ulNumber < 0)
+			return true;
+		else
+			return false;
+		/* NOTREACHED */
+#endif
+	case WIDTH_64:
+		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
+			if (*(int64_t *)ulNumber < 0)
+				return true;
+			else
+				return false;
+		} else {
+			if ((int64_t)(uint64_t)ulNumber < 0)
+				return true;
+			else
+				return false;
+		}
+		/* NOTREACHED */
+	case WIDTH_32:
+		if ((int32_t)(uint32_t)ulNumber < 0)
+			return true
+		else
+			return false;
+		/* NOTREACHED */
+	case WIDTH_16:
+		if ((int16_t)(uint16_t)ulNumber < 0)
+			return true
+		else
+			return false;
+		/* NOTREACHED */
+	case WIDTH_8:
+		if ((int8_t)(uint8_t)ulNumber < 0)
+			return true
+		else
+			return false;
+		/* NOTREACHED */
+	}
 }

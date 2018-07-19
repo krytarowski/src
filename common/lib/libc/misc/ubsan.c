@@ -231,6 +231,8 @@ static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, un
 #endif
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 static const char *DeserializeTypeCheckKind(uint8_t mTypeCheckKind);
+static bool isNegativeNumber(char *, struct CTypeDescriptor *, unsigned long);
+static bool isShiftExponentTooLarge(char *, struct CTypeDescriptor *, unsigned long, size_t);
 
 /* Public symbols used in the instrumentation of the code generation part */
 void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
@@ -342,12 +344,12 @@ HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CType
 	ASSERT(mLocation);
 	ASSERT(mType);
 
-	if (isAlreadyReported(&pData->mLocation))
+	if (isAlreadyReported(mLocation))
 		return;
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, mLocation);
 
-	if (ulPointer == NULL) {
+	if (ulPointer == 0) {
 		Report(isFatal, "UBSan: Undefined Behavior in %s, %s null pointer of type %s\n",
 		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), mType->mTypeName);
 	} else if (ulPointer & __BITS(0, mLogAlignment - 1)) {
@@ -411,13 +413,13 @@ HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsign
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mLHSType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mRHSType, ulRHS);
 
-	if (isNegativeNumber(szLocation, pType->mRHSType, ulRHS))
+	if (isNegativeNumber(szLocation, pData->mRHSType, ulRHS))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is negative\n",
 		       szLocation, szRHS);
-	else if (isShiftExponentTooLarge(szLocation, pType->mRHSType, ulRHS, zDeserializeTypeWidth(pType->mLHSType)))
+	else if (isShiftExponentTooLarge(szLocation, pData->mRHSType, ulRHS, zDeserializeTypeWidth(pData->mLHSType)))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is too large for %u-bit type %s\n",
-		       szLocation, szRHS, zDeserializeTypeWidth(pType->mLHSType), pType->mLHSType->mTypeName);
-	else if (isNegativeNumber(szLocation, pType->mLHSType, ulLHS))
+		       szLocation, szRHS, zDeserializeTypeWidth(pData->mLHSType), pData->mLHSType->mTypeName);
+	else if (isNegativeNumber(szLocation, pData->mLHSType, ulLHS))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, left shift of negative value %s\n",
 		       szLocation, szLHS);
 	else

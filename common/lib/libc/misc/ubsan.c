@@ -1245,7 +1245,6 @@ DeserializeTypeCheckKind(uint8_t mTypeCheckKind)
 static bool
 isNegativeNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber)
 {
-	longest L;
 
 	ASSERT(szLocation);
 	ASSERT(pType);
@@ -1254,9 +1253,7 @@ isNegativeNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long 
 	if (!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT))
 		return false;
 
-	L = llliGetNumber(szLocation, pType, ulNumber);
-
-	return L < 0;
+	return llliGetNumber(szLocation, pType, ulNumber) < 0;
 }
 
 static bool

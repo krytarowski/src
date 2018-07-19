@@ -46,6 +46,7 @@ __RCSID("$NetBSD$");
 #endif
 
 #if defined(_KERNEL)
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stdarg.h>
 #define ASSERT(x) KASSERT(x)
@@ -53,6 +54,7 @@ __RCSID("$NetBSD$");
 #if defined(_LIBC)
 #include "namespace.h"
 #endif
+#include <sys/param.h>
 #include <assert.h>
 #include <inttypes.h>
 #include <math.h>
@@ -1271,7 +1273,6 @@ isShiftExponentTooLarge(char *szLocation, struct CTypeDescriptor *pType, unsigne
 	ASSERT(szLocation);
 	ASSERT(pType);
 	ASSERT(pType->mTypeKind == KIND_INTEGER);
-	ASSERT(!ISSET(pType->mTypeInfo, NUMBER_SIGNED_BIT));
 
 	return llluGetNumber(szLocation, pType, ulNumber) >= zWidth;
 }

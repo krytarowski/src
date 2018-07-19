@@ -948,7 +948,7 @@ DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation 
 	ASSERT(pLocation);
 	ASSERT(pLocation->mFilename);
 
-	snprintf(pBuffer, zBUfferLength, "%s:%" PRIu32 ":%" PRIu32, pLocation->mFilename, pLocation->mLine & ~ACK_REPORTED, pLocation->mColumn);
+	snprintf(pBuffer, zBUfferLength, "%s:%" PRIu32 ":%" PRIu32, pLocation->mFilename, pLocation->mLine & (uint32_t)~ACK_REPORTED, pLocation->mColumn);
 }
 
 #ifdef __SIZEOF_INT128__

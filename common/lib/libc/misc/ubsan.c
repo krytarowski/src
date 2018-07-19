@@ -398,7 +398,7 @@ HandleOutOfBounds(bool isFatal, struct COutOfBoundsData *pData, unsigned long ul
 	DeserializeNumber(szLocation, szIndex, NUMBER_MAXLEN, pData->mIndexType, ulIndex);
 
 	Report(isFatal, "UBSan: Undefined Behavior in %s, index %s is out of range for type %s\n",
-	       szLocation, ulIndex, pData->mArrayType->mTypeName);
+	       szLocation, szIndex, pData->mArrayType->mTypeName);
 }
 
 static void

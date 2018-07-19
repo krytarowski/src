@@ -935,7 +935,7 @@ DeserializeUINT128(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *
 	char rgNumber[sizeof(ulongest)];
 	size_t zI;
 
-	memcpy(rgNumber, U128, sizeof(U128));
+	memcpy(rgNumber, &U128, sizeof(U128));
 
 	strlcpy(pBuffer, "Undecoded-128-bit-Integer-Type (0x", zBUfferLength);
 	for (zI = 0; zI < sizeof(ulongest); zI++) {
@@ -961,7 +961,7 @@ DeserializeNumberSigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		/* NOTREACHED */
 #ifdef __SIZEOF_INT128__
 	case WIDTH_128:
-		DeserializeU128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
+		DeserializeUINT128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
 		break;
 #endif
 	case WIDTH_64:
@@ -988,7 +988,7 @@ DeserializeNumberUnsigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescr
 		/* NOTREACHED */
 #ifdef __SIZEOF_INT128__
 	case WIDTH_128:
-		DeserializeU128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
+		DeserializeUINT128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
 		break;
 #endif
 	case WIDTH_64:

@@ -527,6 +527,25 @@ HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ul
 	}
 }
 
+static void
+HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	/*
+	 * TODO
+	 */
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	return;
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -606,6 +625,8 @@ __ubsan_handle_dynamic_type_cache_miss(struct CDynamicTypeCacheMissData *pData, 
 {
 
 	ASSERT(pData);
+
+	HandleDynamicTypeCacheMiss(false, pData, ulPointer, ulHash);
 }
 
 void
@@ -613,6 +634,8 @@ __ubsan_handle_dynamic_type_cache_miss_abort(struct CDynamicTypeCacheMissData *p
 {
 
 	ASSERT(pData);
+
+	HandleDynamicTypeCacheMiss(false, pData, ulPointer, ulHash);
 }
 
 void

@@ -83,10 +83,10 @@ __RCSID("$NetBSD$");
 
 #define ACK_REPORTED	__BIT(31)
 
-#define MUL_CHARACTER	0x2a
-#define PLUS_CHARACTER	0x2b
-#define MINUS_CHARACTER	0x2d
-#define DIV_CHARACTER	0x2f
+#define MUL_STRING	"*"
+#define PLUS_STRING	"+"
+#define MINUS_STRING	"-"
+#define DIVREM_STRING	"divrem"
 
 #define NUMBER_MAXLEN	128
 #define LOCATION_MAXLEN	(PATH_MAX + 32 /* ':LINE:COLUMN' */)
@@ -288,7 +288,7 @@ void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, un
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
 
 static void
-HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, int iOperation)
+HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, const char *czOperation)
 {
 	char szLocation[LOCATION_MAXLEN];
 	char szLHS[NUMBER_MAXLEN];
@@ -303,8 +303,8 @@ HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, u
 	DeserializeNumber(szLocation, szLHS, NUMBER_MAXLEN, pData->mType, ulLHS);
 	DeserializeNumber(szLocation, szRHS, NUMBER_MAXLEN, pData->mType, ulRHS);
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, %s integer overflow: %s %c %s cannot be represented in type %s\n",
-	       szLocation, ISSET(pData->mType->mTypeInfo, NUMBER_SIGNED_BIT) ? "signed" : "unsigned", szLHS, iOperation, szRHS, pData->mType->mTypeName);
+	Report(isFatal, "UBSan: Undefined Behavior in %s, %s integer overflow: %s %s %s cannot be represented in type %s\n",
+	       szLocation, ISSET(pData->mType->mTypeInfo, NUMBER_SIGNED_BIT) ? "signed" : "unsigned", szLHS, szOperation, szRHS, pData->mType->mTypeName);
 }
 
 static void
@@ -474,7 +474,7 @@ __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, un
 
 	ASSERT(pData);
 
-	HandleOverflow(false, pData, ulLHS, ulRHS, PLUS_CHARACTER);
+	HandleOverflow(false, pData, ulLHS, ulRHS, PLUS_STRING);
 }
 
 void
@@ -483,7 +483,7 @@ __ubsan_handle_add_overflow_abort(struct COverflowData *pData, unsigned long ulL
 
 	ASSERT(pData);
 
-	HandleOverflow(true, pData, ulLHS, ulRHS, PLUS_CHARACTER);
+	HandleOverflow(true, pData, ulLHS, ulRHS, PLUS_STRING);
 }
 
 void
@@ -522,7 +522,7 @@ __ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long ulLHS,
 
 	ASSERT(pData);
 
-	HandleOverflow(false, pData, ulLHS, ulRHS, DIV_CHARACTER);
+	HandleOverflow(false, pData, ulLHS, ulRHS, DIVREM_STRING);
 }
 
 void
@@ -531,7 +531,7 @@ __ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long 
 
 	ASSERT(pData);
 
-	HandleOverflow(true, pData, ulLHS, ulRHS, DIV_CHARACTER);
+	HandleOverflow(true, pData, ulLHS, ulRHS, DIVREM_STRING);
 }
 
 void
@@ -625,7 +625,7 @@ __ubsan_handle_mul_overflow(struct COverflowData *pData, unsigned long ulLHS, un
 
 	ASSERT(pData);
 
-	HandleOverflow(false, pData, ulLHS, ulRHS, MUL_CHARACTER);
+	HandleOverflow(false, pData, ulLHS, ulRHS, MUL_STRING);
 }
 
 void
@@ -634,7 +634,7 @@ __ubsan_handle_mul_overflow_abort(struct COverflowData *pData, unsigned long ulL
 
 	ASSERT(pData);
 
-	HandleOverflow(true, pData, ulLHS, ulRHS, MUL_CHARACTER);
+	HandleOverflow(true, pData, ulLHS, ulRHS, MUL_STRING);
 }
 
 void
@@ -769,7 +769,7 @@ __ubsan_handle_sub_overflow(struct COverflowData *pData, unsigned long ulLHS, un
 
 	ASSERT(pData);
 
-	HandleOverflow(false, pData, ulLHS, ulRHS, MINUS_CHARACTER);
+	HandleOverflow(false, pData, ulLHS, ulRHS, MINUS_STRING);
 }
 
 void
@@ -778,7 +778,7 @@ __ubsan_handle_sub_overflow_abort(struct COverflowData *pData, unsigned long ulL
 
 	ASSERT(pData);
 
-	HandleOverflow(true, pData, ulLHS, ulRHS, MINUS_CHARACTER);
+	HandleOverflow(true, pData, ulLHS, ulRHS, MINUS_STRING);
 }
 
 void

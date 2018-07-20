@@ -236,6 +236,7 @@ static void DeserializeNumberFloat(char *, char *, size_t, struct CTypeDescripto
 static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
 static const char *DeserializeTypeCheckKind(uint8_t mTypeCheckKind);
 static const char *DeserializeBuiltinCheckKind(uint8_t hhuBuiltinCheckKind);
+static const char *DeserializeCFICheckKind(uint8_t hhuCFICheckKind);
 static bool isNegativeNumber(char *, struct CTypeDescriptor *, unsigned long);
 static bool isShiftExponentTooLarge(char *, struct CTypeDescriptor *, unsigned long, size_t);
 
@@ -470,7 +471,16 @@ static void
 HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData, unsigned long ulFunction)
 {
 	char szLocation[LOCATION_MAXLEN];
-	char *szFunctionName;
+
+	/*
+	 * There is no a portable C solution to translate an address of a
+	 * function to its name. On the cost of getting this routine simple
+	 * and portable without ifdefs between the userland and the kernel
+	 * just print the address of the function as-is.
+	 *
+	 * For better diagnostic messages in the userland, users shall use
+	 * the full upstream version shipped along with the compiler toolchain.
+	 */
 
 	ASSERT(pData);
 
@@ -479,10 +489,29 @@ HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
-	szFunctionName =;
+	Report(isFatal, "UBSan: Undefined Behavior in %s, call to function %#lx through pointer to incorrect function type %s\n"
+	      szLocation, ulFunction, pData->mType);
+}
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, call to function %s through pointer to incorrect function type %s\n"
-	      szLocation, pData->mType);
+static void
+HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ulVtable, bool bValidVtable, bool FromUnrecoverableHandler, unsigned long ProgramCounter, unsigned long FramePointer)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	/*
+	 * This is a minimal implementation without diving into C++
+	 * specifics and (Itanium) ABI deserialization.
+	 */
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n"
+	      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, bValidVtable ? "valid" : "invalid", FromUnrecoverableHandler ? "unrecoverable" : "recoverable", ProgramCounter, FramePointer);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -519,6 +548,8 @@ __ubsan_handle_cfi_bad_type(struct CCFICheckFailData *pData, unsigned long ulVta
 {
 
 	ASSERT(pData);
+
+	HandleCFIBadType(false, pData, ulVtable, bValidVtable, FromUnrecoverableHandler, ProgramCounter, FramePointer);
 }
 
 void
@@ -1329,6 +1360,24 @@ DeserializeBuiltinCheckKind(uint8_t hhuBuiltinCheckKind)
 	ASSERT(__arraycount(rgczBuiltinCheckKinds) > hhuBuiltinCheckKind);
 
 	return rgczBuiltinCheckKinds[hhuBuiltinCheckKind];
+}
+
+static const char *
+DeserializeCFICheckKind(uint8_t hhuCFICheckKind)
+{
+	const char *rgczCFICheckKinds[] = {
+		"virtual call",					// CFITCK_VCall
+		"non-virtual call",				// CFITCK_NVCall
+		"base-to-derived cast",				// CFITCK_DerivedCast
+		"cast to unrelated type",			// CFITCK_UnrelatedCast
+		"ICall",					// CFITCK_ICall
+		"NVMFCall",					// CFITCK_NVMFCall
+		"virtual pointer to member function call",	// CFITCK_VMFCall
+	};
+
+	ASSERT(__arraycount(rgczCFICheckKinds) > hhuCFICheckKind);
+
+	return rgczCFICheckKinds[hhuCFICheckKind];
 }
 
 static bool

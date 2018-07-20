@@ -88,6 +88,14 @@ __RCSID("$NetBSD$");
 #define MINUS_STRING	"-"
 #define DIVREM_STRING	"divrem"
 
+#define CFI_VCALL		0
+#define CFI_NVCALL		1
+#define CFI_DERIVEDCAST		2
+#define CFI_UNRELATEDCAST	3
+#define CFI_ICALL		4
+#define CFI_NVMFCALL		5
+#define CFI_VMFCALL		6
+
 #define NUMBER_MAXLEN	128
 #define LOCATION_MAXLEN	(PATH_MAX + 32 /* ':LINE:COLUMN' */)
 

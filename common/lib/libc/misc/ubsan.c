@@ -518,8 +518,13 @@ HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ul
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
-	Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n"
-	      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, bValidVtable ? "valid" : "invalid", FromUnrecoverableHandler ? "unrecoverable" : "recoverable", ProgramCounter, FramePointer);
+	if (pData->mCheckKind == CFI_ICALL || pData->mCheckKind == CFI_VMFCALL) {
+		Report(isFatal, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx)\n"
+		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable);
+	} else {
+		Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n"
+		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, bValidVtable ? "valid" : "invalid", FromUnrecoverableHandler ? "unrecoverable" : "recoverable", ProgramCounter, FramePointer);
+	}
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
@@ -565,6 +570,8 @@ __ubsan_handle_cfi_check_fail(struct CCFICheckFailData *pData, unsigned long ulV
 {
 
 	ASSERT(pData);
+
+	HandleCFIBadType(false, pData, ulVtable, false, false, 0, 0);
 }
 
 void
@@ -572,6 +579,8 @@ __ubsan_handle_cfi_check_fail_abort(struct CCFICheckFailData *pData, unsigned lo
 {
 
 	ASSERT(pData);
+
+	HandleCFIBadType(true, pData, ulVtable, false, false, 0, 0);
 }
 
 void
@@ -1374,13 +1383,13 @@ static const char *
 DeserializeCFICheckKind(uint8_t hhuCFICheckKind)
 {
 	const char *rgczCFICheckKinds[] = {
-		"virtual call",					// CFITCK_VCall
-		"non-virtual call",				// CFITCK_NVCall
-		"base-to-derived cast",				// CFITCK_DerivedCast
-		"cast to unrelated type",			// CFITCK_UnrelatedCast
-		"ICall",					// CFITCK_ICall
-		"NVMFCall",					// CFITCK_NVMFCall
-		"virtual pointer to member function call",	// CFITCK_VMFCall
+		"virtual call",					// CFI_VCALL
+		"non-virtual call",				// CFI_NVCALL
+		"base-to-derived cast",				// CFI_DERIVEDCAST
+		"cast to unrelated type",			// CFI_UNRELATEDCAST
+		"indirect function call",			// CFI_ICALL
+		"non-virtual pointer to member function call",	// CFI_NVMFCALL
+		"virtual pointer to member function call",	// CFI_VMFCALL
 	};
 
 	ASSERT(__arraycount(rgczCFICheckKinds) > hhuCFICheckKind);

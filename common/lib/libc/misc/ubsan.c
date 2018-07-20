@@ -466,6 +466,25 @@ HandleInvalidBuiltin(bool isFatal, struct CInvalidBuiltinData *pData)
 	       szLocation, DeserializeBuiltinCheckKind(pData->mKind));
 }
 
+static void
+HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData, unsigned long ulFunction)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char *szFunctionName;
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	szFunctionName =;
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, call to function %s through pointer to incorrect function type %s\n"
+	      szLocation, pData->mType);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -567,6 +586,8 @@ __ubsan_handle_function_type_mismatch(struct CFunctionTypeMismatchData *pData, u
 {
 
 	ASSERT(pData);
+
+	HandleFunctionTypeMismatch(false, pData, ulFunction);
 }
 
 void
@@ -574,6 +595,8 @@ __ubsan_handle_function_type_mismatch_abort(struct CFunctionTypeMismatchData *pD
 {
 
 	ASSERT(pData);
+
+	HandleFunctionTypeMismatch(false, pData, ulFunction);
 }
 
 void

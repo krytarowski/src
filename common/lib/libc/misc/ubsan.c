@@ -629,6 +629,22 @@ HandleNonnullReturn(bool isFatal, struct CNonNullReturnData *pData, struct CSour
 	       szLocation, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
 }
 
+static void
+HandlePointerOverflow(bool isFatal, struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, pointer expression with base %#lx overflowed to %#lx",
+	       szLocation, ulBase, ulResult);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -937,6 +953,8 @@ __ubsan_handle_pointer_overflow(struct CPointerOverflowData *pData, unsigned lon
 {
 
 	ASSERT(pData);
+
+	HandlePointerOverflow(false, pData, ulBase, ulResult);
 }
 
 void
@@ -944,6 +962,8 @@ __ubsan_handle_pointer_overflow_abort(struct CPointerOverflowData *pData, unsign
 {
 
 	ASSERT(pData);
+
+	HandlePointerOverflow(true, pData, ulBase, ulResult);
 }
 
 void

@@ -280,8 +280,8 @@ void __ubsan_handle_negate_overflow(struct COverflowData *pData, unsigned long u
 void __ubsan_handle_negate_overflow_abort(struct COverflowData *pData, unsigned long ulOldVal);
 void __ubsan_handle_nonnull_arg(struct CNonNullArgData *pData);
 void __ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData);
-void __ubsan_handle_nonnull_return_v1(struct CNonNullArgData *pData);
-void __ubsan_handle_nonnull_return_v1_abort(struct CNonNullArgData *pData);
+void __ubsan_handle_nonnull_return_v1(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer);
+void __ubsan_handle_nonnull_return_v1_abort(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer);
 void __ubsan_handle_nullability_arg(struct CNonNullArgData *pData);
 void __ubsan_handle_nullability_arg_abort(struct CNonNullArgData *pData);
 void __ubsan_handle_nullability_return_v1(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer);
@@ -607,6 +607,28 @@ HandleNonnullArg(bool isFatal, struct CNonNullArgData *pData)
 	       szLocation, pData->mArgIndex, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
 }
 
+static void
+HandleNonnullReturn(bool isFatal, struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szAttributeLocation[LOCATION_MAXLEN];
+
+	ASSERT(pData);
+	ASSERT(pLocationPointer);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	if (pData->mAttributeLocation->mFilename)
+		DeserializeLocation(szAttributeLocation, LOCATION_MAXLEN, &pData->mAttributeLocation);
+	else
+		szAttributeLocation[0] = '\0';
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, null pointer passed as argument %d, which is declared to never be null%s%s\n",
+	       szLocation, pData->mArgIndex, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -835,17 +857,23 @@ __ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData)
 }
 
 void
-__ubsan_handle_nonnull_return_v1(struct CNonNullArgData *pData)
+__ubsan_handle_nonnull_return_v1(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
 {
 
 	ASSERT(pData);
+	ASSERT(pLocationPointer);
+
+	HandleNonnullReturn(false, pData);
 }
 
 void
-__ubsan_handle_nonnull_return_v1_abort(struct CNonNullArgData *pData)
+__ubsan_handle_nonnull_return_v1_abort(struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer)
 {
 
 	ASSERT(pData);
+	ASSERT(pLocationPointer);
+
+	HandleNonnullReturn(true, pData);
 }
 
 void
@@ -872,6 +900,8 @@ __ubsan_handle_nullability_return_v1(struct CNonNullReturnData *pData, struct CS
 
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
+
+	HandleNonnullReturn(false, pData);
 }
 
 void
@@ -880,6 +910,8 @@ __ubsan_handle_nullability_return_v1_abort(struct CNonNullReturnData *pData, str
 
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
+
+	HandleNonnullReturn(true, pData);
 }
 
 void

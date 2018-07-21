@@ -225,6 +225,12 @@ struct CVLABoundData {
 	struct CTypeDescriptor *mType;
 };
 
+struct CFloatCastOverflowData {
+	struct CSourceLocation mLocation;	/* This field exists in this struct since 2015 August 11th */
+	struct CTypeDescriptor *mFromType;
+	struct CTypeDescriptor *mToType;
+};
+
 
 /* Local utility functions */
 static void Report(bool, const char *, ...);
@@ -259,8 +265,8 @@ void __ubsan_handle_divrem_overflow(struct COverflowData *pData, unsigned long u
 void __ubsan_handle_divrem_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
 void __ubsan_handle_dynamic_type_cache_miss(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash);
 void __ubsan_handle_dynamic_type_cache_miss_abort(struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash);
-void __ubsan_handle_float_cast_overflow(void *pData, unsigned long ulFrom);
-void __ubsan_handle_float_cast_overflow_abort(void *pData, unsigned long ulFrom);
+void __ubsan_handle_float_cast_overflow(struct CFloatCastOverflowData *pData, unsigned long ulFrom);
+void __ubsan_handle_float_cast_overflow_abort(struct CFloatCastOverflowData *pData, unsigned long ulFrom);
 void __ubsan_handle_function_type_mismatch(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction);
 void __ubsan_handle_function_type_mismatch_abort(struct CFunctionTypeMismatchData *pData, unsigned long ulFunction);
 void __ubsan_handle_invalid_builtin(struct CInvalidBuiltinData *pData);
@@ -546,6 +552,24 @@ HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData
 	return;
 }
 
+static void
+HandleFloatCastOverflow(bool isFatal, struct CFloatCastOverflowData *pData, unsigned long ulFrom)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szFrom[NUMBER_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeNumber(szLocation, szFrom, NUMBER_MAXLEN, pData->mFromType, ulFrom);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, %s (of type %s) is outside the range of representable values of type %s\n"
+	       szLocation, szFrom, pData->mFromType->mTypeName, pData->mToType->mTypeName);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -639,17 +663,21 @@ __ubsan_handle_dynamic_type_cache_miss_abort(struct CDynamicTypeCacheMissData *p
 }
 
 void
-__ubsan_handle_float_cast_overflow(void *pData, unsigned long ulFrom)
+__ubsan_handle_float_cast_overflow(struct CFloatCastOverflowData *pData, unsigned long ulFrom)
 {
 
 	ASSERT(pData);
+
+	HandleFloatCastOverflow(false, pData, ulFrom);
 }
 
 void
-__ubsan_handle_float_cast_overflow_abort(void *pData, unsigned long ulFrom)
+__ubsan_handle_float_cast_overflow_abort(struct CFloatCastOverflowData *pData, unsigned long ulFrom)
 {
 
 	ASSERT(pData);
+
+	HandleFloatCastOverflow(true, pData, ulFrom);
 }
 
 void

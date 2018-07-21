@@ -586,6 +586,27 @@ HandleMissingReturn(bool isFatal, struct CUnreachableData *pData)
 	       szLocation);
 }
 
+static void
+HandleNonnullArg(bool isFatal, struct CNonNullArgData *pData)
+{
+	char szLocation[LOCATION_MAXLEN];
+	char szAttributeLocation[LOCATION_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	if (pData->mAttributeLocation->mFilename)
+		DeserializeLocation(szAttributeLocation, LOCATION_MAXLEN, &pData->mAttributeLocation);
+	else
+		szAttributeLocation[0] = '\0';
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, null pointer passed as argument %d, which is declared to never be null%s%s\n",
+	       szLocation, pData->mArgIndex, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -800,6 +821,8 @@ __ubsan_handle_nonnull_arg(struct CNonNullArgData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleNonnullArg(false, pData);
 }
 
 void
@@ -807,6 +830,8 @@ __ubsan_handle_nonnull_arg_abort(struct CNonNullArgData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleNonnullArg(true, pData);
 }
 
 void
@@ -828,6 +853,8 @@ __ubsan_handle_nullability_arg(struct CNonNullArgData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleNonnullArg(false, pData);
 }
 
 void
@@ -835,6 +862,8 @@ __ubsan_handle_nullability_arg_abort(struct CNonNullArgData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleNonnullArg(true, pData);
 }
 
 void

@@ -570,6 +570,22 @@ HandleFloatCastOverflow(bool isFatal, struct CFloatCastOverflowData *pData, unsi
 	       szLocation, szFrom, pData->mFromType->mTypeName, pData->mToType->mTypeName);
 }
 
+static void
+HandleMissingReturn(bool isFatal, struct CUnreachableData *pData)
+{
+	char szLocation[LOCATION_MAXLEN];
+
+	ASSERT(pData);
+
+	if (isAlreadyReported(&pData->mLocation))
+		return;
+
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+
+	Report(isFatal, "UBSan: Undefined Behavior in %s, execution reached the end of a value-returning function without returning a value\n"
+	       szLocation);
+}
+
 /* Definions of public symbols emitted by the instrumentation code */
 
 void
@@ -739,6 +755,8 @@ __ubsan_handle_missing_return(struct CUnreachableData *pData)
 {
 
 	ASSERT(pData);
+
+	HandleMissingReturn(true, pData);
 }
 
 void

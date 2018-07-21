@@ -616,17 +616,17 @@ HandleNonnullReturn(bool isFatal, struct CNonNullReturnData *pData, struct CSour
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
 
-	if (isAlreadyReported(&pData->mLocation))
+	if (isAlreadyReported(pLocationPointer))
 		return;
 
-	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
+	DeserializeLocation(szLocation, LOCATION_MAXLEN, pLocationPointer);
 	if (pData->mAttributeLocation->mFilename)
 		DeserializeLocation(szAttributeLocation, LOCATION_MAXLEN, &pData->mAttributeLocation);
 	else
 		szAttributeLocation[0] = '\0';
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, null pointer passed as argument %d, which is declared to never be null%s%s\n",
-	       szLocation, pData->mArgIndex, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
+	Report(isFatal, "UBSan: Undefined Behavior in %s, null pointer returned from function declared to never return null%s%s\n",
+	       szLocation, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
 }
 
 /* Definions of public symbols emitted by the instrumentation code */

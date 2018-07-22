@@ -536,10 +536,16 @@ HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ul
 static void
 HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash)
 {
+#if 0
 	char szLocation[LOCATION_MAXLEN];
 
 	/*
-	 * TODO
+	 * TODO: Unimplemented.
+	 *
+	 * This UBSan handler is special as the check has to be impelemented
+	 * in an implementation. In order to handle it there is need to
+	 * introspect into C++ ABI internals and likely use low-level C++
+	 * runtime interfaces.
 	 */
 
 	ASSERT(pData);
@@ -549,7 +555,9 @@ HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
-	return;
+	Report(isFatal, "UBSan: Undefined Behavior in %s, %s address %#lx which might not point to an object of type %s\n"
+	      szLocation, DeserializeTypeCheckKind(pData->mTypeCheckKind), ulPointer, pData->mType);
+#endif
 }
 
 static void

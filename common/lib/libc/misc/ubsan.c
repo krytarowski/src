@@ -508,7 +508,7 @@ HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData
 }
 
 static void
-HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ulVtable, bool bValidVtable, bool FromUnrecoverableHandler, unsigned long ProgramCounter, unsigned long FramePointer)
+HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ulVtable, bool *bValidVtable, bool *FromUnrecoverableHandler, unsigned long *ProgramCounter, unsigned long *FramePointer)
 {
 	char szLocation[LOCATION_MAXLEN];
 
@@ -529,7 +529,7 @@ HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ul
 		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable);
 	} else {
 		Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n"
-		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, bValidVtable ? "valid" : "invalid", FromUnrecoverableHandler ? "unrecoverable" : "recoverable", ProgramCounter, FramePointer);
+		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, *bValidVtable ? "valid" : "invalid", *FromUnrecoverableHandler ? "unrecoverable" : "recoverable", *ProgramCounter, *FramePointer);
 	}
 }
 
@@ -680,7 +680,7 @@ __ubsan_handle_cfi_bad_type(struct CCFICheckFailData *pData, unsigned long ulVta
 
 	ASSERT(pData);
 
-	HandleCFIBadType(false, pData, ulVtable, bValidVtable, FromUnrecoverableHandler, ProgramCounter, FramePointer);
+	HandleCFIBadType(false, pData, ulVtable, &bValidVtable, &FromUnrecoverableHandler, &ProgramCounter, &FramePointer);
 }
 
 void
@@ -689,7 +689,7 @@ __ubsan_handle_cfi_check_fail(struct CCFICheckFailData *pData, unsigned long ulV
 
 	ASSERT(pData);
 
-	HandleCFIBadType(false, pData, ulVtable, false, false, 0, 0);
+	HandleCFIBadType(false, pData, ulVtable, 0, 0, 0, 0);
 }
 
 void
@@ -698,7 +698,7 @@ __ubsan_handle_cfi_check_fail_abort(struct CCFICheckFailData *pData, unsigned lo
 
 	ASSERT(pData);
 
-	HandleCFIBadType(true, pData, ulVtable, false, false, 0, 0);
+	HandleCFIBadType(true, pData, ulVtable, 0, 0, 0, 0);
 }
 
 void

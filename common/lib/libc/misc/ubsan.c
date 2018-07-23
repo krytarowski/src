@@ -1072,13 +1072,14 @@ __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutM
 	 *
 	 * The __ubsan_on_report() feature is non trivial to implement in a
 	 * shared code between the kernel and userland. It's also opening
-	 * new sets of problems as we are not expected to slow down execution of
-	 * certain kernel subsystems (synchronization issues, interrupt handling
-	 * etc).
+	 * new sets of potential problems as we are not expected to slow down
+	 * execution of certain kernel subsystems (synchronization issues,
+	 * interrupt handling etc).
 	 *
 	 * A proper solution would need probably a lock-free bounded queue built
 	 * with atomic operations with the property of miltiple consumers and
-	 * multiple producers.
+	 * multiple producers. Maintaining such and validating such code is not
+	 * worth the effort.
 	 *
 	 * A legitimate user - besides testing framework - is a debugger plugin
 	 * intercepting reports from the UBSan instrumentation. For such

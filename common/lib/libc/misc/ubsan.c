@@ -540,7 +540,7 @@ HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData
 	char szLocation[LOCATION_MAXLEN];
 
 	/*
-	 * TODO: Unimplemented.
+	 * Unimplemented.
 	 *
 	 * This UBSan handler is special as the check has to be impelemented
 	 * in an implementation. In order to handle it there is need to
@@ -1067,6 +1067,23 @@ __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigne
 void
 __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr)
 {
+	/*
+	 * Unimplemented.
+	 *
+	 * The __ubsan_on_report() feature is non trivial to implement in a
+	 * shared code between the kernel and userland. It's also opening
+	 * new sets of problems as we are not expected to slow down execution of
+	 * certain kernel subsystems (synchronization issues, interrupt handling
+	 * etc).
+	 *
+	 * A proper solution would need probably a lock-free bounded queue built
+	 * with atomic operations with the property of miltiple consumers and
+	 * multiple producers.
+	 *
+	 * A legitimate user - besides testing framework - is a debugger plugin
+	 * intercepting reports from the UBSan instrumentation. For such
+	 * scenarios it is better to run the Clang/GCC version.
+	 */
 }
 
 /* Local utility functions */

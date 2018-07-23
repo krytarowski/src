@@ -303,7 +303,7 @@ void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, un
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
 
 static void
-HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, const char *czOperation)
+HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, const char *szOperation)
 {
 	char szLocation[LOCATION_MAXLEN];
 	char szLHS[NUMBER_MAXLEN];
@@ -503,7 +503,7 @@ HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, call to function %#lx through pointer to incorrect function type %s\n"
+	Report(isFatal, "UBSan: Undefined Behavior in %s, call to function %#lx through pointer to incorrect function type %s\n",
 	      szLocation, ulFunction, pData->mType);
 }
 
@@ -525,10 +525,10 @@ HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ul
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
 	if (pData->mCheckKind == CFI_ICALL || pData->mCheckKind == CFI_VMFCALL) {
-		Report(isFatal, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx)\n"
+		Report(isFatal, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx)\n",
 		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable);
 	} else {
-		Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n"
+		Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n",
 		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, *bValidVtable ? "valid" : "invalid", *FromUnrecoverableHandler ? "unrecoverable" : "recoverable", *ProgramCounter, *FramePointer);
 	}
 }
@@ -574,7 +574,7 @@ HandleFloatCastOverflow(bool isFatal, struct CFloatCastOverflowData *pData, unsi
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 	DeserializeNumber(szLocation, szFrom, NUMBER_MAXLEN, pData->mFromType, ulFrom);
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, %s (of type %s) is outside the range of representable values of type %s\n"
+	Report(isFatal, "UBSan: Undefined Behavior in %s, %s (of type %s) is outside the range of representable values of type %s\n",
 	       szLocation, szFrom, pData->mFromType->mTypeName, pData->mToType->mTypeName);
 }
 
@@ -590,7 +590,7 @@ HandleMissingReturn(bool isFatal, struct CUnreachableData *pData)
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, execution reached the end of a value-returning function without returning a value\n"
+	Report(isFatal, "UBSan: Undefined Behavior in %s, execution reached the end of a value-returning function without returning a value\n",
 	       szLocation);
 }
 
@@ -606,13 +606,13 @@ HandleNonnullArg(bool isFatal, struct CNonNullArgData *pData)
 		return;
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
-	if (pData->mAttributeLocation->mFilename)
+	if (pData->mAttributeLocation.mFilename)
 		DeserializeLocation(szAttributeLocation, LOCATION_MAXLEN, &pData->mAttributeLocation);
 	else
 		szAttributeLocation[0] = '\0';
 
 	Report(isFatal, "UBSan: Undefined Behavior in %s, null pointer passed as argument %d, which is declared to never be null%s%s\n",
-	       szLocation, pData->mArgIndex, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
+	       szLocation, pData->mArgIndex, pData->mAttributeLocation.mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
 }
 
 static void
@@ -628,13 +628,13 @@ HandleNonnullReturn(bool isFatal, struct CNonNullReturnData *pData, struct CSour
 		return;
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, pLocationPointer);
-	if (pData->mAttributeLocation->mFilename)
+	if (pData->mAttributeLocation.mFilename)
 		DeserializeLocation(szAttributeLocation, LOCATION_MAXLEN, &pData->mAttributeLocation);
 	else
 		szAttributeLocation[0] = '\0';
 
 	Report(isFatal, "UBSan: Undefined Behavior in %s, null pointer returned from function declared to never return null%s%s\n",
-	       szLocation, pData->mAttributeLocation->mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
+	       szLocation, pData->mAttributeLocation.mFilename ? ", nonnull/_Nonnull specified in " : "", szAttributeLocation);
 }
 
 static void
@@ -697,7 +697,7 @@ __ubsan_handle_cfi_check_fail(struct CCFICheckFailData *pData, unsigned long ulV
 
 	ASSERT(pData);
 
-	HandleCFIBadType(false, pData, ulVtable, 0, 0, 0, 0);
+	HandleCFIBadType(false, pData, ulValue, 0, 0, 0, 0);
 }
 
 void
@@ -706,7 +706,7 @@ __ubsan_handle_cfi_check_fail_abort(struct CCFICheckFailData *pData, unsigned lo
 
 	ASSERT(pData);
 
-	HandleCFIBadType(true, pData, ulVtable, 0, 0, 0, 0);
+	HandleCFIBadType(true, pData, ulValue, 0, 0, 0, 0);
 }
 
 void
@@ -887,7 +887,7 @@ __ubsan_handle_nonnull_return_v1(struct CNonNullReturnData *pData, struct CSourc
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
 
-	HandleNonnullReturn(false, pData);
+	HandleNonnullReturn(false, pData, pLocationPointer);
 }
 
 void
@@ -897,7 +897,7 @@ __ubsan_handle_nonnull_return_v1_abort(struct CNonNullReturnData *pData, struct 
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
 
-	HandleNonnullReturn(true, pData);
+	HandleNonnullReturn(true, pData, pLocationPointer);
 }
 
 void
@@ -925,7 +925,7 @@ __ubsan_handle_nullability_return_v1(struct CNonNullReturnData *pData, struct CS
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
 
-	HandleNonnullReturn(false, pData);
+	HandleNonnullReturn(false, pData, pLocationPointer);
 }
 
 void
@@ -935,7 +935,7 @@ __ubsan_handle_nullability_return_v1_abort(struct CNonNullReturnData *pData, str
 	ASSERT(pData);
 	ASSERT(pLocationPointer);
 
-	HandleNonnullReturn(true, pData);
+	HandleNonnullReturn(true, pData, pLocationPointer);
 }
 
 void

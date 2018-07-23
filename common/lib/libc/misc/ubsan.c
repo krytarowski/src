@@ -1078,7 +1078,7 @@ __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutM
 	 *
 	 * A proper solution would need probably a lock-free bounded queue built
 	 * with atomic operations with the property of miltiple consumers and
-	 * multiple producers. Maintaining such and validating such code is not
+	 * multiple producers. Maintaining and validating such code is not
 	 * worth the effort.
 	 *
 	 * A legitimate user - besides testing framework - is a debugger plugin

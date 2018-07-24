@@ -235,7 +235,7 @@ struct CFloatCastOverflowData {
 intptr_t __ubsan_vptr_type_cache[128];
 
 /* Local utility functions */
-static void Report(bool, const char *, ...);
+static void Report(bool, const char *, ...) __printflike(2, 3);
 static bool isAlreadyReported(struct CSourceLocation *);
 static size_t zDeserializeTypeWidth(struct CTypeDescriptor *pType);
 static void DeserializeLocation(char *, size_t, struct CSourceLocation *);
@@ -434,7 +434,7 @@ HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsign
 		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is negative\n",
 		       szLocation, szRHS);
 	else if (isShiftExponentTooLarge(szLocation, pData->mRHSType, ulRHS, zDeserializeTypeWidth(pData->mLHSType)))
-		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is too large for %u-bit type %s\n",
+		Report(isFatal, "UBSan: Undefined Behavior in %s, shift exponent %s is too large for %zu-bit type %s\n",
 		       szLocation, szRHS, zDeserializeTypeWidth(pData->mLHSType), pData->mLHSType->mTypeName);
 	else if (isNegativeNumber(szLocation, pData->mLHSType, ulLHS))
 		Report(isFatal, "UBSan: Undefined Behavior in %s, left shift of negative value %s\n",
@@ -501,7 +501,7 @@ HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
 	Report(isFatal, "UBSan: Undefined Behavior in %s, call to function %#lx through pointer to incorrect function type %s\n",
-	      szLocation, ulFunction, pData->mType);
+	      szLocation, ulFunction, pData->mType->mTypeName);
 }
 
 static void
@@ -523,10 +523,10 @@ HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ul
 
 	if (pData->mCheckKind == CFI_ICALL || pData->mCheckKind == CFI_VMFCALL) {
 		Report(isFatal, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx)\n",
-		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable);
+		      szLocation, pData->mType->mTypeName, DeserializeCFICheckKind(pData->mCheckKind), ulVtable);
 	} else {
 		Report(isFatal || FromUnrecoverableHandler, "UBSan: Undefined Behavior in %s, control flow integrity check for type %s failed during %s (vtable address %#lx; %s vtable; from %s handler; Program Counter %#lx; Frame Pointer %#lx)\n",
-		      szLocation, pData->mType, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, *bValidVtable ? "valid" : "invalid", *FromUnrecoverableHandler ? "unrecoverable" : "recoverable", *ProgramCounter, *FramePointer);
+		      szLocation, pData->mType->mTypeName, DeserializeCFICheckKind(pData->mCheckKind), ulVtable, *bValidVtable ? "valid" : "invalid", *FromUnrecoverableHandler ? "unrecoverable" : "recoverable", *ProgramCounter, *FramePointer);
 	}
 }
 

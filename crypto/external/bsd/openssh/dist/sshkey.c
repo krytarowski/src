@@ -1641,7 +1641,7 @@ dsa_generate_private_key(u_int bits, DSA **dsap)
 int
 sshkey_ecdsa_key_to_nid(EC_KEY *k)
 {
-	EC_GROUP *eg;
+	EC_GROUP *eg = NULL;
 	int nids[] = {
 		NID_X9_62_prime256v1,
 		NID_secp384r1,

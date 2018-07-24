@@ -148,6 +148,7 @@ SANITIZERFLAGS=		# empty
 
 .if ${MKLIBCSANITIZER:Uno} == "yes"
 LIBCSANITIZERFLAGS+=	-fsanitize=${USE_LIBCSANITIZER}
+LIBCSANITIZERFLAGS+=	-fno-sanitize=vptr	# Unsupported in micro-UBSan
 .else
 LIBCSANITIZERFLAGS=	# empty
 .endif

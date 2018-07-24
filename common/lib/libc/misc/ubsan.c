@@ -1352,7 +1352,7 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		 */
 		U32 = (uint32_t)ulNumber;
 		memcpy(&F, &U32, sizeof(float));
-		snprintf(pBuffer, zBUfferLength, "%g", D);
+		snprintf(pBuffer, zBUfferLength, "%g", F);
 		break;
 	case WIDTH_16:
 		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type (%#04" PRIx16 ")", (uint16_t)ulNumber);

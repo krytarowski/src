@@ -237,11 +237,6 @@ static void Report(bool, const char *, ...);
 static bool isAlreadyReported(struct CSourceLocation *);
 static size_t zDeserializeTypeWidth(struct CTypeDescriptor *pType);
 static void DeserializeLocation(char *, size_t, struct CSourceLocation *);
-#ifdef __SIZEOF_INT128__
-static void DeserializeLongest(char *, size_t, ulongest *);
-#endif
-static void DeserializeIntegerOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
-static void DeserializeIntegerInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
 #ifndef _KERNEL
 static void DeserializeFloatOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
 static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
@@ -372,7 +367,7 @@ HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CType
 	if (ulPointer == 0) {
 		Report(isFatal, "UBSan: Undefined Behavior in %s, %s null pointer of type %s\n",
 		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), mType->mTypeName);
-	} else if (ulPointer & __BITS(0, mLogAlignment - 1)) {
+	} else if ((mLogAlignment - 1) & ulPointer) {
 		Report(isFatal, "UBSan: Undefined Behavior in %s, %s misaligned address %p for type %s which requires %ld byte alignment\n",
 		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), (void *)ulPointer, mType->mTypeName, mLogAlignment);
 	} else {
@@ -1188,7 +1183,7 @@ isAlreadyReported(struct CSourceLocation *pLocation)
 static size_t
 zDeserializeTypeWidth(struct CTypeDescriptor *pType)
 {
-	size_t zWidth;
+	size_t zWidth = 0;
 
 	ASSERT(pType);
 

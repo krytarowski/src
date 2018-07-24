@@ -9,8 +9,8 @@
 
 ##### Sanitizer specific flags.
 
-CFLAGS+=	${SANITIZERFLAGS}
-CXXFLAGS+=	${SANITIZERFLAGS}
+CFLAGS+=	${SANITIZERFLAGS} ${LIBCSANITIZERFLAGS}
+CXXFLAGS+=	${SANITIZERFLAGS} ${LIBCSANITIZERFLAGS}
 LDFLAGS+=	${SANITIZERFLAGS}
 
 # Rename the local function definitions to not conflict with libc/rt/pthread/m.

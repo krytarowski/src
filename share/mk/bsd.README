@@ -276,6 +276,16 @@ MKLDAP		If "no", disables building of LDAP infrastructure
 		(libraries and support programs).
 		Default: yes
 
+MKLIBCSANITIZER	If "yes", use the selected sanitizer to compile userland
+		programs as defined in USE_LIBCSANITIZER, which defaults to
+		"undefined". The undefined behavior detector is currently
+		the only supported sanitizer in this mode.
+
+		The USE_LIBCSANITIZER value is passed to the -fsanitize=
+		argument to the compiler.
+		Additional arguments can be passed through LIBCSANITIZERFLAGS.
+		Default: no
+
 MKLIBCXX	If not "no", build and install libc++.
 		Default: no
 
@@ -405,6 +415,7 @@ MKSANITIZER	if "yes", use the selected sanitizer to compile userland
 		Additional arguments can be passed through SANITIZERFLAGS.
 		The list of supported features and their valid combinations
 		depends on the compiler version and target CPU architecture.
+		Default: no
 
 MKSHARE		If "no", act as "MKCATPAGES=no MKDOC=no MKHTML=no MKINFO=no
 		MKMAN=no MKNLS=no".

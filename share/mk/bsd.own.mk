@@ -1105,6 +1105,12 @@ MKSANITIZER?=	no
 USE_SANITIZER?=	address
 
 #
+# Sanitizers implemented in libc, only "undefined" is supported
+#
+MKLIBCSANITIZER?=	no
+USE_LIBCSANITIZER?=	undefined
+
+#
 # Exceptions to the above:
 #
 

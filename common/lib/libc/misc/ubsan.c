@@ -231,6 +231,8 @@ struct CFloatCastOverflowData {
 	struct CTypeDescriptor *mToType;
 };
 
+/* Unused in this implementation, emitted by the C++ check dynamic type cast. */
+intptr_t __ubsan_vptr_type_cache[128];
 
 /* Local utility functions */
 static void Report(bool, const char *, ...);

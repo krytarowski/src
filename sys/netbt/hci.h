@@ -2300,7 +2300,7 @@ hci_filter_test(uint8_t bit, const struct hci_filter *filter)
 	uint8_t off = (uint8_t)((bit - 1) >> 5);
 	uint8_t sh = (uint8_t)((bit - 1) & 0x1f);
 
-	return (filter->mask[off] >> sh) & 1U;
+	return (int)((filter->mask[off] >> sh) & 1U);
 }
 
 /*

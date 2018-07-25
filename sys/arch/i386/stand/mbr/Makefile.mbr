@@ -2,6 +2,7 @@
 
 S=		${.CURDIR}/../../../../..
 
+NOLIBCSANITIZER=# defined
 NOSANITIZER=	# defined
 NOMAN=		# defined
 

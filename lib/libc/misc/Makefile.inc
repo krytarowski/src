@@ -3,6 +3,9 @@
 
 .PATH: ${ARCHDIR}/misc ${.CURDIR}/misc
 
+# other sources shared with the kernel
+SRCS+=	ubsan.c
+
 # constructor
 SRCS+=	initfini.c
 

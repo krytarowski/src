@@ -3,6 +3,7 @@
 S=	${.CURDIR}/../../../../..
 
 NOMAN=
+NOLIBCSANITIZER=
 NOSANITIZER=
 NOPIE=
 PROG?= boot

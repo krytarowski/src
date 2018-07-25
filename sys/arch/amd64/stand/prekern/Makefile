@@ -5,6 +5,7 @@ SRCS=		locore.S trap.S prekern.c mm.c console.c elf.c prng.c
 
 NOSSP=		# defined
 NOPIE=		# defined
+NOLIBCSANITIZER=# defined
 NOSANITIZER=	# defined
 NOMAN=		1
 

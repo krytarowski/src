@@ -5,6 +5,7 @@ S=		${.CURDIR}/../../../../..
 PROG?=		fatboot
 NOMAN=		# defined
 NOPIE=		# defined
+NOLIBCSANITIZER=# defined
 NOSANITIZER=	# defined
 
 LIBCRT0=	# nothing

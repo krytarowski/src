@@ -256,13 +256,13 @@ execute(struct command *t, int wtty, int *pipein, int *pipeout)
 		Vsav = Vdp = 0;
 		Vexpath = 0;
 		Vt = 0;
-		pid = vfork();
+		pid = fork();
 
 		if (pid < 0) {
 		    (void)sigprocmask(SIG_SETMASK, &osigset, NULL);
 		    stderror(ERR_NOPROC);
 		}
-		forked++;
+//		forked++;
 		if (pid) {	/* parent */
 		    child = ochild;
 		    setintr = osetintr;

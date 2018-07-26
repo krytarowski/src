@@ -34,17 +34,32 @@ __RCSID("$NetBSD$");
 #include <atf-c.h>
 
 
-ATF_TC(add_overflow);
-ATF_TC_HEAD(add_overflow, tc)
+ATF_TC(add_overflow_signed);
+ATF_TC_HEAD(add_overflow_signed, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks signed-integer-overflow, the addition operator");
 }
 
-ATF_TC_BODY(add_overflow, tc)
+ATF_TC_BODY(add_overflow_signed, tc)
 {
 	volatile int8_t a = INT8_MAX;
 	volatile int8_t b = atoi("1");
+
+	usleep(a + b);
+}
+
+ATF_TC(add_overflow_unsigned);
+ATF_TC_HEAD(add_overflow_unsigned, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks unsigned-integer-overflow, the addition operator");
+}
+
+ATF_TC_BODY(add_overflow_unsigned, tc)
+{
+	volatile uint8_t a = UINT8_MAX;
+	volatile uint8_t b = atoi("1");
 
 	usleep(a + b);
 }
@@ -65,32 +80,32 @@ ATF_TC_BODY(builtin_unreachable, tc)
 	}
 }
 
-ATF_TC(div_overflow);
-ATF_TC_HEAD(div_overflow, tc)
+ATF_TC(divrem_overflow_signed_div);
+ATF_TC_HEAD(divrem_overflow_signed_div, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks signed-integer-overflow, the division operator");
 }
 
-ATF_TC_BODY(div_overflow, tc)
+ATF_TC_BODY(divrem_overflow_signed_div, tc)
 {
-	volatile int8_t a = INT8_MAX;
-	volatile int8_t b = atoi("0");
+	volatile int8_t a = INT8_MIN;
+	volatile int8_t b = atoi("-1");
 
 	usleep(a / b);
 }
 
-ATF_TC(rem_overflow);
-ATF_TC_HEAD(rem_overflow, tc)
+ATF_TC(divrem_overflow_signed_mod);
+ATF_TC_HEAD(divrem_overflow_signed_mod, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks signed-integer-overflow, the modulo operator");
 }
 
-ATF_TC_BODY(rem_overflow, tc)
+ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 {
-	volatile int8_t a = INT8_MAX;
-	volatile int8_t b = atoi("0");
+	volatile int8_t a = INT8_MIN;
+	volatile int8_t b = atoi("-1");
 
 	usleep(a % b);
 }
@@ -98,12 +113,13 @@ ATF_TC_BODY(rem_overflow, tc)
 ATF_TP_ADD_TCS(tp)
 {
 
-	ATF_TP_ADD_TC(tp, add_overflow);
+	ATF_TP_ADD_TC(tp, add_overflow_signed);
+	ATF_TP_ADD_TC(tp, add_overflow_unsigned);
 	ATF_TP_ADD_TC(tp, builtin_unreachable);
 //	ATF_TP_ADD_TC(tp, cfi_bad_type);	// Unimplemented
 //	ATF_TP_ADD_TC(tp, cfi_check_fail);	// Unimplemented
-	ATF_TP_ADD_TC(tp, div_overflow);
-	ATF_TP_ADD_TC(tp, rem_overflow);
+	ATF_TP_ADD_TC(tp, divrem_overflow_signed_div);
+	ATF_TP_ADD_TC(tp, divrem_overflow_signed_mod);
 //	ATF_TP_ADD_TC(tp, dynamic_type_cache_miss); // Not supported in uBSan
 	ATF_TP_ADD_TC(tp, float_cast_overflow);
 	ATF_TP_ADD_TC(tp, function_type_mismatch);

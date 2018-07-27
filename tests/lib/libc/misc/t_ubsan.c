@@ -46,7 +46,7 @@ ATF_TC_BODY(add_overflow_signed, tc)
 	volatile int8_t a = INT8_MAX;
 	volatile int8_t b = atoi("1");
 
-	usleep(a + b);
+	usleep((a + b) ? 1 : 2);
 }
 
 ATF_TC(add_overflow_unsigned);
@@ -61,7 +61,7 @@ ATF_TC_BODY(add_overflow_unsigned, tc)
 	volatile uint8_t a = UINT8_MAX;
 	volatile uint8_t b = atoi("1");
 
-	usleep(a + b);
+	usleep((a + b) ? 1 : 2);
 }
 
 ATF_TC(builtin_unreachable);
@@ -92,7 +92,7 @@ ATF_TC_BODY(divrem_overflow_signed_div, tc)
 	volatile int8_t a = INT8_MIN;
 	volatile int8_t b = atoi("-1");
 
-	usleep(a / b);
+	usleep((a / b)  ? 1 : 2);
 }
 
 ATF_TC(divrem_overflow_signed_mod);
@@ -107,7 +107,7 @@ ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 	volatile int8_t a = INT8_MIN;
 	volatile int8_t b = atoi("-1");
 
-	usleep(a % b);
+	usleep((a % b) ? 1 : 2);
 }
 
 ATF_TP_ADD_TCS(tp)

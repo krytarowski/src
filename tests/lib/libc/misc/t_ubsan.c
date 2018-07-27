@@ -110,6 +110,7 @@ ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 	usleep((a % b) ? 1 : 2);
 }
 
+#ifdef __cplusplus
 ATF_TC(function_type_mismatch);
 ATF_TC_HEAD(function_type_mismatch, tc)
 {
@@ -127,6 +128,28 @@ ATF_TC_BODY(function_type_mismatch, tc)
 
 	((void(*)(int)) ((uintptr_t)(fun1))) (1);
 }
+#endif
+
+#define INVALID_BUILTIN(type)				\
+ATF_TC(invalid_builtin_##type);				\
+ATF_TC_HEAD(invalid_builtin_##type, tc)			\
+{							\
+        atf_tc_set_md_var(tc, "descr",			\
+	    "Checks builtin, " #type );			\
+}							\
+							\
+ATF_TC_BODY(invalid_builtin_##type, tc)			\
+{							\
+	volatile int8_t a = atoi("0");			\
+	__builtin_##type(a);				\
+}
+
+INVALID_BUILTIN(ctz)
+INVALID_BUILTIN(ctzl)
+INVALID_BUILTIN(ctzll)
+INVALID_BUILTIN(clz)
+INVALID_BUILTIN(clzl)
+INVALID_BUILTIN(clzll)
 
 ATF_TP_ADD_TCS(tp)
 {
@@ -139,9 +162,16 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, divrem_overflow_signed_div);
 	ATF_TP_ADD_TC(tp, divrem_overflow_signed_mod);
 //	ATF_TP_ADD_TC(tp, dynamic_type_cache_miss); // Not supported in uBSan
-	ATF_TP_ADD_TC(tp, float_cast_overflow);
+//	ATF_TP_ADD_TC(tp, float_cast_overflow);	// TODO
+#ifdef __cplusplus
 	ATF_TP_ADD_TC(tp, function_type_mismatch);
-	ATF_TP_ADD_TC(tp, invalid_builtin);
+#endif
+	ATF_TP_ADD_TC(tp, invalid_builtin_ctz);
+	ATF_TP_ADD_TC(tp, invalid_builtin_ctzl);
+	ATF_TP_ADD_TC(tp, invalid_builtin_ctzll);
+	ATF_TP_ADD_TC(tp, invalid_builtin_clz);
+	ATF_TP_ADD_TC(tp, invalid_builtin_clzl);
+	ATF_TP_ADD_TC(tp, invalid_builtin_clzll);
 	ATF_TP_ADD_TC(tp, load_invalid_value);
 	ATF_TP_ADD_TC(tp, missing_return);
 	ATF_TP_ADD_TC(tp, mul_overflow);

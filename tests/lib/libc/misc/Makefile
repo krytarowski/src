@@ -4,6 +4,6 @@
 
 TESTSDIR=	${TESTSBASE}/lib/libc/misc
 
-TESTS_C+=	t_ubsan
+TESTS_CXX+=	t_ubsan
 
 .include <bsd.test.mk>

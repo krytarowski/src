@@ -110,6 +110,24 @@ ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 	usleep((a % b) ? 1 : 2);
 }
 
+ATF_TC(function_type_mismatch);
+ATF_TC_HEAD(function_type_mismatch, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks function type mismatch");
+}
+
+void
+fun1(void)
+{
+}
+
+ATF_TC_BODY(function_type_mismatch, tc)
+{
+
+	((void(*)(int)) ((uintptr_t)(fun1))) (1);
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 

@@ -454,6 +454,38 @@ ATF_TC_BODY(sub_overflow_unsigned, tc)
 	usleep((a - b) ? 1 : 2);
 }
 
+ATF_TC(type_mismatch_nullptrderef);
+ATF_TC_HEAD(type_mismatch_nullptrderef, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=null");
+}
+
+ATF_TC_BODY(type_mismatch_nullptrderef, tc)
+{
+	volatile intptr_t a = atoi("0");
+	volatile int *b = (int *)a;
+
+	usleep((*b) ? 1 : 2);
+}
+
+ATF_TC(type_mismatch_misaligned);
+ATF_TC_HEAD(type_mismatch_misaligned, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=alignment");
+}
+
+ATF_TC_BODY(type_mismatch_misaligned, tc)
+{
+	volatile int8_t A[10];
+	volatile int *b;
+
+	memset(A, 0, sizeof(A));
+
+	usleep((*b) ? 1 : 2);
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 
@@ -502,7 +534,8 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, shift_out_of_bounds_toolargeexponent);
 	ATF_TP_ADD_TC(tp, sub_overflow_signed);
 	ATF_TP_ADD_TC(tp, sub_overflow_unsigned);
-	ATF_TP_ADD_TC(tp, type_mismatch);
+	ATF_TP_ADD_TC(tp, type_mismatch_nullptrderef);
+	ATF_TP_ADD_TC(tp, type_mismatch_misaligned);
 	ATF_TP_ADD_TC(tp, vla_bound_not_positive);
 
 	return atf_no_error();

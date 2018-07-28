@@ -73,7 +73,7 @@ ATF_TC_HEAD(builtin_unreachable, tc)
 
 ATF_TC_BODY(builtin_unreachable, tc)
 {
-	volatile int a = 1;
+	volatile int a = atoi("1");
 	volatile int b = atoi("1");
 
 	if (a == b) {
@@ -280,7 +280,7 @@ fun_nonnull_arg(void * _Nonnull ptr)
 
 ATF_TC_BODY(nonnull_arg, tc)
 {
-	volatile intptr_t a = atoi(0);
+	volatile intptr_t a = atoi("0");
 
 	usleep(fun_nonnull_arg((void *)a) ? 1 : 2);
 }
@@ -304,7 +304,7 @@ fun_nonnull_assign(intptr_t a)
 
 ATF_TC_BODY(nonnull_assign, tc)
 {
-	volatile intptr_t a = atoi(0);
+	volatile intptr_t a = atoi("0");
 
 	usleep(fun_nonnull_assign(a) ? 1 : 2);
 }
@@ -319,7 +319,7 @@ ATF_TC_HEAD(nonnull_return, tc)
 static void *
 fun_nonnull_return(void)
 {
-	volatile intptr_t a = atoi(0);
+	volatile intptr_t a = atoi("0");
 
 	return (void *)ptr;
 }
@@ -394,6 +394,66 @@ ATF_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
 	usleep((a << 10) ? 1 : 2);
 }
 
+ATF_TC(shift_out_of_bounds_negativeexponent);
+ATF_TC_HEAD(shift_out_of_bounds_negativeexponent, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=shift");
+}
+
+ATF_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
+{
+	volatile int32_t a = atoi("1");
+	volatile int32_t b = atoi("-10");
+
+	usleep((a << b) ? 1 : 2);
+}
+
+ATF_TC(shift_out_of_bounds_toolargeexponent);
+ATF_TC_HEAD(shift_out_of_bounds_toolargeexponent, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=shift");
+}
+
+ATF_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
+{
+	volatile int32_t a = atoi("1");
+	volatile int32_t b = atoi("40");
+
+	usleep((a << b) ? 1 : 2);
+}
+
+ATF_TC(sub_overflow_signed);
+ATF_TC_HEAD(sub_overflow_signed, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=signed-integer-overflow");
+}
+
+ATF_TC_BODY(sub_overflow_signed, tc)
+{
+	volatile int a = INT_MIN;
+	volatile int b = atoi("1");
+
+	usleep((a - b) ? 1 : 2);
+}
+
+ATF_TC(sub_overflow_unsigned);
+ATF_TC_HEAD(sub_overflow_unsigned, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=unsigned-integer-overflow");
+}
+
+ATF_TC_BODY(sub_overflow_unsigned, tc)
+{
+	volatile unsigned int a = atoi("0");
+	volatile unsigned int b = atoi("1");
+
+	usleep((a - b) ? 1 : 2);
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 
@@ -434,10 +494,14 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, out_of_bounds);
 	ATF_TP_ADD_TC(tp, pointer_overflow);
 #ifndef __cplusplus
+	// Acceptable in C++11
 	ATF_TP_ADD_TC(tp, shift_out_of_bounds_signednessbit);
 #endif
 	ATF_TP_ADD_TC(tp, shift_out_of_bounds_signedoverflow);
-	ATF_TP_ADD_TC(tp, sub_overflow);
+	ATF_TP_ADD_TC(tp, shift_out_of_bounds_negativeexponent);
+	ATF_TP_ADD_TC(tp, shift_out_of_bounds_toolargeexponent);
+	ATF_TP_ADD_TC(tp, sub_overflow_signed);
+	ATF_TP_ADD_TC(tp, sub_overflow_unsigned);
 	ATF_TP_ADD_TC(tp, type_mismatch);
 	ATF_TP_ADD_TC(tp, vla_bound_not_positive);
 

@@ -302,10 +302,11 @@ fun_nonnull_assign(intptr_t a)
 	return ptr;
 }
 
-ATF_TC_BODY(nonnull_return, tc)
+ATF_TC_BODY(nonnull_assign, tc)
 {
+	volatile intptr_t a = atoi(0);
 
-	usleep(fun_nonnull_assign() ? 1 : 2);
+	usleep(fun_nonnull_assign(a) ? 1 : 2);
 }
 
 ATF_TC(nonnull_return);
@@ -329,6 +330,69 @@ ATF_TC_BODY(nonnull_return, tc)
 	usleep(fun_nonnull_return() ? 1 : 2);
 }
 #endif
+
+ATF_TC(out_of_bounds);
+ATF_TC_HEAD(out_of_bounds, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=bounds");
+}
+
+ATF_TC_BODY(out_of_bounds, tc)
+{
+	int A[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	volatile int a = atoi("10");
+
+	usleep(A[a] ? 1 : 2);
+}
+
+ATF_TC(pointer_overflow);
+ATF_TC_HEAD(pointer_overflow, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=pointer-overflow");
+}
+
+ATF_TC_BODY(pointer_overflow, tc)
+{
+	volatile uintptr_t a = UINTPTR_MAX;
+	volatile uintptr_t b = atoi("1");
+	volatile int *ptr = (int *)a;
+
+	usleep((ptr + b) ? 1 : 2);
+}
+
+#ifndef __cplusplus
+ATF_TC(shift_out_of_bounds_signednessbit);
+ATF_TC_HEAD(shift_out_of_bounds_signednessbit, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=shift");
+}
+
+ATF_TC_BODY(shift_out_of_bounds_signednessbit, tc)
+{
+	volatile int32_t a = atoi("1");
+
+	usleep((a << 31) ? 1 : 2);
+}
+#endif
+
+ATF_TC(shift_out_of_bounds_signedoverflow);
+ATF_TC_HEAD(shift_out_of_bounds_signedoverflow, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=shift");
+}
+
+ATF_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
+{
+	volatile int32_t a = atoi("1");
+	volatile int32_t b = atoi("30");
+	a <<= b;
+
+	usleep((a << 10) ? 1 : 2);
+}
 
 ATF_TP_ADD_TCS(tp)
 {
@@ -361,6 +425,7 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, negate_overflow_signed);
 	ATF_TP_ADD_TC(tp, negate_overflow_unsigned);
 #ifdef __clang
+	// Clang/LLVM specific extension
 	// http://clang.llvm.org/docs/AttributeReference.html#nullability-attributes
 	ATF_TP_ADD_TC(tp, nonnull_arg);
 	ATF_TP_ADD_TC(tp, nonnull_assign);
@@ -368,7 +433,10 @@ ATF_TP_ADD_TCS(tp)
 #endif
 	ATF_TP_ADD_TC(tp, out_of_bounds);
 	ATF_TP_ADD_TC(tp, pointer_overflow);
-	ATF_TP_ADD_TC(tp, shift_out_of_bounds);
+#ifndef __cplusplus
+	ATF_TP_ADD_TC(tp, shift_out_of_bounds_signednessbit);
+#endif
+	ATF_TP_ADD_TC(tp, shift_out_of_bounds_signedoverflow);
 	ATF_TP_ADD_TC(tp, sub_overflow);
 	ATF_TP_ADD_TC(tp, type_mismatch);
 	ATF_TP_ADD_TC(tp, vla_bound_not_positive);

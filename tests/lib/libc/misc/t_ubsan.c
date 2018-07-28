@@ -488,6 +488,21 @@ ATF_TC_BODY(type_mismatch_misaligned, tc)
 	usleep((*b) ? 1 : 2);
 }
 
+ATF_TC(vla_bound_not_positive);
+ATF_TC_HEAD(vla_bound_not_positive, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=vla-bound");
+}
+
+ATF_TC_BODY(vla_bound_not_positive, tc)
+{
+	volatile int a = atoi("-1");
+	int A[a];
+
+	usleep(A[0] ? 1 : 2);
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 

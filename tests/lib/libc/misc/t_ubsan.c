@@ -478,10 +478,12 @@ ATF_TC_HEAD(type_mismatch_misaligned, tc)
 
 ATF_TC_BODY(type_mismatch_misaligned, tc)
 {
-	volatile int8_t A[10];
+	volatile int8_t A[10] __aligned(4);
 	volatile int *b;
 
 	memset(A, 0, sizeof(A));
+
+	b = &A[1];
 
 	usleep((*b) ? 1 : 2);
 }

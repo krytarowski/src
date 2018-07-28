@@ -83,6 +83,7 @@
 ./usr/libdata/debug/usr/tests/lib/libc/hash
 ./usr/libdata/debug/usr/tests/lib/libc/locale
 ./usr/libdata/debug/usr/tests/lib/libc/inet
+./usr/libdata/debug/usr/tests/lib/libc/misc
 ./usr/libdata/debug/usr/tests/lib/libc/net
 ./usr/libdata/debug/usr/tests/lib/libc/net/getaddrinfo
 ./usr/libdata/debug/usr/tests/lib/libc/regex
@@ -266,6 +267,7 @@
 ./usr/tests/lib/libc/hash/data
 ./usr/tests/lib/libc/locale
 ./usr/tests/lib/libc/inet
+./usr/tests/lib/libc/misc
 ./usr/tests/lib/libc/net
 ./usr/tests/lib/libc/net/getaddrinfo
 ./usr/tests/lib/libc/net/getaddrinfo/data

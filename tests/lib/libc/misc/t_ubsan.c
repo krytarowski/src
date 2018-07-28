@@ -503,6 +503,36 @@ ATF_TC_BODY(vla_bound_not_positive, tc)
 	usleep(A[0] ? 1 : 2);
 }
 
+ATF_TC(integer_divide_by_zero);
+ATF_TC_HEAD(integer_divide_by_zero, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=integer-divide-by-zero");
+}
+
+ATF_TC_BODY(integer_divide_by_zero, tc)
+{
+	volatile int a = atoi("-1");
+	volatile int b = atoi("0");
+
+	usleep((a / b) ? 1 : 2);
+}
+
+ATF_TC(float_divide_by_zero);
+ATF_TC_HEAD(float_divide_by_zero, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=float-divide-by-zero");
+}
+
+ATF_TC_BODY(float_divide_by_zero, tc)
+{
+	volatile float a = strtof("1.0");
+	volatile float b = strtof("0.0");
+
+	usleep((a / b) > 0 ? 1 : 2);
+}
+
 ATF_TP_ADD_TCS(tp)
 {
 
@@ -554,6 +584,8 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, type_mismatch_nullptrderef);
 	ATF_TP_ADD_TC(tp, type_mismatch_misaligned);
 	ATF_TP_ADD_TC(tp, vla_bound_not_positive);
+	ATF_TP_ADD_TC(tp, integer_divide_by_zero);
+	ATF_TP_ADD_TC(tp, float_divide_by_zero);
 
 	return atf_no_error();
 }

@@ -111,7 +111,7 @@ ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 	usleep((a % b) ? 1 : 2);
 }
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
 ATF_TC(function_type_mismatch);
 ATF_TC_HEAD(function_type_mismatch, tc)
 {
@@ -184,6 +184,7 @@ ATF_TC_BODY(load_invalid_value_enum, tc)
 	usleep((E == e1) ? 1 : 2);
 }
 
+#ifdef __cplusplus
 ATF_TC(missing_return);
 ATF_TC_HEAD(missing_return, tc)
 {
@@ -191,7 +192,7 @@ ATF_TC_HEAD(missing_return, tc)
 	    "Checks -fsanitize=return");
 }
 
-static int 
+static int
 fun_missing_return(void)
 {
 }
@@ -201,6 +202,37 @@ ATF_TC_BODY(missing_return, tc)
 	volatile int a = fun_missing_return();
 
 	usleep(a ? 1 : 2);
+}
+#endif
+
+ATF_TC(mul_overflow_signed);
+ATF_TC_HEAD(mul_overflow_signed, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=signed-integer-overflow");
+}
+
+ATF_TC_BODY(mul_overflow_signed, tc)
+{
+	volatile int8_t a = INT8_MAX;
+	volatile int8_t b = atoi("2");
+
+	usleep((a * b) ? 1 : 2);
+}
+
+ATF_TC(mul_overflow_unsigned);
+ATF_TC_HEAD(mul_overflow_unsigned, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=unsigned-integer-overflow");
+}
+
+ATF_TC_BODY(mul_overflow_unsigned, tc)
+{
+	volatile uint8_t a = UINT8_MAX;
+	volatile uint8_t b = atoi("2");
+
+	usleep((a * b) ? 1 : 2);
 }
 
 ATF_TP_ADD_TCS(tp)
@@ -213,9 +245,9 @@ ATF_TP_ADD_TCS(tp)
 //	ATF_TP_ADD_TC(tp, cfi_check_fail);	// TODO
 	ATF_TP_ADD_TC(tp, divrem_overflow_signed_div);
 	ATF_TP_ADD_TC(tp, divrem_overflow_signed_mod);
-//	ATF_TP_ADD_TC(tp, dynamic_type_cache_miss); // Not supported in uBSan
+//	ATF_TP_ADD_TC(tp, dynamic_type_cache_miss); // Not supported in uUBSan
 //	ATF_TP_ADD_TC(tp, float_cast_overflow);	// TODO
-#ifdef __cplusplus
+#if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
 	ATF_TP_ADD_TC(tp, function_type_mismatch);
 #endif
 	ATF_TP_ADD_TC(tp, invalid_builtin_ctz);
@@ -226,8 +258,11 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, invalid_builtin_clzll);
 	ATF_TP_ADD_TC(tp, load_invalid_value_bool);
 	ATF_TP_ADD_TC(tp, load_invalid_value_enum);
-	ATF_TP_ADD_TC(tp, missing_return); // C++
-	ATF_TP_ADD_TC(tp, mul_overflow);
+#ifdef __cplusplus
+	ATF_TP_ADD_TC(tp, missing_return);
+#endif
+	ATF_TP_ADD_TC(tp, mul_overflow_signed);
+	ATF_TP_ADD_TC(tp, mul_overflow_unsigned);
 	ATF_TP_ADD_TC(tp, negate_overflow);
 	ATF_TP_ADD_TC(tp, nonnull_arg);
 	ATF_TP_ADD_TC(tp, nonnull_return);

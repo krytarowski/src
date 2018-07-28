@@ -263,6 +263,73 @@ ATF_TC_BODY(negate_overflow_unsigned, tc)
 	usleep(-a ? 1 : 2);
 }
 
+#ifdef __clang
+ATF_TC(nonnull_arg);
+ATF_TC_HEAD(nonnull_arg, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=nullability-arg");
+}
+
+static void *
+fun_nonnull_arg(void * _Nonnull ptr)
+{
+
+	return ptr;
+}
+
+ATF_TC_BODY(nonnull_arg, tc)
+{
+	volatile intptr_t a = atoi(0);
+
+	usleep(fun_nonnull_arg((void *)a) ? 1 : 2);
+}
+
+ATF_TC(nonnull_assign);
+ATF_TC_HEAD(nonnull_assign, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=nullability-assign");
+}
+
+static void *
+fun_nonnull_assign(intptr_t a)
+{
+	volatile void *_Nonnull ptr;
+
+	ptr = (void *)a;
+
+	return ptr;
+}
+
+ATF_TC_BODY(nonnull_return, tc)
+{
+
+	usleep(fun_nonnull_assign() ? 1 : 2);
+}
+
+ATF_TC(nonnull_return);
+ATF_TC_HEAD(nonnull_return, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=nullability-return");
+}
+
+static void *
+fun_nonnull_return(void)
+{
+	volatile intptr_t a = atoi(0);
+
+	return (void *)ptr;
+}
+
+ATF_TC_BODY(nonnull_return, tc)
+{
+
+	usleep(fun_nonnull_return() ? 1 : 2);
+}
+#endif
+
 ATF_TP_ADD_TCS(tp)
 {
 
@@ -293,10 +360,12 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, mul_overflow_unsigned);
 	ATF_TP_ADD_TC(tp, negate_overflow_signed);
 	ATF_TP_ADD_TC(tp, negate_overflow_unsigned);
+#ifdef __clang
+	// http://clang.llvm.org/docs/AttributeReference.html#nullability-attributes
 	ATF_TP_ADD_TC(tp, nonnull_arg);
+	ATF_TP_ADD_TC(tp, nonnull_assign);
 	ATF_TP_ADD_TC(tp, nonnull_return);
-	ATF_TP_ADD_TC(tp, nullability_arg);
-	ATF_TP_ADD_TC(tp, nullability_return);
+#endif
 	ATF_TP_ADD_TC(tp, out_of_bounds);
 	ATF_TP_ADD_TC(tp, pointer_overflow);
 	ATF_TP_ADD_TC(tp, shift_out_of_bounds);

@@ -43,8 +43,8 @@ ATF_TC_HEAD(add_overflow_signed, tc)
 
 ATF_TC_BODY(add_overflow_signed, tc)
 {
-	volatile int8_t a = INT8_MAX;
-	volatile int8_t b = atoi("1");
+	volatile int a = INT_MAX;
+	volatile int b = atoi("1");
 
 	usleep((a + b) ? 1 : 2);
 }
@@ -58,8 +58,8 @@ ATF_TC_HEAD(add_overflow_unsigned, tc)
 
 ATF_TC_BODY(add_overflow_unsigned, tc)
 {
-	volatile uint8_t a = UINT8_MAX;
-	volatile uint8_t b = atoi("1");
+	volatile unsigned int a = UINT_MAX;
+	volatile unsigned int b = atoi("1");
 
 	usleep((a + b) ? 1 : 2);
 }
@@ -73,8 +73,8 @@ ATF_TC_HEAD(builtin_unreachable, tc)
 
 ATF_TC_BODY(builtin_unreachable, tc)
 {
-	volatile int8_t a = 1;
-	volatile int8_t b = atoi("1");
+	volatile int a = 1;
+	volatile int b = atoi("1");
 
 	if (a == b) {
 		__builtin_unreachable();
@@ -90,8 +90,8 @@ ATF_TC_HEAD(divrem_overflow_signed_div, tc)
 
 ATF_TC_BODY(divrem_overflow_signed_div, tc)
 {
-	volatile int8_t a = INT8_MIN;
-	volatile int8_t b = atoi("-1");
+	volatile int a = INT_MIN;
+	volatile int b = atoi("-1");
 
 	usleep((a / b)  ? 1 : 2);
 }
@@ -105,8 +105,8 @@ ATF_TC_HEAD(divrem_overflow_signed_mod, tc)
 
 ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 {
-	volatile int8_t a = INT8_MIN;
-	volatile int8_t b = atoi("-1");
+	volatile int a = INT_MIN;
+	volatile int b = atoi("-1");
 
 	usleep((a % b) ? 1 : 2);
 }
@@ -120,14 +120,14 @@ ATF_TC_HEAD(function_type_mismatch, tc)
 }
 
 static void
-fun1(void)
+fun_type_mismatch(void)
 {
 }
 
 ATF_TC_BODY(function_type_mismatch, tc)
 {
 
-	((void(*)(int)) ((uintptr_t)(fun1))) (1);
+	((void(*)(int)) ((uintptr_t)(fun_type_mismatch))) (1);
 }
 #endif
 
@@ -142,7 +142,7 @@ ATF_TC_HEAD(invalid_builtin_##type, tc)			\
 ATF_TC_BODY(invalid_builtin_##type, tc)			\
 {							\
 							\
-	volatile int8_t a = atoi("0");			\
+	volatile int a = atoi("0");			\
 	__builtin_##type(a);				\
 }
 
@@ -162,7 +162,7 @@ ATF_TC_HEAD(load_invalid_value_bool, tc)
 
 ATF_TC_BODY(load_invalid_value_bool, tc)
 {
-	volatile int8_t a = atoi("10");
+	volatile int a = atoi("10");
 	volatile bool b = a;
 
 	usleep(b ? 1 : 2);
@@ -178,7 +178,7 @@ ATF_TC_HEAD(load_invalid_value_enum, tc)
 ATF_TC_BODY(load_invalid_value_enum, tc)
 {
 	enum e { e1, e2, e3, e4 };
-	volatile int8_t a = atoi("10");
+	volatile int a = atoi("10");
 	volatile enum e E = a;
 
 	usleep((E == e1) ? 1 : 2);
@@ -214,8 +214,8 @@ ATF_TC_HEAD(mul_overflow_signed, tc)
 
 ATF_TC_BODY(mul_overflow_signed, tc)
 {
-	volatile int8_t a = INT8_MAX;
-	volatile int8_t b = atoi("2");
+	volatile int a = INT_MAX;
+	volatile int b = atoi("2");
 
 	usleep((a * b) ? 1 : 2);
 }
@@ -229,10 +229,38 @@ ATF_TC_HEAD(mul_overflow_unsigned, tc)
 
 ATF_TC_BODY(mul_overflow_unsigned, tc)
 {
-	volatile uint8_t a = UINT8_MAX;
-	volatile uint8_t b = atoi("2");
+	volatile unsigned int a = UINT_MAX;
+	volatile unsigned int b = atoi("2");
 
 	usleep((a * b) ? 1 : 2);
+}
+
+ATF_TC(negate_overflow_signed);
+ATF_TC_HEAD(negate_overflow_signed, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=signed-integer-overflow");
+}
+
+ATF_TC_BODY(negate_overflow_signed, tc)
+{
+	volatile int a = INT_MIN;
+
+	usleep(-a ? 1 : 2);
+}
+
+ATF_TC(negate_overflow_unsigned);
+ATF_TC_HEAD(negate_overflow_unsigned, tc)
+{
+        atf_tc_set_md_var(tc, "descr",
+	    "Checks -fsanitize=unsigned-integer-overflow");
+}
+
+ATF_TC_BODY(negate_overflow_unsigned, tc)
+{
+	volatile unsigned int a = UINT_MAX;
+
+	usleep(-a ? 1 : 2);
 }
 
 ATF_TP_ADD_TCS(tp)
@@ -263,7 +291,8 @@ ATF_TP_ADD_TCS(tp)
 #endif
 	ATF_TP_ADD_TC(tp, mul_overflow_signed);
 	ATF_TP_ADD_TC(tp, mul_overflow_unsigned);
-	ATF_TP_ADD_TC(tp, negate_overflow);
+	ATF_TP_ADD_TC(tp, negate_overflow_signed);
+	ATF_TP_ADD_TC(tp, negate_overflow_unsigned);
 	ATF_TP_ADD_TC(tp, nonnull_arg);
 	ATF_TP_ADD_TC(tp, nonnull_return);
 	ATF_TP_ADD_TC(tp, nullability_arg);

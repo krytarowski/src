@@ -4,7 +4,9 @@
 .PATH: ${ARCHDIR}/misc ${.CURDIR}/misc
 
 # other sources shared with the kernel
+.if ${MKLIBCSANITIZER:Uno} == "yes"
 SRCS+=	ubsan.c
+.endif
 
 # constructor
 SRCS+=	initfini.c

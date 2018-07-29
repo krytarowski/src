@@ -33,6 +33,8 @@ __RCSID("$NetBSD$");
 
 #include <atf-c.h>
 
+#ifdef ENABLE_TESTS
+#include "ubsan.h"
 
 ATF_TC(add_overflow_signed);
 ATF_TC_HEAD(add_overflow_signed, tc)
@@ -532,10 +534,11 @@ ATF_TC_BODY(float_divide_by_zero, tc)
 
 	usleep((a / b) > 0 ? 1 : 2);
 }
+#endif
 
 ATF_TP_ADD_TCS(tp)
 {
-
+#ifdef ENABLE_TESTS
 	ATF_TP_ADD_TC(tp, add_overflow_signed);
 	ATF_TP_ADD_TC(tp, add_overflow_unsigned);
 	ATF_TP_ADD_TC(tp, builtin_unreachable);
@@ -586,6 +589,7 @@ ATF_TP_ADD_TCS(tp)
 	ATF_TP_ADD_TC(tp, vla_bound_not_positive);
 	ATF_TP_ADD_TC(tp, integer_divide_by_zero);
 	ATF_TP_ADD_TC(tp, float_divide_by_zero);
+#endif
 
 	return atf_no_error();
 }

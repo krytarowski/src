@@ -34,7 +34,7 @@ __RCSID("$NetBSD$");
 #include <atf-c.h>
 
 #ifdef ENABLE_TESTS
-#include "ubsan.h"
+#include "ubsan.c"
 
 ATF_TC(add_overflow_signed);
 ATF_TC_HEAD(add_overflow_signed, tc)

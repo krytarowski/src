@@ -483,9 +483,9 @@ ATF_TC_BODY(type_mismatch_misaligned, tc)
 	volatile int8_t A[10] __aligned(4);
 	volatile int *b;
 
-	memset(A, 0, sizeof(A));
+	memset(__UNVOLATILE(A), 0, sizeof(A));
 
-	b = &A[1];
+	b = (volatile void *)&A[1];
 
 	usleep((*b) ? 1 : 2);
 }
@@ -529,8 +529,8 @@ ATF_TC_HEAD(float_divide_by_zero, tc)
 
 ATF_TC_BODY(float_divide_by_zero, tc)
 {
-	volatile float a = strtof("1.0");
-	volatile float b = strtof("0.0");
+	volatile float a = strtof("1.0", NULL);
+	volatile float b = strtof("0.0", NULL);
 
 	usleep((a / b) > 0 ? 1 : 2);
 }

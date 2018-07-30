@@ -145,7 +145,7 @@ fun_type_mismatch(void)
 UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
-	((void(*)(int)) ((uintptr_t)(fun_type_mismatch))) (1);
+	reinterpret_cast<void(*)(int)>(reinterpret_cast<uintptr_t>(fun_type_mismatch)(1));
 }
 #endif
 
@@ -197,7 +197,7 @@ UBSAN_TC_BODY(load_invalid_value_enum, tc)
 {
 	enum e { e1, e2, e3, e4 };
 	volatile int a = atoi("10");
-	volatile enum e E = a;
+	volatile enum e E = STATIC_CAST(enum e, a);
 
 	usleep((E == e1) ? 1 : 2);
 }
@@ -375,7 +375,7 @@ UBSAN_TC_BODY(pointer_overflow, tc)
 {
 	volatile uintptr_t a = UINTPTR_MAX;
 	volatile uintptr_t b = atoi("1");
-	volatile int *ptr = (int *)a;
+	volatile int *ptr = REINTERPRET_CAST(int *, a);
 
 	usleep((ptr + b) ? 1 : 2);
 }
@@ -482,7 +482,7 @@ UBSAN_TC_HEAD(type_mismatch_nullptrderef, tc)
 UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
 {
 	volatile intptr_t a = atoi("0");
-	volatile int *b = (int *)a;
+	volatile int *b = REINTERPRET_CAST(int *, a);
 
 	usleep((*b) ? 1 : 2);
 }
@@ -501,7 +501,7 @@ UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 
 	memset(__UNVOLATILE(A), 0, sizeof(A));
 
-	b = (volatile void *)&A[1];
+	b = REINTERPRET_CAST(volatile void *, &A[1]);
 
 	usleep((*b) ? 1 : 2);
 }

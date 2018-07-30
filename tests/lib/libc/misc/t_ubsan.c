@@ -145,7 +145,7 @@ fun_type_mismatch(void)
 UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
-	reinterpret_cast<void(*)(int)>(reinterpret_cast<uintptr_t>(fun_type_mismatch)(1));
+	reinterpret_cast<void(*)(int)>(reinterpret_cast<uintptr_t>(fun_type_mismatch))(1);
 }
 #endif
 

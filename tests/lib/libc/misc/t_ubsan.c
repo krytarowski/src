@@ -501,7 +501,7 @@ UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 
 	memset(__UNVOLATILE(A), 0, sizeof(A));
 
-	b = STATIC_CAST(volatile int *, &A[1]);
+	b = REINTERPRET_CAST(volatile int *, &A[1]);
 
 	usleep((*b) ? 1 : 2);
 }

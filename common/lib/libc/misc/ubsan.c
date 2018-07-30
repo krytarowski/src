@@ -1366,7 +1366,7 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		snprintf(pBuffer, zBUfferLength, "%g", F);
 		break;
 	case WIDTH_16:
-		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type (%#04" PRIx16 ")", (uint16_t)ulNumber);
+		snprintf(pBuffer, zBUfferLength, "Undecoded-16-bit-Floating-Type (%#04" PRIx16 ")", STATIC_CAST(uint16_t, ulNumber));
 		break;
 	}
 }
@@ -1388,7 +1388,7 @@ llliGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 		/* NOTREACHED */
 	case WIDTH_128:
 #ifdef __SIZEOF_INT128__
-		memcpy(&L, (longest *)ulNumber, sizeof(longest));
+		memcpy(&L, REINTERPRET_CAST(longest *, ulNumber), sizeof(longest));
 #else
 		Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
 		/* NOTREACHED */

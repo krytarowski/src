@@ -31,19 +31,33 @@ __COPYRIGHT("@(#) Copyright (c) 2018\
  The NetBSD Foundation, inc. All rights reserved.");
 __RCSID("$NetBSD$");
 
+#ifdef __cplusplus
+#include <atf-c++.hpp>
+#define UBSAN_TC(a)		ATF_TEST_CASE(a)
+#define UBSAN_TC_HEAD(a, b)	ATF_TEST_CASE_HEAD(a)
+#define UBSAN_TC_BODY(a, b)	ATF_TEST_CASE_BODY(a)
+#define UBSAN_CASES(a)		ATF_INIT_TEST_CASES(a)
+#define UBSAN_TEST_CASE(a, b)	ATF_ADD_TEST_CASE(a, b)
+#else
 #include <atf-c.h>
+#define UBSAN_TC(a)		ATF_TC(a)
+#define UBSAN_TC_HEAD(a, b)	ATF_TC_HEAD(a, b)
+#define UBSAN_TC_BODY(a, b)	ATF_TC_BODY(a, b)
+#define UBSAN_CASES(a)		ATF_TP_ADD_TCS(a)
+#define UBSAN_TEST_CASE(a, b)	ATF_TP_ADD_TC(a, b)
+#endif
 
 #ifdef ENABLE_TESTS
 #include "ubsan.c"
 
-ATF_TC(add_overflow_signed);
-ATF_TC_HEAD(add_overflow_signed, tc)
+UBSAN_TC(add_overflow_signed);
+UBSAN_TC_HEAD(add_overflow_signed, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-ATF_TC_BODY(add_overflow_signed, tc)
+UBSAN_TC_BODY(add_overflow_signed, tc)
 {
 	volatile int a = INT_MAX;
 	volatile int b = atoi("1");
@@ -51,14 +65,14 @@ ATF_TC_BODY(add_overflow_signed, tc)
 	usleep((a + b) ? 1 : 2);
 }
 
-ATF_TC(add_overflow_unsigned);
-ATF_TC_HEAD(add_overflow_unsigned, tc)
+UBSAN_TC(add_overflow_unsigned);
+UBSAN_TC_HEAD(add_overflow_unsigned, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-ATF_TC_BODY(add_overflow_unsigned, tc)
+UBSAN_TC_BODY(add_overflow_unsigned, tc)
 {
 	volatile unsigned int a = UINT_MAX;
 	volatile unsigned int b = atoi("1");
@@ -66,14 +80,14 @@ ATF_TC_BODY(add_overflow_unsigned, tc)
 	usleep((a + b) ? 1 : 2);
 }
 
-ATF_TC(builtin_unreachable);
-ATF_TC_HEAD(builtin_unreachable, tc)
+UBSAN_TC(builtin_unreachable);
+UBSAN_TC_HEAD(builtin_unreachable, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=unreachable");
 }
 
-ATF_TC_BODY(builtin_unreachable, tc)
+UBSAN_TC_BODY(builtin_unreachable, tc)
 {
 	volatile int a = atoi("1");
 	volatile int b = atoi("1");
@@ -83,14 +97,14 @@ ATF_TC_BODY(builtin_unreachable, tc)
 	}
 }
 
-ATF_TC(divrem_overflow_signed_div);
-ATF_TC_HEAD(divrem_overflow_signed_div, tc)
+UBSAN_TC(divrem_overflow_signed_div);
+UBSAN_TC_HEAD(divrem_overflow_signed_div, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-ATF_TC_BODY(divrem_overflow_signed_div, tc)
+UBSAN_TC_BODY(divrem_overflow_signed_div, tc)
 {
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
@@ -98,14 +112,14 @@ ATF_TC_BODY(divrem_overflow_signed_div, tc)
 	usleep((a / b)  ? 1 : 2);
 }
 
-ATF_TC(divrem_overflow_signed_mod);
-ATF_TC_HEAD(divrem_overflow_signed_mod, tc)
+UBSAN_TC(divrem_overflow_signed_mod);
+UBSAN_TC_HEAD(divrem_overflow_signed_mod, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-ATF_TC_BODY(divrem_overflow_signed_mod, tc)
+UBSAN_TC_BODY(divrem_overflow_signed_mod, tc)
 {
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
@@ -114,8 +128,8 @@ ATF_TC_BODY(divrem_overflow_signed_mod, tc)
 }
 
 #if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
-ATF_TC(function_type_mismatch);
-ATF_TC_HEAD(function_type_mismatch, tc)
+UBSAN_TC(function_type_mismatch);
+UBSAN_TC_HEAD(function_type_mismatch, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=function");
@@ -126,7 +140,7 @@ fun_type_mismatch(void)
 {
 }
 
-ATF_TC_BODY(function_type_mismatch, tc)
+UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
 	((void(*)(int)) ((uintptr_t)(fun_type_mismatch))) (1);
@@ -134,14 +148,14 @@ ATF_TC_BODY(function_type_mismatch, tc)
 #endif
 
 #define INVALID_BUILTIN(type)				\
-ATF_TC(invalid_builtin_##type);				\
-ATF_TC_HEAD(invalid_builtin_##type, tc)			\
+UBSAN_TC(invalid_builtin_##type);				\
+UBSAN_TC_HEAD(invalid_builtin_##type, tc)			\
 {							\
         atf_tc_set_md_var(tc, "descr",			\
 	    "Checks -fsanitize=builtin");		\
 }							\
 							\
-ATF_TC_BODY(invalid_builtin_##type, tc)			\
+UBSAN_TC_BODY(invalid_builtin_##type, tc)			\
 {							\
 							\
 	volatile int a = atoi("0");			\
@@ -155,14 +169,14 @@ INVALID_BUILTIN(clz)
 INVALID_BUILTIN(clzl)
 INVALID_BUILTIN(clzll)
 
-ATF_TC(load_invalid_value_bool);
-ATF_TC_HEAD(load_invalid_value_bool, tc)
+UBSAN_TC(load_invalid_value_bool);
+UBSAN_TC_HEAD(load_invalid_value_bool, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=bool");
 }
 
-ATF_TC_BODY(load_invalid_value_bool, tc)
+UBSAN_TC_BODY(load_invalid_value_bool, tc)
 {
 	volatile int a = atoi("10");
 	volatile bool b = a;
@@ -170,14 +184,14 @@ ATF_TC_BODY(load_invalid_value_bool, tc)
 	usleep(b ? 1 : 2);
 }
 
-ATF_TC(load_invalid_value_enum);
-ATF_TC_HEAD(load_invalid_value_enum, tc)
+UBSAN_TC(load_invalid_value_enum);
+UBSAN_TC_HEAD(load_invalid_value_enum, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=enum");
 }
 
-ATF_TC_BODY(load_invalid_value_enum, tc)
+UBSAN_TC_BODY(load_invalid_value_enum, tc)
 {
 	enum e { e1, e2, e3, e4 };
 	volatile int a = atoi("10");
@@ -187,8 +201,8 @@ ATF_TC_BODY(load_invalid_value_enum, tc)
 }
 
 #ifdef __cplusplus
-ATF_TC(missing_return);
-ATF_TC_HEAD(missing_return, tc)
+UBSAN_TC(missing_return);
+UBSAN_TC_HEAD(missing_return, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=return");
@@ -199,7 +213,7 @@ fun_missing_return(void)
 {
 }
 
-ATF_TC_BODY(missing_return, tc)
+UBSAN_TC_BODY(missing_return, tc)
 {
 	volatile int a = fun_missing_return();
 
@@ -207,14 +221,14 @@ ATF_TC_BODY(missing_return, tc)
 }
 #endif
 
-ATF_TC(mul_overflow_signed);
-ATF_TC_HEAD(mul_overflow_signed, tc)
+UBSAN_TC(mul_overflow_signed);
+UBSAN_TC_HEAD(mul_overflow_signed, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-ATF_TC_BODY(mul_overflow_signed, tc)
+UBSAN_TC_BODY(mul_overflow_signed, tc)
 {
 	volatile int a = INT_MAX;
 	volatile int b = atoi("2");
@@ -222,14 +236,14 @@ ATF_TC_BODY(mul_overflow_signed, tc)
 	usleep((a * b) ? 1 : 2);
 }
 
-ATF_TC(mul_overflow_unsigned);
-ATF_TC_HEAD(mul_overflow_unsigned, tc)
+UBSAN_TC(mul_overflow_unsigned);
+UBSAN_TC_HEAD(mul_overflow_unsigned, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-ATF_TC_BODY(mul_overflow_unsigned, tc)
+UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 {
 	volatile unsigned int a = UINT_MAX;
 	volatile unsigned int b = atoi("2");
@@ -237,28 +251,28 @@ ATF_TC_BODY(mul_overflow_unsigned, tc)
 	usleep((a * b) ? 1 : 2);
 }
 
-ATF_TC(negate_overflow_signed);
-ATF_TC_HEAD(negate_overflow_signed, tc)
+UBSAN_TC(negate_overflow_signed);
+UBSAN_TC_HEAD(negate_overflow_signed, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-ATF_TC_BODY(negate_overflow_signed, tc)
+UBSAN_TC_BODY(negate_overflow_signed, tc)
 {
 	volatile int a = INT_MIN;
 
 	usleep(-a ? 1 : 2);
 }
 
-ATF_TC(negate_overflow_unsigned);
-ATF_TC_HEAD(negate_overflow_unsigned, tc)
+UBSAN_TC(negate_overflow_unsigned);
+UBSAN_TC_HEAD(negate_overflow_unsigned, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-ATF_TC_BODY(negate_overflow_unsigned, tc)
+UBSAN_TC_BODY(negate_overflow_unsigned, tc)
 {
 	volatile unsigned int a = UINT_MAX;
 
@@ -266,8 +280,8 @@ ATF_TC_BODY(negate_overflow_unsigned, tc)
 }
 
 #ifdef __clang
-ATF_TC(nonnull_arg);
-ATF_TC_HEAD(nonnull_arg, tc)
+UBSAN_TC(nonnull_arg);
+UBSAN_TC_HEAD(nonnull_arg, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=nullability-arg");
@@ -280,15 +294,15 @@ fun_nonnull_arg(void * _Nonnull ptr)
 	return ptr;
 }
 
-ATF_TC_BODY(nonnull_arg, tc)
+UBSAN_TC_BODY(nonnull_arg, tc)
 {
 	volatile intptr_t a = atoi("0");
 
 	usleep(fun_nonnull_arg((void *)a) ? 1 : 2);
 }
 
-ATF_TC(nonnull_assign);
-ATF_TC_HEAD(nonnull_assign, tc)
+UBSAN_TC(nonnull_assign);
+UBSAN_TC_HEAD(nonnull_assign, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=nullability-assign");
@@ -304,15 +318,15 @@ fun_nonnull_assign(intptr_t a)
 	return ptr;
 }
 
-ATF_TC_BODY(nonnull_assign, tc)
+UBSAN_TC_BODY(nonnull_assign, tc)
 {
 	volatile intptr_t a = atoi("0");
 
 	usleep(fun_nonnull_assign(a) ? 1 : 2);
 }
 
-ATF_TC(nonnull_return);
-ATF_TC_HEAD(nonnull_return, tc)
+UBSAN_TC(nonnull_return);
+UBSAN_TC_HEAD(nonnull_return, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=nullability-return");
@@ -326,21 +340,21 @@ fun_nonnull_return(void)
 	return (void *)ptr;
 }
 
-ATF_TC_BODY(nonnull_return, tc)
+UBSAN_TC_BODY(nonnull_return, tc)
 {
 
 	usleep(fun_nonnull_return() ? 1 : 2);
 }
 #endif
 
-ATF_TC(out_of_bounds);
-ATF_TC_HEAD(out_of_bounds, tc)
+UBSAN_TC(out_of_bounds);
+UBSAN_TC_HEAD(out_of_bounds, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=bounds");
 }
 
-ATF_TC_BODY(out_of_bounds, tc)
+UBSAN_TC_BODY(out_of_bounds, tc)
 {
 	int A[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	volatile int a = atoi("10");
@@ -348,14 +362,14 @@ ATF_TC_BODY(out_of_bounds, tc)
 	usleep(A[a] ? 1 : 2);
 }
 
-ATF_TC(pointer_overflow);
-ATF_TC_HEAD(pointer_overflow, tc)
+UBSAN_TC(pointer_overflow);
+UBSAN_TC_HEAD(pointer_overflow, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=pointer-overflow");
 }
 
-ATF_TC_BODY(pointer_overflow, tc)
+UBSAN_TC_BODY(pointer_overflow, tc)
 {
 	volatile uintptr_t a = UINTPTR_MAX;
 	volatile uintptr_t b = atoi("1");
@@ -365,14 +379,14 @@ ATF_TC_BODY(pointer_overflow, tc)
 }
 
 #ifndef __cplusplus
-ATF_TC(shift_out_of_bounds_signednessbit);
-ATF_TC_HEAD(shift_out_of_bounds_signednessbit, tc)
+UBSAN_TC(shift_out_of_bounds_signednessbit);
+UBSAN_TC_HEAD(shift_out_of_bounds_signednessbit, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
-ATF_TC_BODY(shift_out_of_bounds_signednessbit, tc)
+UBSAN_TC_BODY(shift_out_of_bounds_signednessbit, tc)
 {
 	volatile int32_t a = atoi("1");
 
@@ -380,14 +394,14 @@ ATF_TC_BODY(shift_out_of_bounds_signednessbit, tc)
 }
 #endif
 
-ATF_TC(shift_out_of_bounds_signedoverflow);
-ATF_TC_HEAD(shift_out_of_bounds_signedoverflow, tc)
+UBSAN_TC(shift_out_of_bounds_signedoverflow);
+UBSAN_TC_HEAD(shift_out_of_bounds_signedoverflow, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
-ATF_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
+UBSAN_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("30");
@@ -396,14 +410,14 @@ ATF_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
 	usleep((a << 10) ? 1 : 2);
 }
 
-ATF_TC(shift_out_of_bounds_negativeexponent);
-ATF_TC_HEAD(shift_out_of_bounds_negativeexponent, tc)
+UBSAN_TC(shift_out_of_bounds_negativeexponent);
+UBSAN_TC_HEAD(shift_out_of_bounds_negativeexponent, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
-ATF_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
+UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("-10");
@@ -411,14 +425,14 @@ ATF_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 	usleep((a << b) ? 1 : 2);
 }
 
-ATF_TC(shift_out_of_bounds_toolargeexponent);
-ATF_TC_HEAD(shift_out_of_bounds_toolargeexponent, tc)
+UBSAN_TC(shift_out_of_bounds_toolargeexponent);
+UBSAN_TC_HEAD(shift_out_of_bounds_toolargeexponent, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
-ATF_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
+UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("40");
@@ -426,14 +440,14 @@ ATF_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
 	usleep((a << b) ? 1 : 2);
 }
 
-ATF_TC(sub_overflow_signed);
-ATF_TC_HEAD(sub_overflow_signed, tc)
+UBSAN_TC(sub_overflow_signed);
+UBSAN_TC_HEAD(sub_overflow_signed, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-ATF_TC_BODY(sub_overflow_signed, tc)
+UBSAN_TC_BODY(sub_overflow_signed, tc)
 {
 	volatile int a = INT_MIN;
 	volatile int b = atoi("1");
@@ -441,14 +455,14 @@ ATF_TC_BODY(sub_overflow_signed, tc)
 	usleep((a - b) ? 1 : 2);
 }
 
-ATF_TC(sub_overflow_unsigned);
-ATF_TC_HEAD(sub_overflow_unsigned, tc)
+UBSAN_TC(sub_overflow_unsigned);
+UBSAN_TC_HEAD(sub_overflow_unsigned, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-ATF_TC_BODY(sub_overflow_unsigned, tc)
+UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 {
 	volatile unsigned int a = atoi("0");
 	volatile unsigned int b = atoi("1");
@@ -456,14 +470,14 @@ ATF_TC_BODY(sub_overflow_unsigned, tc)
 	usleep((a - b) ? 1 : 2);
 }
 
-ATF_TC(type_mismatch_nullptrderef);
-ATF_TC_HEAD(type_mismatch_nullptrderef, tc)
+UBSAN_TC(type_mismatch_nullptrderef);
+UBSAN_TC_HEAD(type_mismatch_nullptrderef, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=null");
 }
 
-ATF_TC_BODY(type_mismatch_nullptrderef, tc)
+UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
 {
 	volatile intptr_t a = atoi("0");
 	volatile int *b = (int *)a;
@@ -471,14 +485,14 @@ ATF_TC_BODY(type_mismatch_nullptrderef, tc)
 	usleep((*b) ? 1 : 2);
 }
 
-ATF_TC(type_mismatch_misaligned);
-ATF_TC_HEAD(type_mismatch_misaligned, tc)
+UBSAN_TC(type_mismatch_misaligned);
+UBSAN_TC_HEAD(type_mismatch_misaligned, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=alignment");
 }
 
-ATF_TC_BODY(type_mismatch_misaligned, tc)
+UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 {
 	volatile int8_t A[10] __aligned(4);
 	volatile int *b;
@@ -490,14 +504,14 @@ ATF_TC_BODY(type_mismatch_misaligned, tc)
 	usleep((*b) ? 1 : 2);
 }
 
-ATF_TC(vla_bound_not_positive);
-ATF_TC_HEAD(vla_bound_not_positive, tc)
+UBSAN_TC(vla_bound_not_positive);
+UBSAN_TC_HEAD(vla_bound_not_positive, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=vla-bound");
 }
 
-ATF_TC_BODY(vla_bound_not_positive, tc)
+UBSAN_TC_BODY(vla_bound_not_positive, tc)
 {
 	volatile int a = atoi("-1");
 	int A[a];
@@ -505,14 +519,14 @@ ATF_TC_BODY(vla_bound_not_positive, tc)
 	usleep(A[0] ? 1 : 2);
 }
 
-ATF_TC(integer_divide_by_zero);
-ATF_TC_HEAD(integer_divide_by_zero, tc)
+UBSAN_TC(integer_divide_by_zero);
+UBSAN_TC_HEAD(integer_divide_by_zero, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=integer-divide-by-zero");
 }
 
-ATF_TC_BODY(integer_divide_by_zero, tc)
+UBSAN_TC_BODY(integer_divide_by_zero, tc)
 {
 	volatile int a = atoi("-1");
 	volatile int b = atoi("0");
@@ -520,14 +534,14 @@ ATF_TC_BODY(integer_divide_by_zero, tc)
 	usleep((a / b) ? 1 : 2);
 }
 
-ATF_TC(float_divide_by_zero);
-ATF_TC_HEAD(float_divide_by_zero, tc)
+UBSAN_TC(float_divide_by_zero);
+UBSAN_TC_HEAD(float_divide_by_zero, tc)
 {
         atf_tc_set_md_var(tc, "descr",
 	    "Checks -fsanitize=float-divide-by-zero");
 }
 
-ATF_TC_BODY(float_divide_by_zero, tc)
+UBSAN_TC_BODY(float_divide_by_zero, tc)
 {
 	volatile float a = strtof("1.0", NULL);
 	volatile float b = strtof("0.0", NULL);
@@ -536,60 +550,62 @@ ATF_TC_BODY(float_divide_by_zero, tc)
 }
 #endif
 
-ATF_TP_ADD_TCS(tp)
+UBSAN_CASES(tp)
 {
 #ifdef ENABLE_TESTS
-	ATF_TP_ADD_TC(tp, add_overflow_signed);
-	ATF_TP_ADD_TC(tp, add_overflow_unsigned);
-	ATF_TP_ADD_TC(tp, builtin_unreachable);
-//	ATF_TP_ADD_TC(tp, cfi_bad_type);	// TODO
-//	ATF_TP_ADD_TC(tp, cfi_check_fail);	// TODO
-	ATF_TP_ADD_TC(tp, divrem_overflow_signed_div);
-	ATF_TP_ADD_TC(tp, divrem_overflow_signed_mod);
-//	ATF_TP_ADD_TC(tp, dynamic_type_cache_miss); // Not supported in uUBSan
-//	ATF_TP_ADD_TC(tp, float_cast_overflow);	// TODO
+	UBSAN_TEST_CASE(tp, add_overflow_signed);
+	UBSAN_TEST_CASE(tp, add_overflow_unsigned);
+	UBSAN_TEST_CASE(tp, builtin_unreachable);
+//	UBSAN_TEST_CASE(tp, cfi_bad_type);	// TODO
+//	UBSAN_TEST_CASE(tp, cfi_check_fail);	// TODO
+	UBSAN_TEST_CASE(tp, divrem_overflow_signed_div);
+	UBSAN_TEST_CASE(tp, divrem_overflow_signed_mod);
+//	UBSAN_TEST_CASE(tp, dynamic_type_cache_miss); // Not supported in uUBSan
+//	UBSAN_TEST_CASE(tp, float_cast_overflow);	// TODO
 #if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
-	ATF_TP_ADD_TC(tp, function_type_mismatch);
+	UBSAN_TEST_CASE(tp, function_type_mismatch);
 #endif
-	ATF_TP_ADD_TC(tp, invalid_builtin_ctz);
-	ATF_TP_ADD_TC(tp, invalid_builtin_ctzl);
-	ATF_TP_ADD_TC(tp, invalid_builtin_ctzll);
-	ATF_TP_ADD_TC(tp, invalid_builtin_clz);
-	ATF_TP_ADD_TC(tp, invalid_builtin_clzl);
-	ATF_TP_ADD_TC(tp, invalid_builtin_clzll);
-	ATF_TP_ADD_TC(tp, load_invalid_value_bool);
-	ATF_TP_ADD_TC(tp, load_invalid_value_enum);
+	UBSAN_TEST_CASE(tp, invalid_builtin_ctz);
+	UBSAN_TEST_CASE(tp, invalid_builtin_ctzl);
+	UBSAN_TEST_CASE(tp, invalid_builtin_ctzll);
+	UBSAN_TEST_CASE(tp, invalid_builtin_clz);
+	UBSAN_TEST_CASE(tp, invalid_builtin_clzl);
+	UBSAN_TEST_CASE(tp, invalid_builtin_clzll);
+	UBSAN_TEST_CASE(tp, load_invalid_value_bool);
+	UBSAN_TEST_CASE(tp, load_invalid_value_enum);
 #ifdef __cplusplus
-	ATF_TP_ADD_TC(tp, missing_return);
+	UBSAN_TEST_CASE(tp, missing_return);
 #endif
-	ATF_TP_ADD_TC(tp, mul_overflow_signed);
-	ATF_TP_ADD_TC(tp, mul_overflow_unsigned);
-	ATF_TP_ADD_TC(tp, negate_overflow_signed);
-	ATF_TP_ADD_TC(tp, negate_overflow_unsigned);
+	UBSAN_TEST_CASE(tp, mul_overflow_signed);
+	UBSAN_TEST_CASE(tp, mul_overflow_unsigned);
+	UBSAN_TEST_CASE(tp, negate_overflow_signed);
+	UBSAN_TEST_CASE(tp, negate_overflow_unsigned);
 #ifdef __clang
 	// Clang/LLVM specific extension
 	// http://clang.llvm.org/docs/AttributeReference.html#nullability-attributes
-	ATF_TP_ADD_TC(tp, nonnull_arg);
-	ATF_TP_ADD_TC(tp, nonnull_assign);
-	ATF_TP_ADD_TC(tp, nonnull_return);
+	UBSAN_TEST_CASE(tp, nonnull_arg);
+	UBSAN_TEST_CASE(tp, nonnull_assign);
+	UBSAN_TEST_CASE(tp, nonnull_return);
 #endif
-	ATF_TP_ADD_TC(tp, out_of_bounds);
-	ATF_TP_ADD_TC(tp, pointer_overflow);
+	UBSAN_TEST_CASE(tp, out_of_bounds);
+	UBSAN_TEST_CASE(tp, pointer_overflow);
 #ifndef __cplusplus
 	// Acceptable in C++11
-	ATF_TP_ADD_TC(tp, shift_out_of_bounds_signednessbit);
+	UBSAN_TEST_CASE(tp, shift_out_of_bounds_signednessbit);
 #endif
-	ATF_TP_ADD_TC(tp, shift_out_of_bounds_signedoverflow);
-	ATF_TP_ADD_TC(tp, shift_out_of_bounds_negativeexponent);
-	ATF_TP_ADD_TC(tp, shift_out_of_bounds_toolargeexponent);
-	ATF_TP_ADD_TC(tp, sub_overflow_signed);
-	ATF_TP_ADD_TC(tp, sub_overflow_unsigned);
-	ATF_TP_ADD_TC(tp, type_mismatch_nullptrderef);
-	ATF_TP_ADD_TC(tp, type_mismatch_misaligned);
-	ATF_TP_ADD_TC(tp, vla_bound_not_positive);
-	ATF_TP_ADD_TC(tp, integer_divide_by_zero);
-	ATF_TP_ADD_TC(tp, float_divide_by_zero);
+	UBSAN_TEST_CASE(tp, shift_out_of_bounds_signedoverflow);
+	UBSAN_TEST_CASE(tp, shift_out_of_bounds_negativeexponent);
+	UBSAN_TEST_CASE(tp, shift_out_of_bounds_toolargeexponent);
+	UBSAN_TEST_CASE(tp, sub_overflow_signed);
+	UBSAN_TEST_CASE(tp, sub_overflow_unsigned);
+	UBSAN_TEST_CASE(tp, type_mismatch_nullptrderef);
+	UBSAN_TEST_CASE(tp, type_mismatch_misaligned);
+	UBSAN_TEST_CASE(tp, vla_bound_not_positive);
+	UBSAN_TEST_CASE(tp, integer_divide_by_zero);
+	UBSAN_TEST_CASE(tp, float_divide_by_zero);
 #endif
 
+#ifndef __cplusplus
 	return atf_no_error();
+#endif
 }

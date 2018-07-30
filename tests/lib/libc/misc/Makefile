@@ -5,7 +5,7 @@
 TESTSDIR=	${TESTSBASE}/lib/libc/misc
 
 TESTS_C+=	t_ubsan
-#TESTS_CXX+=	t_ubsanxx
+TESTS_CXX+=	t_ubsanxx
 
 .if ${MKSANITIZER:Uno} == "yes" || ${MKLIBCSANITIZER:Uno} == "yes"
 # These tests are designed to be used against micro-UBSan only.

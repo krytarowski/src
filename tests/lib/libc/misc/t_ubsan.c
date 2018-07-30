@@ -550,6 +550,19 @@ UBSAN_TC_BODY(float_divide_by_zero, tc)
 
 	usleep((a / b) > 0 ? 1 : 2);
 }
+#else
+UBSAN_TC(dummy);
+UBSAN_TC_HEAD(dummy, tc)
+{
+        UBSAN_MD_VAR(tc, "descr",
+	    "A dummy test");
+}
+
+UBSAN_TC_BODY(dummy, tc)
+{
+
+	// Dummy, skipped
+}
 #endif
 
 UBSAN_CASES(tp)
@@ -605,6 +618,8 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, vla_bound_not_positive);
 	UBSAN_TEST_CASE(tp, integer_divide_by_zero);
 	UBSAN_TEST_CASE(tp, float_divide_by_zero);
+#else
+	UBSAN_TEST_CASE(tp, dummy);
 #endif
 
 #ifndef __cplusplus

@@ -38,6 +38,7 @@ __RCSID("$NetBSD$");
 #define UBSAN_TC_BODY(a, b)	ATF_TEST_CASE_BODY(a)
 #define UBSAN_CASES(a)		ATF_INIT_TEST_CASES(a)
 #define UBSAN_TEST_CASE(a, b)	ATF_ADD_TEST_CASE(a, b)
+#define UBSAN_MD_VAR(a, b, c)	set_md_var(b, c)
 #else
 #include <atf-c.h>
 #define UBSAN_TC(a)		ATF_TC(a)
@@ -45,6 +46,7 @@ __RCSID("$NetBSD$");
 #define UBSAN_TC_BODY(a, b)	ATF_TC_BODY(a, b)
 #define UBSAN_CASES(a)		ATF_TP_ADD_TCS(a)
 #define UBSAN_TEST_CASE(a, b)	ATF_TP_ADD_TC(a, b)
+#define UBSAN_MD_VAR(a, b, c)	atf_tc_set_md_var(a, b, c)
 #endif
 
 #ifdef ENABLE_TESTS
@@ -53,7 +55,7 @@ __RCSID("$NetBSD$");
 UBSAN_TC(add_overflow_signed);
 UBSAN_TC_HEAD(add_overflow_signed, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
@@ -68,7 +70,7 @@ UBSAN_TC_BODY(add_overflow_signed, tc)
 UBSAN_TC(add_overflow_unsigned);
 UBSAN_TC_HEAD(add_overflow_unsigned, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
@@ -83,7 +85,7 @@ UBSAN_TC_BODY(add_overflow_unsigned, tc)
 UBSAN_TC(builtin_unreachable);
 UBSAN_TC_HEAD(builtin_unreachable, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=unreachable");
 }
 
@@ -100,7 +102,7 @@ UBSAN_TC_BODY(builtin_unreachable, tc)
 UBSAN_TC(divrem_overflow_signed_div);
 UBSAN_TC_HEAD(divrem_overflow_signed_div, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
@@ -115,7 +117,7 @@ UBSAN_TC_BODY(divrem_overflow_signed_div, tc)
 UBSAN_TC(divrem_overflow_signed_mod);
 UBSAN_TC_HEAD(divrem_overflow_signed_mod, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
@@ -131,7 +133,7 @@ UBSAN_TC_BODY(divrem_overflow_signed_mod, tc)
 UBSAN_TC(function_type_mismatch);
 UBSAN_TC_HEAD(function_type_mismatch, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=function");
 }
 
@@ -148,14 +150,14 @@ UBSAN_TC_BODY(function_type_mismatch, tc)
 #endif
 
 #define INVALID_BUILTIN(type)				\
-UBSAN_TC(invalid_builtin_##type);				\
-UBSAN_TC_HEAD(invalid_builtin_##type, tc)			\
+UBSAN_TC(invalid_builtin_##type);			\
+UBSAN_TC_HEAD(invalid_builtin_##type, tc)		\
 {							\
-        atf_tc_set_md_var(tc, "descr",			\
+        UBSAN_MD_VAR(tc, "descr",			\
 	    "Checks -fsanitize=builtin");		\
 }							\
 							\
-UBSAN_TC_BODY(invalid_builtin_##type, tc)			\
+UBSAN_TC_BODY(invalid_builtin_##type, tc)		\
 {							\
 							\
 	volatile int a = atoi("0");			\
@@ -172,7 +174,7 @@ INVALID_BUILTIN(clzll)
 UBSAN_TC(load_invalid_value_bool);
 UBSAN_TC_HEAD(load_invalid_value_bool, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=bool");
 }
 
@@ -187,7 +189,7 @@ UBSAN_TC_BODY(load_invalid_value_bool, tc)
 UBSAN_TC(load_invalid_value_enum);
 UBSAN_TC_HEAD(load_invalid_value_enum, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=enum");
 }
 
@@ -204,7 +206,7 @@ UBSAN_TC_BODY(load_invalid_value_enum, tc)
 UBSAN_TC(missing_return);
 UBSAN_TC_HEAD(missing_return, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=return");
 }
 
@@ -224,7 +226,7 @@ UBSAN_TC_BODY(missing_return, tc)
 UBSAN_TC(mul_overflow_signed);
 UBSAN_TC_HEAD(mul_overflow_signed, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
@@ -239,7 +241,7 @@ UBSAN_TC_BODY(mul_overflow_signed, tc)
 UBSAN_TC(mul_overflow_unsigned);
 UBSAN_TC_HEAD(mul_overflow_unsigned, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
@@ -254,7 +256,7 @@ UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 UBSAN_TC(negate_overflow_signed);
 UBSAN_TC_HEAD(negate_overflow_signed, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
@@ -268,7 +270,7 @@ UBSAN_TC_BODY(negate_overflow_signed, tc)
 UBSAN_TC(negate_overflow_unsigned);
 UBSAN_TC_HEAD(negate_overflow_unsigned, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
@@ -283,7 +285,7 @@ UBSAN_TC_BODY(negate_overflow_unsigned, tc)
 UBSAN_TC(nonnull_arg);
 UBSAN_TC_HEAD(nonnull_arg, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=nullability-arg");
 }
 
@@ -304,7 +306,7 @@ UBSAN_TC_BODY(nonnull_arg, tc)
 UBSAN_TC(nonnull_assign);
 UBSAN_TC_HEAD(nonnull_assign, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=nullability-assign");
 }
 
@@ -328,7 +330,7 @@ UBSAN_TC_BODY(nonnull_assign, tc)
 UBSAN_TC(nonnull_return);
 UBSAN_TC_HEAD(nonnull_return, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=nullability-return");
 }
 
@@ -350,7 +352,7 @@ UBSAN_TC_BODY(nonnull_return, tc)
 UBSAN_TC(out_of_bounds);
 UBSAN_TC_HEAD(out_of_bounds, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=bounds");
 }
 
@@ -365,7 +367,7 @@ UBSAN_TC_BODY(out_of_bounds, tc)
 UBSAN_TC(pointer_overflow);
 UBSAN_TC_HEAD(pointer_overflow, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=pointer-overflow");
 }
 
@@ -382,7 +384,7 @@ UBSAN_TC_BODY(pointer_overflow, tc)
 UBSAN_TC(shift_out_of_bounds_signednessbit);
 UBSAN_TC_HEAD(shift_out_of_bounds_signednessbit, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
@@ -397,7 +399,7 @@ UBSAN_TC_BODY(shift_out_of_bounds_signednessbit, tc)
 UBSAN_TC(shift_out_of_bounds_signedoverflow);
 UBSAN_TC_HEAD(shift_out_of_bounds_signedoverflow, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
@@ -413,7 +415,7 @@ UBSAN_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
 UBSAN_TC(shift_out_of_bounds_negativeexponent);
 UBSAN_TC_HEAD(shift_out_of_bounds_negativeexponent, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
@@ -428,7 +430,7 @@ UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 UBSAN_TC(shift_out_of_bounds_toolargeexponent);
 UBSAN_TC_HEAD(shift_out_of_bounds_toolargeexponent, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=shift");
 }
 
@@ -443,7 +445,7 @@ UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
 UBSAN_TC(sub_overflow_signed);
 UBSAN_TC_HEAD(sub_overflow_signed, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
@@ -458,7 +460,7 @@ UBSAN_TC_BODY(sub_overflow_signed, tc)
 UBSAN_TC(sub_overflow_unsigned);
 UBSAN_TC_HEAD(sub_overflow_unsigned, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
@@ -473,7 +475,7 @@ UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 UBSAN_TC(type_mismatch_nullptrderef);
 UBSAN_TC_HEAD(type_mismatch_nullptrderef, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=null");
 }
 
@@ -488,7 +490,7 @@ UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
 UBSAN_TC(type_mismatch_misaligned);
 UBSAN_TC_HEAD(type_mismatch_misaligned, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=alignment");
 }
 
@@ -507,7 +509,7 @@ UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 UBSAN_TC(vla_bound_not_positive);
 UBSAN_TC_HEAD(vla_bound_not_positive, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=vla-bound");
 }
 
@@ -522,7 +524,7 @@ UBSAN_TC_BODY(vla_bound_not_positive, tc)
 UBSAN_TC(integer_divide_by_zero);
 UBSAN_TC_HEAD(integer_divide_by_zero, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=integer-divide-by-zero");
 }
 
@@ -537,7 +539,7 @@ UBSAN_TC_BODY(integer_divide_by_zero, tc)
 UBSAN_TC(float_divide_by_zero);
 UBSAN_TC_HEAD(float_divide_by_zero, tc)
 {
-        atf_tc_set_md_var(tc, "descr",
+        UBSAN_MD_VAR(tc, "descr",
 	    "Checks -fsanitize=float-divide-by-zero");
 }
 

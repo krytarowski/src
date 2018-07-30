@@ -371,10 +371,10 @@ HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CType
 		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), mType->mTypeName);
 	} else if ((mLogAlignment - 1) & ulPointer) {
 		Report(isFatal, "UBSan: Undefined Behavior in %s, %s misaligned address %p for type %s which requires %ld byte alignment\n",
-		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), (void *)ulPointer, mType->mTypeName, mLogAlignment);
+		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), __CAST(void *, ulPointer), mType->mTypeName, mLogAlignment);
 	} else {
 		Report(isFatal, "UBSan: Undefined Behavior in %s, %s address %p with insufficient space for an object of type %s\n",
-		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), (void *)ulPointer, mType->mTypeName);
+		       szLocation, DeserializeTypeCheckKind(mTypeCheckKind), __CAST(void *, ulPointer), mType->mTypeName);
 	}
 }
 
@@ -1251,14 +1251,14 @@ DeserializeNumberSigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		/* NOTREACHED */
 #ifdef __SIZEOF_INT128__
 	case WIDTH_128:
-		DeserializeUINT128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
+		DeserializeUINT128(pBuffer, zBUfferLength, pType, __CAST(__uint128_t, L));
 		break;
 #endif
 	case WIDTH_64:
 	case WIDTH_32:
 	case WIDTH_16:
 	case WIDTH_8:
-		snprintf(pBuffer, zBUfferLength, "%" PRId64, (int64_t)L);
+		snprintf(pBuffer, zBUfferLength, "%" PRId64, __CAST(int64_t, L));
 		break;
 	}
 }
@@ -1278,14 +1278,14 @@ DeserializeNumberUnsigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescr
 		/* NOTREACHED */
 #ifdef __SIZEOF_INT128__
 	case WIDTH_128:
-		DeserializeUINT128(pBuffer, zBUfferLength, pType, (__uint128_t)L);
+		DeserializeUINT128(pBuffer, zBUfferLength, pType, __CAST(__uint128_t, L));
 		break;
 #endif
 	case WIDTH_64:
 	case WIDTH_32:
 	case WIDTH_16:
 	case WIDTH_8:
-		snprintf(pBuffer, zBUfferLength, "%" PRIu64, (uint64_t)L);
+		snprintf(pBuffer, zBUfferLength, "%" PRIu64, __CAST(uint64_t, L));
 		break;
 	}
 }
@@ -1352,7 +1352,7 @@ DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescrip
 		 * unsigned long is either 32 or 64-bit, cast it to 32-bit
 		 * value in order to call memcpy(3) in an Endian-aware way.
 		 */
-		U32 = (uint32_t)ulNumber;
+		U32 = __CAST(uint32_t, ulNumber);
 		memcpy(&F, &U32, sizeof(float));
 		snprintf(pBuffer, zBUfferLength, "%g", F);
 		break;
@@ -1387,19 +1387,19 @@ llliGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 		break;
 	case WIDTH_64:
 		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			L = *(int64_t *)ulNumber;
+			L = *__CAST(int64_t *, ulNumber);
 		} else {
-			L = (int64_t)(uint64_t)ulNumber;
+			L = __CAST(int64_t, __CAST(uint64_t, ulNumber));
 		}
 		break;
 	case WIDTH_32:
-		L = (int32_t)(uint32_t)ulNumber;
+		L = __CAST(int32_t, __CAST(uint32_t, ulNumber));
 		break;
 	case WIDTH_16:
-		L = (int16_t)(uint16_t)ulNumber;
+		L = __CAST(int16_t, __CAST(uint16_t, ulNumber));
 		break;
 	case WIDTH_8:
-		L = (int8_t)(uint8_t)ulNumber;
+		L = __CAST(int8_t, __CAST(uint8_t, ulNumber));
 		break;
 	}
 
@@ -1421,7 +1421,7 @@ llluGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 		/* NOTREACHED */
 	case WIDTH_128:
 #ifdef __SIZEOF_INT128__
-		memcpy(&UL, (ulongest *)ulNumber, sizeof(ulongest));
+		memcpy(&UL, __CAST(ulongest *, ulNumber), sizeof(ulongest));
 		break;
 #else
 		Report(true, "UBSan: Unexpected 128-Bit Type in %s\n", szLocation);
@@ -1429,7 +1429,7 @@ llluGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulN
 #endif
 	case WIDTH_64:
 		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			UL = *(uint64_t *)ulNumber;
+			UL = *__CAST(uint64_t *, ulNumber);
 			break;
 		}
 		/* FALLTHROUGH */
@@ -1466,12 +1466,12 @@ DeserializeNumberFloat(char *szLocation, char *pBuffer, size_t zBUfferLength, st
 	case WIDTH_128:
 	case WIDTH_96:
 	case WIDTH_80:
-		DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+		DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, __CAST(unsigned long *, ulNumber));
 		break;
 #endif
 	case WIDTH_64:
 		if (sizeof(ulNumber) * CHAR_BIT < WIDTH_64) {
-			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, (unsigned long *)ulNumber);
+			DeserializeFloatOverPointer(pBuffer, zBUfferLength, pType, __CAST(unsigned long *, ulNumber));
 			break;
 		}
 	case WIDTH_32:

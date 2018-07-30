@@ -16,7 +16,7 @@ UBSAN_FLAGS+=	${${ACTIVE_CC} == "clang" :? -fsanitize=integer :}
 UBSAN_FLAGS+=	${${ACTIVE_CC} == "clang" :? -fsanitize=nullability :}
 CFLAGS+=	${UBSAN_FLAGS}
 CXXFLAGS+=	${UBSAN_FLAGS}
-CWARNFLAGS+=	-Wno-return-type
+CWARNFLAGS+=	-Wno-return-type -fpermissive
 .endif
 
 .include <bsd.test.mk>

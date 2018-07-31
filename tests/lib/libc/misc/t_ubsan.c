@@ -43,29 +43,27 @@ __RCSID("$NetBSD$");
 
 #ifdef __cplusplus
 #include <atf-c++.hpp>
-#define UBSAN_TC(a)		ATF_TEST_CASE(a)
-#define UBSAN_TC_HEAD(a, b)	ATF_TEST_CASE_HEAD(a)
-#define UBSAN_TC_BODY(a, b)	ATF_TEST_CASE_BODY(a)
-#define UBSAN_CASES(a)		ATF_INIT_TEST_CASES(a)
-#define UBSAN_TEST_CASE(a, b)	ATF_ADD_TEST_CASE(a, b)
-#define UBSAN_MD_VAR(a, b, c)	set_md_var(b, c)
+#define UBSAN_TC(a)			ATF_TEST_CASE(a)
+#define UBSAN_TC_HEAD(a, b)		ATF_TEST_CASE_HEAD(a)
+#define UBSAN_TC_BODY(a, b)		ATF_TEST_CASE_BODY(a)
+#define UBSAN_CASES(a)			ATF_INIT_TEST_CASES(a)
+#define UBSAN_TEST_CASE(a, b)		ATF_ADD_TEST_CASE(a, b)
+#define UBSAN_MD_VAR(a, b, c)		set_md_var(b, c)
 #define REINTERPRET_CAST(__dt, __st)	reinterpret_cast<__dt>(__st)
 #define STATIC_CAST(__dt, __st)		static_cast<__dt>(__st)
 #else
 #include <atf-c.h>
-#define UBSAN_TC(a)		ATF_TC(a)
-#define UBSAN_TC_HEAD(a, b)	ATF_TC_HEAD(a, b)
-#define UBSAN_TC_BODY(a, b)	ATF_TC_BODY(a, b)
-#define UBSAN_CASES(a)		ATF_TP_ADD_TCS(a)
-#define UBSAN_TEST_CASE(a, b)	ATF_TP_ADD_TC(a, b)
-#define UBSAN_MD_VAR(a, b, c)	atf_tc_set_md_var(a, b, c)
+#define UBSAN_TC(a)			ATF_TC(a)
+#define UBSAN_TC_HEAD(a, b)		ATF_TC_HEAD(a, b)
+#define UBSAN_TC_BODY(a, b)		ATF_TC_BODY(a, b)
+#define UBSAN_CASES(a)			ATF_TP_ADD_TCS(a)
+#define UBSAN_TEST_CASE(a, b)		ATF_TP_ADD_TC(a, b)
+#define UBSAN_MD_VAR(a, b, c)		atf_tc_set_md_var(a, b, c)
 #define REINTERPRET_CAST(__dt, __st)	((__dt)(__st))
 #define STATIC_CAST(__dt, __st)		((__dt)(__st))
 #endif
 
 #ifdef ENABLE_TESTS
-//#include "ubsan.c"
-
 static void
 test_case(void (*fun)(void), const char *string, bool exited, bool signaled)
 {

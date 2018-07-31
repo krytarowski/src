@@ -548,7 +548,7 @@ test_out_of_bounds(void)
 UBSAN_TC_BODY(out_of_bounds, tc)
 {
 
-	test_case(test_out_of_bounds, " XXX ", true, false);
+	test_case(test_out_of_bounds, " index 10 is out of range for type ", true, false);
 }
 
 UBSAN_TC(pointer_overflow);

@@ -53,7 +53,7 @@ __RCSID("$NetBSD$");
 #endif
 
 #ifdef ENABLE_TESTS
-#include "ubsan.c"
+//#include "ubsan.c"
 
 static void
 test_case(void (*fun)(void), const char *string, bool exited, bool signaled)

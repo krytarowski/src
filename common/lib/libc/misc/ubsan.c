@@ -118,10 +118,6 @@ __RCSID("$NetBSD$");
 
 #define NUMBER_SIGNED_BIT	1U
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if __SIZEOF_INT128__
 typedef __int128 longest;
 typedef unsigned __int128 ulongest;
@@ -1606,7 +1602,3 @@ isShiftExponentTooLarge(char *szLocation, struct CTypeDescriptor *pType, unsigne
 
 	return llluGetNumber(szLocation, pType, ulNumber) >= zWidth;
 }
-
-#ifdef __cplusplus
-}
-#endif

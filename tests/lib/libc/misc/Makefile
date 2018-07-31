@@ -7,6 +7,9 @@ TESTSDIR=	${TESTSBASE}/lib/libc/misc
 TESTS_C+=	t_ubsan
 TESTS_CXX+=	t_ubsanxx
 
+SRCS.t_ubsan=	t_ubsan.c ubsan.c
+SRCS.t_ubsanxx=	t_ubsanxx.cpp ubsan.c
+
 .if ${MKSANITIZER:Uno} == "yes" || ${MKLIBCSANITIZER:Uno} == "yes"
 # These tests are designed to be used against micro-UBSan only.
 CPPFLAGS+=		-DENABLE_TESTS

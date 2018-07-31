@@ -193,12 +193,19 @@ UBSAN_TC_HEAD(divrem_overflow_signed_mod, tc)
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-UBSAN_TC_BODY(divrem_overflow_signed_mod, tc)
+static void
+test_divrem_overflow_signed_mod(void)
 {
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
 
-	usleep((a % b) ? 1 : 2);
+	_exit((a % b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(divrem_overflow_signed_mod, tc)
+{
+
+	test_case(test_divrem_overflow_signed_mod, " signed integer overflow: ", false, true);
 }
 
 #if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
@@ -209,15 +216,24 @@ UBSAN_TC_HEAD(function_type_mismatch, tc)
 	    "Checks -fsanitize=function");
 }
 
-static void
+static int
 fun_type_mismatch(void)
 {
+}
+
+static void
+test_function_type_mismatch(void)
+{
+
+	_exit(reinterpret_cast<void(*)(int)>
+	    (reinterpret_cast<uintptr_t>(fun_type_mismatch))(1));
 }
 
 UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
-	reinterpret_cast<void(*)(int)>(reinterpret_cast<uintptr_t>(fun_type_mismatch))(1);
+	test_case(test_function_type_mismatch, " signed integer overflow: ",
+	          true, false);
 }
 #endif
 
@@ -229,11 +245,19 @@ UBSAN_TC_HEAD(invalid_builtin_##type, tc)		\
 	    "Checks -fsanitize=builtin");		\
 }							\
 							\
-UBSAN_TC_BODY(invalid_builtin_##type, tc)		\
+static void						\
+test_invalid_builtin_##type(void)			\
 {							\
 							\
 	volatile int a = atoi("0");			\
-	__builtin_##type(a);				\
+	_exit(__builtin_##type(a));			\
+}							\
+							\
+UBSAN_TC_BODY(invalid_builtin_##type, tc)		\
+{							\
+							\
+	test_case(test_invalid_builtin_##type,		\
+	          " XXX  ", false, true);		\
 }
 
 INVALID_BUILTIN(ctz)
@@ -250,12 +274,18 @@ UBSAN_TC_HEAD(load_invalid_value_bool, tc)
 	    "Checks -fsanitize=bool");
 }
 
-UBSAN_TC_BODY(load_invalid_value_bool, tc)
+static void
+test_load_invalid_value_bool(void)
 {
 	volatile int a = atoi("10");
 	volatile bool b = a;
 
-	usleep(b ? 1 : 2);
+	_exit(b ? 1 : 2);
+}
+
+UBSAN_TC_BODY(load_invalid_value_bool, tc)
+{
+	test_case(test_load_invalid_value_bool, " XXX ", true, false);
 }
 
 UBSAN_TC(load_invalid_value_enum);
@@ -265,13 +295,20 @@ UBSAN_TC_HEAD(load_invalid_value_enum, tc)
 	    "Checks -fsanitize=enum");
 }
 
-UBSAN_TC_BODY(load_invalid_value_enum, tc)
+static void
+test_load_invalid_value_enum(void)
 {
 	enum e { e1, e2, e3, e4 };
 	volatile int a = atoi("10");
 	volatile enum e E = STATIC_CAST(enum e, a);
 
-	usleep((E == e1) ? 1 : 2);
+	_exit((E == e1) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(load_invalid_value_enum, tc)
+{
+
+	test_case(test_load_invalid_value_enum, " signed integer overflow: ", true, false);
 }
 
 #ifdef __cplusplus
@@ -287,11 +324,18 @@ fun_missing_return(void)
 {
 }
 
-UBSAN_TC_BODY(missing_return, tc)
+static void
+test_missing_return(void)
 {
 	volatile int a = fun_missing_return();
 
-	usleep(a ? 1 : 2);
+	_exit(a ? 1 : 2);
+}
+
+UBSAN_TC_BODY(missing_return, tc)
+{
+
+	test_case(test_missing_return, " XXX ", true, false);
 }
 #endif
 
@@ -302,12 +346,19 @@ UBSAN_TC_HEAD(mul_overflow_signed, tc)
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-UBSAN_TC_BODY(mul_overflow_signed, tc)
+static void
+test_mul_overflow_signed(void)
 {
 	volatile int a = INT_MAX;
 	volatile int b = atoi("2");
 
-	usleep((a * b) ? 1 : 2);
+	_exit((a * b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(mul_overflow_signed, tc)
+{
+
+	test_case(test_mul_overflow_signed, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(mul_overflow_unsigned);
@@ -317,12 +368,19 @@ UBSAN_TC_HEAD(mul_overflow_unsigned, tc)
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-UBSAN_TC_BODY(mul_overflow_unsigned, tc)
+static void
+test_mul_overflow_unsigned(void)
 {
 	volatile unsigned int a = UINT_MAX;
 	volatile unsigned int b = atoi("2");
 
-	usleep((a * b) ? 1 : 2);
+	_exit((a * b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(mul_overflow_unsigned, tc)
+{
+
+	test_case(test_mul_overflow_signed, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(negate_overflow_signed);
@@ -332,11 +390,18 @@ UBSAN_TC_HEAD(negate_overflow_signed, tc)
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-UBSAN_TC_BODY(negate_overflow_signed, tc)
+static void
+test_negate_overflow_signed(void)
 {
 	volatile int a = INT_MIN;
 
-	usleep(-a ? 1 : 2);
+	_exit(-a ? 1 : 2);
+}
+
+UBSAN_TC_BODY(negate_overflow_signed, tc)
+{
+
+	test_case(test_negate_overflow_signed, " signed integer overflow: ", false, true);
 }
 
 UBSAN_TC(negate_overflow_unsigned);

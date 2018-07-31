@@ -115,9 +115,11 @@ test_add_overflow_signed(void)
 UBSAN_TC_BODY(add_overflow_signed, tc)
 {
 
-	test_case(test_add_overflow_signed, " signed integer overflow: ", true, false);
+	test_case(test_add_overflow_signed, "  signed integer overflow: ",
+	          true, false);
 }
 
+#ifdef __clang__
 UBSAN_TC(add_overflow_unsigned);
 UBSAN_TC_HEAD(add_overflow_unsigned, tc)
 {
@@ -137,8 +139,10 @@ test_add_overflow_unsigned(void)
 UBSAN_TC_BODY(add_overflow_unsigned, tc)
 {
 
-	test_case(test_add_overflow_unsigned, " unsigned integer overflow: ", true, false);
+	test_case(test_add_overflow_unsigned, " unsigned integer overflow: ",
+	          true, false);
 }
+#endif
 
 UBSAN_TC(builtin_unreachable);
 UBSAN_TC_HEAD(builtin_unreachable, tc)
@@ -161,7 +165,8 @@ test_builtin_unreachable(void)
 UBSAN_TC_BODY(builtin_unreachable, tc)
 {
 
-	test_case(test_builtin_unreachable, " calling __builtin_unreachable()", false, true);
+	test_case(test_builtin_unreachable, " calling __builtin_unreachable()",
+	          false, true);
 }
 
 UBSAN_TC(divrem_overflow_signed_div);
@@ -225,7 +230,7 @@ static void
 test_function_type_mismatch(void)
 {
 
-	_exit(reinterpret_cast<void(*)(int)>
+	_exit(reinterpret_cast<int(*)(int)>
 	    (reinterpret_cast<uintptr_t>(fun_type_mismatch))(1));
 }
 

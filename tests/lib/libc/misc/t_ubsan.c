@@ -411,11 +411,18 @@ UBSAN_TC_HEAD(negate_overflow_unsigned, tc)
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-UBSAN_TC_BODY(negate_overflow_unsigned, tc)
+void
+test_negate_overflow_unsigned(void)
 {
 	volatile unsigned int a = UINT_MAX;
 
-	usleep(-a ? 1 : 2);
+	_exit(-a ? 1 : 2);
+}
+
+UBSAN_TC_BODY(negate_overflow_unsigned, tc)
+{
+
+	test_case(test_negate_overflow_unsigned, " signed integer overflow: ", true, false);
 }
 
 #ifdef __clang
@@ -433,11 +440,18 @@ fun_nonnull_arg(void * _Nonnull ptr)
 	return ptr;
 }
 
-UBSAN_TC_BODY(nonnull_arg, tc)
+void
+test_nonnull_arg(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	usleep(fun_nonnull_arg((void *)a) ? 1 : 2);
+	_exit(fun_nonnull_arg((void *)a) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(nonnull_arg, tc)
+{
+
+	test_case(test_nonnull_arg, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(nonnull_assign);
@@ -457,11 +471,18 @@ fun_nonnull_assign(intptr_t a)
 	return ptr;
 }
 
-UBSAN_TC_BODY(nonnull_assign, tc)
+static void
+test_nonnull_assign(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	usleep(fun_nonnull_assign(a) ? 1 : 2);
+	_exit(fun_nonnull_assign(a) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(nonnull_assign, tc)
+{
+
+	test_case(test_nonnull_assign, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(nonnull_return);
@@ -479,10 +500,17 @@ fun_nonnull_return(void)
 	return (void *)ptr;
 }
 
+static void
+test_nonnull_return(void)
+{
+
+	_exit(fun_nonnull_return() ? 1 : 2);
+}
+
 UBSAN_TC_BODY(nonnull_return, tc)
 {
 
-	usleep(fun_nonnull_return() ? 1 : 2);
+	test_case(test_nonnull_return, " XXX ", true, false);
 }
 #endif
 
@@ -493,12 +521,19 @@ UBSAN_TC_HEAD(out_of_bounds, tc)
 	    "Checks -fsanitize=bounds");
 }
 
-UBSAN_TC_BODY(out_of_bounds, tc)
+static void
+test_out_of_bounds(void)
 {
 	int A[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	volatile int a = atoi("10");
 
-	usleep(A[a] ? 1 : 2);
+	_exit(A[a] ? 1 : 2);
+}
+
+UBSAN_TC_BODY(out_of_bounds, tc)
+{
+
+	test_case(test_out_of_bounds, " XXX ", true, false);
 }
 
 UBSAN_TC(pointer_overflow);
@@ -508,13 +543,20 @@ UBSAN_TC_HEAD(pointer_overflow, tc)
 	    "Checks -fsanitize=pointer-overflow");
 }
 
-UBSAN_TC_BODY(pointer_overflow, tc)
+static void
+test_pointer_overflow(void)
 {
 	volatile uintptr_t a = UINTPTR_MAX;
 	volatile uintptr_t b = atoi("1");
 	volatile int *ptr = REINTERPRET_CAST(int *, a);
 
-	usleep((ptr + b) ? 1 : 2);
+	_exit((ptr + b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(pointer_overflow, tc)
+{
+
+	test_case(test_pointer_overflow, " XXX ", true, false);
 }
 
 #ifndef __cplusplus
@@ -525,11 +567,18 @@ UBSAN_TC_HEAD(shift_out_of_bounds_signednessbit, tc)
 	    "Checks -fsanitize=shift");
 }
 
-UBSAN_TC_BODY(shift_out_of_bounds_signednessbit, tc)
+static void
+test_shift_out_of_bounds_signednessbit(void)
 {
 	volatile int32_t a = atoi("1");
 
-	usleep((a << 31) ? 1 : 2);
+	_exit((a << 31) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(shift_out_of_bounds_signednessbit, tc)
+{
+
+	test_case(test_shift_out_of_bounds_signednessbit, " XXX ", true, false);
 }
 #endif
 
@@ -540,13 +589,20 @@ UBSAN_TC_HEAD(shift_out_of_bounds_signedoverflow, tc)
 	    "Checks -fsanitize=shift");
 }
 
-UBSAN_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
+static void
+test_shift_out_of_bounds_signedoverflow(void)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("30");
 	a <<= b;
 
-	usleep((a << 10) ? 1 : 2);
+	_exit((a << 10) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
+{
+
+	test_case(test_shift_out_of_bounds_signedoverflow, " XXX ", true, false);
 }
 
 UBSAN_TC(shift_out_of_bounds_negativeexponent);
@@ -556,12 +612,19 @@ UBSAN_TC_HEAD(shift_out_of_bounds_negativeexponent, tc)
 	    "Checks -fsanitize=shift");
 }
 
-UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
+static void
+test_load_invalid_value_enum(void)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("-10");
 
-	usleep((a << b) ? 1 : 2);
+	_exit((a << b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
+{
+
+	test_case(test_load_invalid_value_enum, " XXX ", true, false);
 }
 
 UBSAN_TC(shift_out_of_bounds_toolargeexponent);
@@ -571,12 +634,19 @@ UBSAN_TC_HEAD(shift_out_of_bounds_toolargeexponent, tc)
 	    "Checks -fsanitize=shift");
 }
 
-UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
+static void
+test_shift_out_of_bounds_toolargeexponent(void)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("40");
 
-	usleep((a << b) ? 1 : 2);
+	_exit((a << b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
+{
+
+	test_case(test_shift_out_of_bounds_toolargeexponent, " XXX ", true, false);
 }
 
 UBSAN_TC(sub_overflow_signed);
@@ -586,12 +656,19 @@ UBSAN_TC_HEAD(sub_overflow_signed, tc)
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-UBSAN_TC_BODY(sub_overflow_signed, tc)
+static void
+test_sub_overflow_signed(void)
 {
 	volatile int a = INT_MIN;
 	volatile int b = atoi("1");
 
-	usleep((a - b) ? 1 : 2);
+	_exit((a - b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(sub_overflow_signed, tc)
+{
+
+	test_case(test_sub_overflow_signed, " XXX ", true, false);
 }
 
 UBSAN_TC(sub_overflow_unsigned);
@@ -601,12 +678,19 @@ UBSAN_TC_HEAD(sub_overflow_unsigned, tc)
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-UBSAN_TC_BODY(sub_overflow_unsigned, tc)
+static void
+test_sub_overflow_unsigned(void)
 {
 	volatile unsigned int a = atoi("0");
 	volatile unsigned int b = atoi("1");
 
-	usleep((a - b) ? 1 : 2);
+	_exit((a - b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(sub_overflow_unsigned, tc)
+{
+
+	test_case(test_sub_overflow_unsigned, " XXX ", true, false);
 }
 
 UBSAN_TC(type_mismatch_nullptrderef);
@@ -616,12 +700,19 @@ UBSAN_TC_HEAD(type_mismatch_nullptrderef, tc)
 	    "Checks -fsanitize=null");
 }
 
-UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
+static void
+test_type_mismatch_nullptrderef(void)
 {
 	volatile intptr_t a = atoi("0");
 	volatile int *b = REINTERPRET_CAST(int *, a);
 
-	usleep((*b) ? 1 : 2);
+	_exit((*b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
+{
+
+	test_case(test_type_mismatch_nullptrderef, " XXX ", true, false);
 }
 
 UBSAN_TC(type_mismatch_misaligned);
@@ -665,12 +756,19 @@ UBSAN_TC_HEAD(integer_divide_by_zero, tc)
 	    "Checks -fsanitize=integer-divide-by-zero");
 }
 
-UBSAN_TC_BODY(integer_divide_by_zero, tc)
+static void
+test_integer_divide_by_zero(void)
 {
 	volatile int a = atoi("-1");
 	volatile int b = atoi("0");
 
-	usleep((a / b) ? 1 : 2);
+	_exit((a / b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(integer_divide_by_zero, tc)
+{
+
+	test_case(test_integer_divide_by_zero, " XXX ", true, false);
 }
 
 UBSAN_TC(float_divide_by_zero);
@@ -680,12 +778,19 @@ UBSAN_TC_HEAD(float_divide_by_zero, tc)
 	    "Checks -fsanitize=float-divide-by-zero");
 }
 
-UBSAN_TC_BODY(float_divide_by_zero, tc)
+static void
+test_float_divide_by_zero(void)
 {
 	volatile float a = strtof("1.0", NULL);
 	volatile float b = strtof("0.0", NULL);
 
-	usleep((a / b) > 0 ? 1 : 2);
+	_exit((a / b) > 0 ? 1 : 2);
+}
+
+UBSAN_TC_BODY(float_divide_by_zero, tc)
+{
+
+	test_case(test_float_divide_by_zero, " XXX ", true, false);
 }
 #else
 UBSAN_TC(dummy);
@@ -699,6 +804,7 @@ UBSAN_TC_BODY(dummy, tc)
 {
 
 	// Dummy, skipped
+	// The framework requires at least a single defined test.
 }
 #endif
 

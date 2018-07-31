@@ -55,6 +55,47 @@ __RCSID("$NetBSD$");
 #ifdef ENABLE_TESTS
 #include "ubsan.c"
 
+static void
+test_case(void (*fun)(void), const char *string, bool exited, bool signaled)
+{
+	int filedes[2];
+	pid_t pid;
+	FILE *fp;
+	size_t len;
+	char *buffer;
+	int status;
+
+	/*
+	 * Spawn a subprocess that triggers the issue.
+	 * A child process either exits or is signaled with a crash signal.
+	 */
+	ATF_REQUIRE_EQ(pipe(filedes), 0);
+	pid = fork();
+	ATF_REQUIRE(pid != -1);
+	if (pid == 0) {
+		ATF_REQUIRE(dup2(filedes[1], STDERR_FILENO) != -1);
+		ATF_REQUIRE(close(filedes[0]) == 0);
+		ATF_REQUIRE(close(filedes[1]) == 0);
+
+		(*fun)();
+	}
+
+	ATF_REQUIRE(close(filedes[1]) == 0);
+
+	fp = fdopen(filedes[0], "r");
+	ATF_REQUIRE(fp != NULL);
+
+	buffer = fgetln(fp, &len);
+	ATF_REQUIRE(buffer != 0);
+	ATF_REQUIRE(!ferror(fp));
+	ATF_REQUIRE(strstr(buffer, string) != NULL);
+	ATF_REQUIRE(wait(&status) == pid);
+	ATF_REQUIRE(!!WIFEXITED(status) == exited);
+	ATF_REQUIRE(!!WIFSIGNALED(status) == signaled);
+	ATF_REQUIRE(!WIFSTOPPED(status));
+	ATF_REQUIRE(!WIFCONTINUED(status));
+}
+
 UBSAN_TC(add_overflow_signed);
 UBSAN_TC_HEAD(add_overflow_signed, tc)
 {
@@ -62,41 +103,19 @@ UBSAN_TC_HEAD(add_overflow_signed, tc)
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
+static void
+test_add_overflow_signed(void)
+{
+	volatile int a = INT_MAX;
+	volatile int b = atoi("1");
+
+	_exit((a + b) ? 1 : 2);
+}
+
 UBSAN_TC_BODY(add_overflow_signed, tc)
 {
-	int filedes[2];
-	ATF_REQUIRE_EQ(pipe(filedes), 0);
-	pid_t pid = fork();
-	ATF_REQUIRE(pid != -1);
-	if (pid == 0) {
-		ATF_REQUIRE(dup2(filedes[1], STDERR_FILENO) != -1);
-		ATF_REQUIRE(close(filedes[0]) == 0);
-		ATF_REQUIRE(close(filedes[1]) == 0);
 
-		volatile int a = INT_MAX;
-		volatile int b = atoi("1");
-
-		_exit((a + b) ? 1 : 2);
-	}
-
-	ATF_REQUIRE(close(filedes[1]) == 0);
-
-	FILE *fp;
-	fp = fdopen(filedes[0], "r");
-	ATF_REQUIRE(fp != NULL);
-	size_t len;
-	char *buffer = fgetln(fp, &len);
-	ATF_REQUIRE(buffer != 0);
-	ATF_REQUIRE(!ferror(fp));
-	char *sub;
-	sub = strstr(buffer, " signed integer overflow: ");
-	ATF_REQUIRE(sub != 0);
-	int status;
-	ATF_REQUIRE(wait(&status) == pid);
-	ATF_REQUIRE(!!WIFEXITED(status));
-	ATF_REQUIRE(!WIFSIGNALED(status));
-	ATF_REQUIRE(!WIFSTOPPED(status));
-	ATF_REQUIRE(!WIFCONTINUED(status));
+	test_case(test_add_overflow_signed, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(add_overflow_unsigned);
@@ -106,12 +125,19 @@ UBSAN_TC_HEAD(add_overflow_unsigned, tc)
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-UBSAN_TC_BODY(add_overflow_unsigned, tc)
+static void
+test_add_overflow_unsigned(void)
 {
 	volatile unsigned int a = UINT_MAX;
 	volatile unsigned int b = atoi("1");
 
-	usleep((a + b) ? 1 : 2);
+	_exit((a + b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(add_overflow_unsigned, tc)
+{
+
+	test_case(test_add_overflow_unsigned, " unsigned integer overflow: ", true, false);
 }
 
 UBSAN_TC(builtin_unreachable);

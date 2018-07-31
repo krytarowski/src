@@ -411,7 +411,7 @@ UBSAN_TC_HEAD(negate_overflow_unsigned, tc)
 	    "Checks -fsanitize=unsigned-integer-overflow");
 }
 
-void
+static void
 test_negate_overflow_unsigned(void)
 {
 	volatile unsigned int a = UINT_MAX;
@@ -613,7 +613,7 @@ UBSAN_TC_HEAD(shift_out_of_bounds_negativeexponent, tc)
 }
 
 static void
-test_load_invalid_value_enum(void)
+test_shift_out_of_bounds_negativeexponent(void)
 {
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("-10");
@@ -624,7 +624,7 @@ test_load_invalid_value_enum(void)
 UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 {
 
-	test_case(test_load_invalid_value_enum, " XXX ", true, false);
+	test_case(test_shift_out_of_bounds_negativeexponent, " XXX ", true, false);
 }
 
 UBSAN_TC(shift_out_of_bounds_toolargeexponent);

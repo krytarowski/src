@@ -124,7 +124,7 @@ test_add_overflow_signed(void)
 UBSAN_TC_BODY(add_overflow_signed, tc)
 {
 
-	test_case(test_add_overflow_signed, "  signed integer overflow: ",
+	test_case(test_add_overflow_signed, " signed integer overflow: ",
 	          true, false);
 }
 
@@ -246,7 +246,7 @@ test_function_type_mismatch(void)
 UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
-	test_case(test_function_type_mismatch, " signed integer overflow: ",
+	test_case(test_function_type_mismatch, " execution reached the end of a value-returning function without returning a value",
 	          true, false);
 }
 #endif
@@ -264,7 +264,8 @@ test_invalid_builtin_##type(void)			\
 {							\
 							\
 	volatile int a = atoi("0");			\
-	_exit(__builtin_##type(a));			\
+	volatile int b = __builtin_##type(a);		\
+	_exit(b);					\
 }							\
 							\
 UBSAN_TC_BODY(invalid_builtin_##type, tc)		\

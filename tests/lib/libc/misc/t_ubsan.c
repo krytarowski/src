@@ -380,7 +380,7 @@ test_mul_overflow_unsigned(void)
 UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 {
 
-	test_case(test_mul_overflow_signed, " signed integer overflow: ", true, false);
+	test_case(test_mul_overflow_unsigned, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(negate_overflow_signed);
@@ -440,7 +440,7 @@ fun_nonnull_arg(void * _Nonnull ptr)
 	return ptr;
 }
 
-void
+static void
 test_nonnull_arg(void)
 {
 	volatile intptr_t a = atoi("0");
@@ -722,7 +722,8 @@ UBSAN_TC_HEAD(type_mismatch_misaligned, tc)
 	    "Checks -fsanitize=alignment");
 }
 
-UBSAN_TC_BODY(type_mismatch_misaligned, tc)
+static void
+test_type_mismatch_misaligned(void)
 {
 	volatile int8_t A[10] __aligned(4);
 	volatile int *b;
@@ -731,7 +732,13 @@ UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 
 	b = REINTERPRET_CAST(volatile int *, &A[1]);
 
-	usleep((*b) ? 1 : 2);
+	_exit((*b) ? 1 : 2);
+}
+
+UBSAN_TC_BODY(type_mismatch_misaligned, tc)
+{
+
+	test_case(test_type_mismatch_misaligned, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(vla_bound_not_positive);
@@ -741,12 +748,19 @@ UBSAN_TC_HEAD(vla_bound_not_positive, tc)
 	    "Checks -fsanitize=vla-bound");
 }
 
-UBSAN_TC_BODY(vla_bound_not_positive, tc)
+static void
+test_vla_bound_not_positive(void)
 {
 	volatile int a = atoi("-1");
 	int A[a];
 
-	usleep(A[0] ? 1 : 2);
+	_exit(A[0] ? 1 : 2);
+}
+
+UBSAN_TC_BODY(vla_bound_not_positive, tc)
+{
+
+	test_case(test_vla_bound_not_positive, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(integer_divide_by_zero);
@@ -804,7 +818,7 @@ UBSAN_TC_BODY(dummy, tc)
 {
 
 	// Dummy, skipped
-	// The framework requires at least a single defined test.
+	// The ATF framework requires at least a single defined test.
 }
 #endif
 

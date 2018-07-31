@@ -35,8 +35,10 @@ __RCSID("$NetBSD$");
 #include <sys/wait.h>
 
 #include <limits.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #ifdef __cplusplus

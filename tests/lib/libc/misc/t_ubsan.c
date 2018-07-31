@@ -31,6 +31,9 @@ __COPYRIGHT("@(#) Copyright (c) 2018\
  The NetBSD Foundation, inc. All rights reserved.");
 __RCSID("$NetBSD$");
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #ifdef __cplusplus
 #include <atf-c++.hpp>
 #define UBSAN_TC(a)		ATF_TEST_CASE(a)
@@ -61,10 +64,39 @@ UBSAN_TC_HEAD(add_overflow_signed, tc)
 
 UBSAN_TC_BODY(add_overflow_signed, tc)
 {
-	volatile int a = INT_MAX;
-	volatile int b = atoi("1");
+	int filedes[2];
+	ATF_REQUIRE_EQ(pipe(filedes), 0);
+	pid_t pid = fork();
+	ATF_REQUIRE(pid != -1);
+	if (pid == 0) {
+		ATF_REQUIRE(dup2(filedes[1], STDERR_FILENO) != -1);
+		ATF_REQUIRE(close(filedes[0]) == 0);
+		ATF_REQUIRE(close(filedes[1]) == 0);
 
-	usleep((a + b) ? 1 : 2);
+		volatile int a = INT_MAX;
+		volatile int b = atoi("1");
+
+		_exit((a + b) ? 1 : 2);
+	}
+
+	ATF_REQUIRE(close(filedes[1]) == 0);
+
+	FILE *fp;
+	fp = fdopen(filedes[0], "r");
+	ATF_REQUIRE(fp != NULL);
+	size_t len;
+	char *buffer = fgetln(fp, &len);
+	ATF_REQUIRE(buffer != 0);
+	ATF_REQUIRE(!ferror(fp));
+	char *sub;
+	sub = strstr(buffer, " signed integer overflow: ");
+	ATF_REQUIRE(sub != 0);
+	int status;
+	ATF_REQUIRE(wait(&status) == pid);
+	ATF_REQUIRE(!!WIFEXITED(status));
+	ATF_REQUIRE(!WIFSIGNALED(status));
+	ATF_REQUIRE(!WIFSTOPPED(status));
+	ATF_REQUIRE(!WIFCONTINUED(status));
 }
 
 UBSAN_TC(add_overflow_unsigned);

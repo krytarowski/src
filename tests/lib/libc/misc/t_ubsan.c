@@ -252,6 +252,7 @@ UBSAN_TC_BODY(function_type_mismatch, tc)
 }
 #endif
 
+#ifdef __clang__
 #define INVALID_BUILTIN(type)				\
 UBSAN_TC(invalid_builtin_##type);			\
 UBSAN_TC_HEAD(invalid_builtin_##type, tc)		\
@@ -282,6 +283,7 @@ INVALID_BUILTIN(ctzll)
 INVALID_BUILTIN(clz)
 INVALID_BUILTIN(clzl)
 INVALID_BUILTIN(clzll)
+#endif
 
 UBSAN_TC(load_invalid_value_bool);
 UBSAN_TC_HEAD(load_invalid_value_bool, tc)
@@ -863,12 +865,14 @@ UBSAN_CASES(tp)
 #if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
 	UBSAN_TEST_CASE(tp, function_type_mismatch);
 #endif
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, invalid_builtin_ctz);
 	UBSAN_TEST_CASE(tp, invalid_builtin_ctzl);
 	UBSAN_TEST_CASE(tp, invalid_builtin_ctzll);
 	UBSAN_TEST_CASE(tp, invalid_builtin_clz);
 	UBSAN_TEST_CASE(tp, invalid_builtin_clzl);
 	UBSAN_TEST_CASE(tp, invalid_builtin_clzll);
+#endif
 	UBSAN_TEST_CASE(tp, load_invalid_value_bool);
 	UBSAN_TEST_CASE(tp, load_invalid_value_enum);
 #ifdef __cplusplus

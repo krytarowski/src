@@ -377,6 +377,7 @@ UBSAN_TC_BODY(mul_overflow_signed, tc)
 	test_case(test_mul_overflow_signed, " signed integer overflow: ", true, false);
 }
 
+#ifdef __clang__
 UBSAN_TC(mul_overflow_unsigned);
 UBSAN_TC_HEAD(mul_overflow_unsigned, tc)
 {
@@ -398,6 +399,7 @@ UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 
 	test_case(test_mul_overflow_unsigned, " signed integer overflow: ", true, false);
 }
+#endif
 
 UBSAN_TC(negate_overflow_signed);
 UBSAN_TC_HEAD(negate_overflow_signed, tc)
@@ -420,6 +422,7 @@ UBSAN_TC_BODY(negate_overflow_signed, tc)
 	test_case(test_negate_overflow_signed, " signed integer overflow: ", false, true);
 }
 
+#ifdef __clang__
 UBSAN_TC(negate_overflow_unsigned);
 UBSAN_TC_HEAD(negate_overflow_unsigned, tc)
 {
@@ -440,6 +443,7 @@ UBSAN_TC_BODY(negate_overflow_unsigned, tc)
 
 	test_case(test_negate_overflow_unsigned, " signed integer overflow: ", true, false);
 }
+#endif
 
 #ifdef __clang__
 UBSAN_TC(nonnull_arg);
@@ -618,7 +622,7 @@ test_shift_out_of_bounds_signedoverflow(void)
 UBSAN_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
 {
 
-	test_case(test_shift_out_of_bounds_signedoverflow, " XXX ", true, false);
+	test_case(test_shift_out_of_bounds_signedoverflow, " left shift of ", true, false);
 }
 
 UBSAN_TC(shift_out_of_bounds_negativeexponent);
@@ -640,7 +644,7 @@ test_shift_out_of_bounds_negativeexponent(void)
 UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 {
 
-	test_case(test_shift_out_of_bounds_negativeexponent, " XXX ", true, false);
+	test_case(test_shift_out_of_bounds_negativeexponent, "  shift exponent -", true, false);
 }
 
 UBSAN_TC(shift_out_of_bounds_toolargeexponent);
@@ -662,7 +666,7 @@ test_shift_out_of_bounds_toolargeexponent(void)
 UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
 {
 
-	test_case(test_shift_out_of_bounds_toolargeexponent, " XXX ", true, false);
+	test_case(test_shift_out_of_bounds_toolargeexponent, " shift exponent ", true, false);
 }
 
 UBSAN_TC(sub_overflow_signed);
@@ -871,9 +875,13 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, missing_return);
 #endif
 	UBSAN_TEST_CASE(tp, mul_overflow_signed);
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, mul_overflow_unsigned);
+#endif
 	UBSAN_TEST_CASE(tp, negate_overflow_signed);
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, negate_overflow_unsigned);
+#endif
 #ifdef __clang__
 	// Clang/LLVM specific extension
 	// http://clang.llvm.org/docs/AttributeReference.html#nullability-attributes

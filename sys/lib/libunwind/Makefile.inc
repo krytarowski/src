@@ -1,5 +1,7 @@
 #	$NetBSD: Makefile.inc,v 1.11 2015/01/29 20:45:16 joerg Exp $
 
+NOLIBCSANITIZER=	# defined
+
 .PATH:	${NETBSDSRCDIR}/sys/lib/libunwind
 
 SRCS+=	libunwind.cxx \

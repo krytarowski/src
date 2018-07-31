@@ -81,14 +81,8 @@ __RCSID("$NetBSD$");
 #define CLR(t, f)	((t) &= ~(f))
 #endif
 
-#ifdef __cplusplus
-#define REINTERPRET_CAST(__dt, __st)	reinterpret_cast<__dt>(__st)
-#define STATIC_CAST(__dt, __st)		static_cast<__dt>(__st)
-#else
 #define REINTERPRET_CAST(__dt, __st)	((__dt)(__st))
 #define STATIC_CAST(__dt, __st)		((__dt)(__st))
-#endif
-
 
 #define ACK_REPORTED	__BIT(31)
 

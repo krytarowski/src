@@ -147,7 +147,8 @@ UBSAN_TC_HEAD(builtin_unreachable, tc)
 	    "Checks -fsanitize=unreachable");
 }
 
-UBSAN_TC_BODY(builtin_unreachable, tc)
+static void
+test_builtin_unreachable(void)
 {
 	volatile int a = atoi("1");
 	volatile int b = atoi("1");
@@ -157,6 +158,12 @@ UBSAN_TC_BODY(builtin_unreachable, tc)
 	}
 }
 
+UBSAN_TC_BODY(builtin_unreachable, tc)
+{
+
+	test_case(test_builtin_unreachable, " calling __builtin_unreachable()", false, true);
+}
+
 UBSAN_TC(divrem_overflow_signed_div);
 UBSAN_TC_HEAD(divrem_overflow_signed_div, tc)
 {
@@ -164,12 +171,19 @@ UBSAN_TC_HEAD(divrem_overflow_signed_div, tc)
 	    "Checks -fsanitize=signed-integer-overflow");
 }
 
-UBSAN_TC_BODY(divrem_overflow_signed_div, tc)
+static void
+test_divrem_overflow_signed_div(void)
 {
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
 
-	usleep((a / b)  ? 1 : 2);
+	_exit((a / b)  ? 1 : 2); // SIGFPE will be triggered before exiting
+}
+
+UBSAN_TC_BODY(divrem_overflow_signed_div, tc)
+{
+
+	test_case(test_divrem_overflow_signed_div, " signed integer overflow: ", false, true);
 }
 
 UBSAN_TC(divrem_overflow_signed_mod);

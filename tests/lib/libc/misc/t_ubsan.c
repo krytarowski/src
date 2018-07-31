@@ -35,6 +35,7 @@ __RCSID("$NetBSD$");
 #include <sys/wait.h>
 
 #include <limits.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -686,6 +687,7 @@ UBSAN_TC_BODY(sub_overflow_signed, tc)
 	test_case(test_sub_overflow_signed, " XXX ", true, false);
 }
 
+#ifdef __clang__
 UBSAN_TC(sub_overflow_unsigned);
 UBSAN_TC_HEAD(sub_overflow_unsigned, tc)
 {
@@ -707,6 +709,7 @@ UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 
 	test_case(test_sub_overflow_unsigned, " XXX ", true, false);
 }
+#endif
 
 UBSAN_TC(type_mismatch_nullptrderef);
 UBSAN_TC_HEAD(type_mismatch_nullptrderef, tc)
@@ -721,13 +724,13 @@ test_type_mismatch_nullptrderef(void)
 	volatile intptr_t a = atoi("0");
 	volatile int *b = REINTERPRET_CAST(int *, a);
 
-	_exit((*b) ? 1 : 2);
+	_exit((*b) ? 1 : 2); // SIGSEGV
 }
 
 UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
 {
 
-	test_case(test_type_mismatch_nullptrderef, " XXX ", true, false);
+	test_case(test_type_mismatch_nullptrderef, " load of null pointer of type ", false, true);
 }
 
 UBSAN_TC(type_mismatch_misaligned);
@@ -747,13 +750,15 @@ test_type_mismatch_misaligned(void)
 
 	b = REINTERPRET_CAST(volatile int *, &A[1]);
 
-	_exit((*b) ? 1 : 2);
+	// If it survive misalignment access, trigger a signal manually
+	
+	raise((*b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 {
 
-	test_case(test_type_mismatch_misaligned, " signed integer overflow: ", true, false);
+	test_case(test_type_mismatch_misaligned, " load of misaligned address ", false, true);
 }
 
 UBSAN_TC(vla_bound_not_positive);
@@ -775,7 +780,7 @@ test_vla_bound_not_positive(void)
 UBSAN_TC_BODY(vla_bound_not_positive, tc)
 {
 
-	test_case(test_vla_bound_not_positive, " signed integer overflow: ", true, false);
+	test_case(test_vla_bound_not_positive, " variable length array bound value ", true, false);
 }
 
 UBSAN_TC(integer_divide_by_zero);
@@ -886,7 +891,9 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, shift_out_of_bounds_negativeexponent);
 	UBSAN_TEST_CASE(tp, shift_out_of_bounds_toolargeexponent);
 	UBSAN_TEST_CASE(tp, sub_overflow_signed);
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, sub_overflow_unsigned);
+#endif
 	UBSAN_TEST_CASE(tp, type_mismatch_nullptrderef);
 	UBSAN_TEST_CASE(tp, type_mismatch_misaligned);
 	UBSAN_TEST_CASE(tp, vla_bound_not_positive);

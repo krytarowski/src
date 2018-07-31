@@ -118,6 +118,10 @@ __RCSID("$NetBSD$");
 
 #define NUMBER_SIGNED_BIT	1U
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if __SIZEOF_INT128__
 typedef __int128 longest;
 typedef unsigned __int128 ulongest;
@@ -257,13 +261,10 @@ static const char *DeserializeCFICheckKind(uint8_t hhuCFICheckKind);
 static bool isNegativeNumber(char *, struct CTypeDescriptor *, unsigned long);
 static bool isShiftExponentTooLarge(char *, struct CTypeDescriptor *, unsigned long, size_t);
 
-/* Public symbols used in the instrumentation of the code generation part */
-#ifdef __cplusplus
-extern "C" {
-#endif
 /* Unused in this implementation, emitted by the C++ check dynamic type cast. */
 intptr_t __ubsan_vptr_type_cache[128];
 
+/* Public symbols used in the instrumentation of the code generation part */
 void __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
 void __ubsan_handle_add_overflow_abort(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS);
 void __ubsan_handle_builtin_unreachable(struct CUnreachableData *pData);
@@ -310,9 +311,6 @@ void __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData_v1 *pData, u
 void __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
-#ifdef __cplusplus
-}
-#endif
 
 static void
 HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, const char *szOperation)
@@ -666,9 +664,6 @@ HandlePointerOverflow(bool isFatal, struct CPointerOverflowData *pData, unsigned
 }
 
 /* Definions of public symbols emitted by the instrumentation code */
-#ifdef __cplusplus
-extern "C" {
-#endif
 void
 __ubsan_handle_add_overflow(struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS)
 {
@@ -1100,9 +1095,6 @@ __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutM
 	 * scenarios it is better to run the Clang/GCC version.
 	 */
 }
-#ifdef __cplusplus
-}
-#endif
 
 /* Local utility functions */
 
@@ -1614,3 +1606,7 @@ isShiftExponentTooLarge(char *szLocation, struct CTypeDescriptor *pType, unsigne
 
 	return llluGetNumber(szLocation, pType, ulNumber) >= zWidth;
 }
+
+#ifdef __cplusplus
+}
+#endif

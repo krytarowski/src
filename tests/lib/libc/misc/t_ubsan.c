@@ -430,7 +430,7 @@ UBSAN_TC_BODY(negate_overflow_unsigned, tc)
 	test_case(test_negate_overflow_unsigned, " signed integer overflow: ", true, false);
 }
 
-#ifdef __clang
+#ifdef __clang__
 UBSAN_TC(nonnull_arg);
 UBSAN_TC_HEAD(nonnull_arg, tc)
 {
@@ -831,7 +831,9 @@ UBSAN_CASES(tp)
 {
 #ifdef ENABLE_TESTS
 	UBSAN_TEST_CASE(tp, add_overflow_signed);
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, add_overflow_unsigned);
+#endif
 	UBSAN_TEST_CASE(tp, builtin_unreachable);
 //	UBSAN_TEST_CASE(tp, cfi_bad_type);	// TODO
 //	UBSAN_TEST_CASE(tp, cfi_check_fail);	// TODO
@@ -857,7 +859,7 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, mul_overflow_unsigned);
 	UBSAN_TEST_CASE(tp, negate_overflow_signed);
 	UBSAN_TEST_CASE(tp, negate_overflow_unsigned);
-#ifdef __clang
+#ifdef __clang__
 	// Clang/LLVM specific extension
 	// http://clang.llvm.org/docs/AttributeReference.html#nullability-attributes
 	UBSAN_TEST_CASE(tp, nonnull_arg);

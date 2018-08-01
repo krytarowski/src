@@ -17,6 +17,8 @@
 # The Hesiod functions are always in libc. To choose that getpwent() and friends
 # actually call the Hesiod functions, put -DHESIOD on the CPPFLAGS line below.
 
+LIBCSANITIZERFLAGS+=	-fno-sanitize=function	# rtti dependency
+
 .include "Makefile.inc"
 
 LIB=		c

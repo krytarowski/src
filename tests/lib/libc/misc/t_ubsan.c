@@ -251,8 +251,7 @@ UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
 	test_case(test_function_type_mismatch,
-	          " execution reached the end of a value-returning function "
-	          "without returning a value",
+	          " call to function ",
 	          false, true);
 }
 #endif
@@ -302,16 +301,17 @@ static void
 test_load_invalid_value_bool(void)
 {
 	volatile int a = atoi("10");
-	volatile bool b = a;
+	volatile bool b = *(REINTERPRET_CAST(volatile bool *, &a));
 
 	_exit(b ? 1 : 2);
 }
 
 UBSAN_TC_BODY(load_invalid_value_bool, tc)
 {
-	test_case(test_load_invalid_value_bool, " XXX ", true, false);
+	test_case(test_load_invalid_value_bool, " load of value ", true, false);
 }
 
+#if defined(__cplusplus) // ? && (defined(__x86_64__) || defined(__i386__))
 UBSAN_TC(load_invalid_value_enum);
 UBSAN_TC_HEAD(load_invalid_value_enum, tc)
 {
@@ -324,7 +324,7 @@ test_load_invalid_value_enum(void)
 {
 	enum e { e1, e2, e3, e4 };
 	volatile int a = atoi("10");
-	volatile enum e E = STATIC_CAST(enum e, a);
+	volatile enum e E = *(REINTERPRET_CAST(volatile enum e*, &a));
 
 	_exit((E == e1) ? 1 : 2);
 }
@@ -332,8 +332,9 @@ test_load_invalid_value_enum(void)
 UBSAN_TC_BODY(load_invalid_value_enum, tc)
 {
 
-	test_case(test_load_invalid_value_enum, " signed integer overflow: ", true, false);
+	test_case(test_load_invalid_value_enum, " load of value ", true, false);
 }
+#endif
 
 #ifdef __cplusplus
 UBSAN_TC(missing_return);
@@ -886,7 +887,9 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, invalid_builtin_clzll);
 #endif
 	UBSAN_TEST_CASE(tp, load_invalid_value_bool);
+#ifdef __cplusplus // ? && (defined(__x86_64__) || defined(__i386__))
 	UBSAN_TEST_CASE(tp, load_invalid_value_enum);
+#endif
 #ifdef __cplusplus
 	UBSAN_TEST_CASE(tp, missing_return);
 #endif

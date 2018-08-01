@@ -808,7 +808,7 @@ test_integer_divide_by_zero(void)
 UBSAN_TC_BODY(integer_divide_by_zero, tc)
 {
 
-	test_case(test_integer_divide_by_zero, " signed integer overflow: ", true, false);
+	test_case(test_integer_divide_by_zero, " signed integer overflow: ", false, true);
 }
 
 UBSAN_TC(float_divide_by_zero);

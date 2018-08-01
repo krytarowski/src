@@ -20,6 +20,7 @@ UBSAN_FLAGS+=		${${ACTIVE_CC} == "clang" :? -fsanitize=nullability :}
 CFLAGS+=		${UBSAN_FLAGS}
 CXXFLAGS+=		${UBSAN_FLAGS}
 CWARNFLAGS+=		-Wno-return-type
+CWARNFLAGS.clang+=	-Wincompatible-pointer-types-discards-qualifiers
 .endif
 
 .include <bsd.test.mk>

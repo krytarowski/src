@@ -528,7 +528,7 @@ fun_nonnull_return(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	return (void *)ptr;
+	return (void *)a;
 }
 
 static void

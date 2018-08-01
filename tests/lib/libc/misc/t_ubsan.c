@@ -242,13 +242,18 @@ test_function_type_mismatch(void)
 
 	_exit(reinterpret_cast<int(*)(int)>
 	    (reinterpret_cast<uintptr_t>(fun_type_mismatch))(1));
+	// The above code shall generate SIGABRT, however if it will no occur,
+	// we call it manually here too.
+	raise(SIGABRT);
 }
 
 UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
-	test_case(test_function_type_mismatch, " execution reached the end of a value-returning function without returning a value",
-	          true, false);
+	test_case(test_function_type_mismatch,
+	          " execution reached the end of a value-returning function "
+	          "without returning a value",
+	          false, true);
 }
 #endif
 

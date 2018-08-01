@@ -476,7 +476,7 @@ test_nonnull_arg(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	_exit(fun_nonnull_arg((void *)a) ? 1 : 2);
+	_exit(fun_nonnull_arg(REINTERPRET_CAST(void *, a)) ? 1 : 2);
 }
 
 UBSAN_TC_BODY(nonnull_arg, tc)
@@ -492,12 +492,12 @@ UBSAN_TC_HEAD(nonnull_assign, tc)
 	    "Checks -fsanitize=nullability-assign");
 }
 
-static void *
+static volatile void * _Nonnull
 fun_nonnull_assign(intptr_t a)
 {
 	volatile void *_Nonnull ptr;
 
-	ptr = (void *)a;
+	ptr = REINTERPRET_CAST(void *, a);
 
 	return ptr;
 }
@@ -528,7 +528,7 @@ fun_nonnull_return(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	return (void *)a;
+	return REINTERPRET_CAST(void *, a);
 }
 
 static void

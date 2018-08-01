@@ -8,4 +8,6 @@ MAN=		wsfb.4
 
 CPPFLAGS+=	-DHAVE_CONFIG_H -I${X11SRCDIR.${DRIVER}}/../include
 
+CWARNFLAGS.clang+=	-Wno-format
+
 .include "../Makefile.xf86-driver"

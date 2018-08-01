@@ -413,6 +413,7 @@ UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 }
 #endif
 
+#ifdef __clang__
 UBSAN_TC(negate_overflow_signed);
 UBSAN_TC_HEAD(negate_overflow_signed, tc)
 {
@@ -434,7 +435,6 @@ UBSAN_TC_BODY(negate_overflow_signed, tc)
 	test_case(test_negate_overflow_signed, " negation of ", true, false);
 }
 
-#ifdef __clang__
 UBSAN_TC(negate_overflow_unsigned);
 UBSAN_TC_HEAD(negate_overflow_unsigned, tc)
 {
@@ -568,6 +568,7 @@ UBSAN_TC_BODY(out_of_bounds, tc)
 	test_case(test_out_of_bounds, " index 10 is out of range for type ", true, false);
 }
 
+#ifdef __clang__
 UBSAN_TC(pointer_overflow);
 UBSAN_TC_HEAD(pointer_overflow, tc)
 {
@@ -588,8 +589,9 @@ test_pointer_overflow(void)
 UBSAN_TC_BODY(pointer_overflow, tc)
 {
 
-	test_case(test_pointer_overflow, " XXX ", true, false);
+	test_case(test_pointer_overflow, " pointer expression with base ", true, false);
 }
+#endif
 
 #ifndef __cplusplus
 UBSAN_TC(shift_out_of_bounds_signednessbit);
@@ -681,6 +683,7 @@ UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
 	test_case(test_shift_out_of_bounds_toolargeexponent, " shift exponent ", true, false);
 }
 
+#ifdef __clang__
 UBSAN_TC(sub_overflow_signed);
 UBSAN_TC_HEAD(sub_overflow_signed, tc)
 {
@@ -700,10 +703,9 @@ test_sub_overflow_signed(void)
 UBSAN_TC_BODY(sub_overflow_signed, tc)
 {
 
-	test_case(test_sub_overflow_signed, " XXX ", true, false);
+	test_case(test_sub_overflow_signed, " signed integer overflow: ", true, false);
 }
 
-#ifdef __clang__
 UBSAN_TC(sub_overflow_unsigned);
 UBSAN_TC_HEAD(sub_overflow_unsigned, tc)
 {
@@ -723,7 +725,7 @@ test_sub_overflow_unsigned(void)
 UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 {
 
-	test_case(test_sub_overflow_unsigned, " XXX ", true, false);
+	test_case(test_sub_overflow_unsigned, " unsigned integer overflow: ", true, false);
 }
 #endif
 
@@ -790,13 +792,13 @@ test_vla_bound_not_positive(void)
 	volatile int a = atoi("-1");
 	int A[a];
 
-	_exit(A[0] ? 1 : 2);
+	raise(A[0] ? SIGBUS : SIGSEGV);
 }
 
 UBSAN_TC_BODY(vla_bound_not_positive, tc)
 {
 
-	test_case(test_vla_bound_not_positive, " variable length array bound value ", true, false);
+	test_case(test_vla_bound_not_positive, " variable length array bound value ", false, true);
 }
 
 UBSAN_TC(integer_divide_by_zero);
@@ -891,12 +893,8 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, mul_overflow_signed);
 #ifdef __clang__
 	UBSAN_TEST_CASE(tp, mul_overflow_unsigned);
-#endif
 	UBSAN_TEST_CASE(tp, negate_overflow_signed);
-#ifdef __clang__
 	UBSAN_TEST_CASE(tp, negate_overflow_unsigned);
-#endif
-#ifdef __clang__
 	// Clang/LLVM specific extension
 	// http://clang.llvm.org/docs/AttributeReference.html#nullability-attributes
 	UBSAN_TEST_CASE(tp, nonnull_arg);
@@ -904,7 +902,9 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, nonnull_return);
 #endif
 	UBSAN_TEST_CASE(tp, out_of_bounds);
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, pointer_overflow);
+#endif
 #ifndef __cplusplus
 	// Acceptable in C++11
 	UBSAN_TEST_CASE(tp, shift_out_of_bounds_signednessbit);
@@ -912,8 +912,8 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, shift_out_of_bounds_signedoverflow);
 	UBSAN_TEST_CASE(tp, shift_out_of_bounds_negativeexponent);
 	UBSAN_TEST_CASE(tp, shift_out_of_bounds_toolargeexponent);
-	UBSAN_TEST_CASE(tp, sub_overflow_signed);
 #ifdef __clang__
+	UBSAN_TEST_CASE(tp, sub_overflow_signed);
 	UBSAN_TEST_CASE(tp, sub_overflow_unsigned);
 #endif
 	UBSAN_TEST_CASE(tp, type_mismatch_nullptrderef);

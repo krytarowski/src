@@ -514,7 +514,7 @@ test_nonnull_assign(void)
 UBSAN_TC_BODY(nonnull_assign, tc)
 {
 
-	test_case(test_nonnull_assign, " signed integer overflow: ", true, false);
+	test_case(test_nonnull_assign, " _Nonnull binding to null pointer of type ", true, false);
 }
 
 UBSAN_TC(nonnull_return);

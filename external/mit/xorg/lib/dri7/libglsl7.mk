@@ -14,6 +14,7 @@ CPPFLAGS+=	-I${X11SRCDIR.MesaLib7}/include
 CPPFLAGS+=	-I${X11SRCDIR.MesaLib7}/src/glsl
 CPPFLAGS+=	-I${X11SRCDIR.MesaLib7}/src/mapi
 CPPFLAGS+=	-I${X11SRCDIR.MesaLib7}/src/mesa
+COPTS.glsl_lexer.cpp+=	-Wno-deprecated-register
 
 SRCS.glsl.libglcpp= \
 	glcpp-lex.c \

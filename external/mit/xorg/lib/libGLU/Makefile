@@ -158,3 +158,4 @@ COPTS.sampleCompTop.cc+=	-O0
 .endif
 
 CWARNFLAGS.clang+=	-Wno-parentheses -Wno-tautological-compare
+CWARNFLAGS.clang+=	-Wno-deprecated-register

@@ -600,7 +600,7 @@ test_shift_out_of_bounds_signednessbit(void)
 UBSAN_TC_BODY(shift_out_of_bounds_signednessbit, tc)
 {
 
-	test_case(test_shift_out_of_bounds_signednessbit, " XXX ", true, false);
+	test_case(test_shift_out_of_bounds_signednessbit, " left shift of ", true, false);
 }
 #endif
 
@@ -646,7 +646,7 @@ test_shift_out_of_bounds_negativeexponent(void)
 UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 {
 
-	test_case(test_shift_out_of_bounds_negativeexponent, "  shift exponent -", true, false);
+	test_case(test_shift_out_of_bounds_negativeexponent, " shift exponent -", true, false);
 }
 
 UBSAN_TC(shift_out_of_bounds_toolargeexponent);
@@ -808,7 +808,7 @@ test_integer_divide_by_zero(void)
 UBSAN_TC_BODY(integer_divide_by_zero, tc)
 {
 
-	test_case(test_integer_divide_by_zero, " XXX ", true, false);
+	test_case(test_integer_divide_by_zero, " signed integer overflow: ", true, false);
 }
 
 UBSAN_TC(float_divide_by_zero);

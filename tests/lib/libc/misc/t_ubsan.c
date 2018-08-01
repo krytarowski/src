@@ -352,13 +352,17 @@ test_missing_return(void)
 {
 	volatile int a = fun_missing_return();
 
-	_exit(a ? 1 : 2);
+	// This interceptor shall be fatal, however if it won't generate
+	// a signal, do it on our own here:
+	raise(a ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(missing_return, tc)
 {
 
-	test_case(test_missing_return, " XXX ", true, false);
+	test_case(test_missing_return,
+	          " execution reached the end of a value-returning function "
+	          "without returning a value", false, true);
 }
 #endif
 

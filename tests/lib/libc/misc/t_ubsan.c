@@ -409,7 +409,7 @@ test_mul_overflow_unsigned(void)
 UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 {
 
-	test_case(test_mul_overflow_unsigned, " signed integer overflow: ", true, false);
+	test_case(test_mul_overflow_unsigned, " unsigned integer overflow: ", true, false);
 }
 #endif
 
@@ -431,7 +431,7 @@ test_negate_overflow_signed(void)
 UBSAN_TC_BODY(negate_overflow_signed, tc)
 {
 
-	test_case(test_negate_overflow_signed, " signed integer overflow: ", false, true);
+	test_case(test_negate_overflow_signed, " negation of ", true, false);
 }
 
 #ifdef __clang__
@@ -453,7 +453,7 @@ test_negate_overflow_unsigned(void)
 UBSAN_TC_BODY(negate_overflow_unsigned, tc)
 {
 
-	test_case(test_negate_overflow_unsigned, " signed integer overflow: ", true, false);
+	test_case(test_negate_overflow_unsigned, " negation of ", true, false);
 }
 #endif
 
@@ -483,7 +483,7 @@ test_nonnull_arg(void)
 UBSAN_TC_BODY(nonnull_arg, tc)
 {
 
-	test_case(test_nonnull_arg, " signed integer overflow: ", true, false);
+	test_case(test_nonnull_arg, " null pointer passed as argument ", true, false);
 }
 
 UBSAN_TC(nonnull_assign);

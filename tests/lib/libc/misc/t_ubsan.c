@@ -279,7 +279,8 @@ UBSAN_TC_BODY(invalid_builtin_##type, tc)		\
 {							\
 							\
 	test_case(test_invalid_builtin_##type,		\
-	          " XXX  ", false, true);		\
+	          " passing zero to ", 			\
+	          false, true);				\
 }
 
 INVALID_BUILTIN(ctz)

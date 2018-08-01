@@ -831,16 +831,16 @@ UBSAN_TC_HEAD(float_divide_by_zero, tc)
 static void
 test_float_divide_by_zero(void)
 {
-	volatile float a = strtof("1.0", NULL);
+	volatile float a = strtof("1.5", NULL);
 	volatile float b = strtof("0.0", NULL);
 
-	_exit((a / b) > 0 ? 1 : 2);
+	raise((a / b) > 0 ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(float_divide_by_zero, tc)
 {
 
-	test_case(test_float_divide_by_zero, " XXX ", true, false);
+	test_case(test_float_divide_by_zero, " unsigned integer overflow: ", false, true);
 }
 #else
 UBSAN_TC(dummy);

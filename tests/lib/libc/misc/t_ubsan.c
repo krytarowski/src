@@ -525,7 +525,7 @@ UBSAN_TC_HEAD(nonnull_return, tc)
 	    "Checks -fsanitize=nullability-return");
 }
 
-static void *
+static void * _Nonnull
 fun_nonnull_return(void)
 {
 	volatile intptr_t a = atoi("0");
@@ -543,7 +543,7 @@ test_nonnull_return(void)
 UBSAN_TC_BODY(nonnull_return, tc)
 {
 
-	test_case(test_nonnull_return, " XXX ", true, false);
+	test_case(test_nonnull_return, " null pointer returned from function ", true, false);
 }
 #endif
 

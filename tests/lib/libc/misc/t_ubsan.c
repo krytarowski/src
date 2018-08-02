@@ -223,7 +223,7 @@ UBSAN_TC_BODY(divrem_overflow_signed_mod, tc)
 	test_case(test_divrem_overflow_signed_mod, " signed integer overflow: ", false, true);
 }
 
-#if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
+#if defined(__cplusplus) && defined(__clang__) && (defined(__x86_64__) || defined(__i386__))
 UBSAN_TC(function_type_mismatch);
 UBSAN_TC_HEAD(function_type_mismatch, tc)
 {
@@ -234,6 +234,8 @@ UBSAN_TC_HEAD(function_type_mismatch, tc)
 static int
 fun_type_mismatch(void)
 {
+
+	return 0;
 }
 
 static void
@@ -802,6 +804,7 @@ UBSAN_TC_BODY(integer_divide_by_zero, tc)
 	test_case(test_integer_divide_by_zero, " signed integer overflow: ", false, true);
 }
 
+#ifdef __clang__
 UBSAN_TC(float_divide_by_zero);
 UBSAN_TC_HEAD(float_divide_by_zero, tc)
 {
@@ -823,6 +826,8 @@ UBSAN_TC_BODY(float_divide_by_zero, tc)
 
 	test_case(test_float_divide_by_zero, " unsigned integer overflow: ", false, true);
 }
+#endif
+
 #else
 UBSAN_TC(dummy);
 UBSAN_TC_HEAD(dummy, tc)
@@ -853,7 +858,7 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, divrem_overflow_signed_mod);
 //	UBSAN_TEST_CASE(tp, dynamic_type_cache_miss); // Not supported in uUBSan
 //	UBSAN_TEST_CASE(tp, float_cast_overflow);	// TODO
-#if defined(__cplusplus) && (defined(__x86_64__) || defined(__i386__))
+#if defined(__cplusplus) && defined(__clang__) && (defined(__x86_64__) || defined(__i386__))
 	UBSAN_TEST_CASE(tp, function_type_mismatch);
 #endif
 #ifdef __clang__
@@ -902,7 +907,9 @@ UBSAN_CASES(tp)
 #endif
 	UBSAN_TEST_CASE(tp, vla_bound_not_positive);
 	UBSAN_TEST_CASE(tp, integer_divide_by_zero);
+#ifdef __clang__
 	UBSAN_TEST_CASE(tp, float_divide_by_zero);
+#endif
 #else
 	UBSAN_TEST_CASE(tp, dummy);
 #endif

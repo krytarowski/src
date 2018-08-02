@@ -235,21 +235,30 @@ struct CFloatCastOverflowData {
 };
 
 /* Local utility functions */
-static void Report(bool, const char *, ...) __printflike(2, 3);
-static bool isAlreadyReported(struct CSourceLocation *);
+static void Report(bool isFatal, const char *pFormat, ...) __printflike(2, 3);
+static bool isAlreadyReported(struct CSourceLocation *pLocation);
 static size_t zDeserializeTypeWidth(struct CTypeDescriptor *pType);
-static void DeserializeLocation(char *, size_t, struct CSourceLocation *);
-#ifndef _KERNEL
-static void DeserializeFloatOverPointer(char *, size_t, struct CTypeDescriptor *, unsigned long *);
-static void DeserializeFloatInlined(char *, size_t, struct CTypeDescriptor *, unsigned long);
-static void DeserializeNumberFloat(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
+static void DeserializeLocation(char *pBuffer, size_t zBUfferLength, struct CSourceLocation *pLocation);
+#ifdef __SIZEOF_INT128__
+static void DeserializeUINT128(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, __uint128_t U128);
 #endif
-static void DeserializeNumber(char *, char *, size_t, struct CTypeDescriptor *, unsigned long);
-static const char *DeserializeTypeCheckKind(uint8_t mTypeCheckKind);
+static void DeserializeNumberSigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, longest L);
+static void DeserializeNumberUnsigned(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, ulongest L);
+#ifndef _KERNEL
+static void DeserializeFloatOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long *pNumber);
+static void DeserializeFloatInlined(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber);
+#endif
+static longest llliGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber);
+static ulongest llluGetNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber);
+#ifndef _KERNEL
+static void DeserializeNumberFloat(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber);
+#endif
+static void DeserializeNumber(char *szLocation, char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *pType, unsigned long ulNumber);
+static const char *DeserializeTypeCheckKind(uint8_t hhuTypeCheckKind);
 static const char *DeserializeBuiltinCheckKind(uint8_t hhuBuiltinCheckKind);
 static const char *DeserializeCFICheckKind(uint8_t hhuCFICheckKind);
-static bool isNegativeNumber(char *, struct CTypeDescriptor *, unsigned long);
-static bool isShiftExponentTooLarge(char *, struct CTypeDescriptor *, unsigned long, size_t);
+static bool isNegativeNumber(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber);
+static bool isShiftExponentTooLarge(char *szLocation, struct CTypeDescriptor *pType, unsigned long ulNumber, size_t zWidth);
 
 /* Unused in this implementation, emitted by the C++ check dynamic type cast. */
 intptr_t __ubsan_vptr_type_cache[128];
@@ -301,6 +310,24 @@ void __ubsan_handle_type_mismatch_v1_abort(struct CTypeMismatchData_v1 *pData, u
 void __ubsan_handle_vla_bound_not_positive(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_handle_vla_bound_not_positive_abort(struct CVLABoundData *pData, unsigned long ulBound);
 void __ubsan_get_current_report_data(const char **ppOutIssueKind, const char **ppOutMessage, const char **ppOutFilename, uint32_t *pOutLine, uint32_t *pOutCol, char **ppOutMemoryAddr);
+
+static void HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, const char *szOperation);
+static void HandleNegateOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulOldValue);
+static void HandleBuiltinUnreachable(bool isFatal, struct CUnreachableData *pData);
+static void HandleTypeMismatch(bool isFatal, struct CSourceLocation *mLocation, struct CTypeDescriptor *mType, unsigned long mLogAlignment, uint8_t mTypeCheckKind, unsigned long ulPointer);
+static void HandleVlaBoundNotPositive(bool isFatal, struct CVLABoundData *pData, unsigned long ulBound);
+static void HandleOutOfBounds(bool isFatal, struct COutOfBoundsData *pData, unsigned long ulIndex);
+static void HandleShiftOutOfBounds(bool isFatal, struct CShiftOutOfBoundsData *pData, unsigned long ulLHS, unsigned long ulRHS);
+static void HandleLoadInvalidValue(bool isFatal, struct CInvalidValueData *pData, unsigned long ulValue);
+static void HandleInvalidBuiltin(bool isFatal, struct CInvalidBuiltinData *pData);
+static void HandleFunctionTypeMismatch(bool isFatal, struct CFunctionTypeMismatchData *pData, unsigned long ulFunction);
+static void HandleCFIBadType(bool isFatal, struct CCFICheckFailData *pData, unsigned long ulVtable, bool *bValidVtable, bool *FromUnrecoverableHandler, unsigned long *ProgramCounter, unsigned long *FramePointer);
+static void HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData, unsigned long ulPointer, unsigned long ulHash);
+static void HandleFloatCastOverflow(bool isFatal, struct CFloatCastOverflowData *pData, unsigned long ulFrom);
+static void HandleMissingReturn(bool isFatal, struct CUnreachableData *pData);
+static void HandleNonnullArg(bool isFatal, struct CNonNullArgData *pData);
+static void HandleNonnullReturn(bool isFatal, struct CNonNullReturnData *pData, struct CSourceLocation *pLocationPointer);
+static void HandlePointerOverflow(bool isFatal, struct CPointerOverflowData *pData, unsigned long ulBase, unsigned long ulResult);
 
 static void
 HandleOverflow(bool isFatal, struct COverflowData *pData, unsigned long ulLHS, unsigned long ulRHS, const char *szOperation)
@@ -544,8 +571,8 @@ HandleDynamicTypeCacheMiss(bool isFatal, struct CDynamicTypeCacheMissData *pData
 	 *
 	 * This UBSan handler is special as the check has to be impelemented
 	 * in an implementation. In order to handle it there is need to
-	 * introspect into C++ ABI internals and likely use low-level C++
-	 * runtime interfaces.
+	 * introspect into C++ ABI internals (RTTI) and use low-level
+	 * C++ runtime interfaces.
 	 */
 
 	ASSERT(pData);

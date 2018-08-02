@@ -649,7 +649,7 @@ HandlePointerOverflow(bool isFatal, struct CPointerOverflowData *pData, unsigned
 
 	DeserializeLocation(szLocation, LOCATION_MAXLEN, &pData->mLocation);
 
-	Report(isFatal, "UBSan: Undefined Behavior in %s, pointer expression with base %#lx overflowed to %#lx",
+	Report(isFatal, "UBSan: Undefined Behavior in %s, pointer expression with base %#lx overflowed to %#lx\n",
 	       szLocation, ulBase, ulResult);
 }
 

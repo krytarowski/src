@@ -66,7 +66,7 @@ __RCSID("$NetBSD$");
 
 #ifdef ENABLE_TESTS
 static void
-test_case(void (*fun)(void), const char *string, bool exited, bool signaled)
+test_case(void (*fun)(void), const char *string)
 {
 	int filedes[2];
 	pid_t pid;
@@ -100,8 +100,8 @@ test_case(void (*fun)(void), const char *string, bool exited, bool signaled)
 	ATF_REQUIRE(!ferror(fp));
 	ATF_REQUIRE(strstr(buffer, string) != NULL);
 	ATF_REQUIRE(wait(&status) == pid);
-	ATF_REQUIRE(!!WIFEXITED(status) == exited);
-	ATF_REQUIRE(!!WIFSIGNALED(status) == signaled);
+	ATF_REQUIRE(!WIFEXITED(status));
+	ATF_REQUIRE(WIFSIGNALED(status));
 	ATF_REQUIRE(!WIFSTOPPED(status));
 	ATF_REQUIRE(!WIFCONTINUED(status));
 }
@@ -119,14 +119,13 @@ test_add_overflow_signed(void)
 	volatile int a = INT_MAX;
 	volatile int b = atoi("1");
 
-	_exit((a + b) ? 1 : 2);
+	raise((a + b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(add_overflow_signed, tc)
 {
 
-	test_case(test_add_overflow_signed, " signed integer overflow: ",
-	          true, false);
+	test_case(test_add_overflow_signed, " signed integer overflow: ");
 }
 
 #ifdef __clang__
@@ -143,14 +142,13 @@ test_add_overflow_unsigned(void)
 	volatile unsigned int a = UINT_MAX;
 	volatile unsigned int b = atoi("1");
 
-	_exit((a + b) ? 1 : 2);
+	raise((a + b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(add_overflow_unsigned, tc)
 {
 
-	test_case(test_add_overflow_unsigned, " unsigned integer overflow: ",
-	          true, false);
+	test_case(test_add_overflow_unsigned, " unsigned integer overflow: ");
 }
 #endif
 
@@ -170,13 +168,14 @@ test_builtin_unreachable(void)
 	if (a == b) {
 		__builtin_unreachable();
 	}
+	// This shall not be reached
+	raise(SIGSEGV);
 }
 
 UBSAN_TC_BODY(builtin_unreachable, tc)
 {
 
-	test_case(test_builtin_unreachable, " calling __builtin_unreachable()",
-	          false, true);
+	test_case(test_builtin_unreachable, " calling __builtin_unreachable()");
 }
 
 UBSAN_TC(divrem_overflow_signed_div);
@@ -192,13 +191,13 @@ test_divrem_overflow_signed_div(void)
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
 
-	_exit((a / b)  ? 1 : 2); // SIGFPE will be triggered before exiting
+	reaise((a / b) ? SIGSEGV : SIGBUS); // SIGFPE will be triggered before exiting
 }
 
 UBSAN_TC_BODY(divrem_overflow_signed_div, tc)
 {
 
-	test_case(test_divrem_overflow_signed_div, " signed integer overflow: ", false, true);
+	test_case(test_divrem_overflow_signed_div, " signed integer overflow: ");
 }
 
 UBSAN_TC(divrem_overflow_signed_mod);
@@ -214,16 +213,16 @@ test_divrem_overflow_signed_mod(void)
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
 
-	_exit((a % b) ? 1 : 2);
+	raise((a % b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(divrem_overflow_signed_mod, tc)
 {
 
-	test_case(test_divrem_overflow_signed_mod, " signed integer overflow: ", false, true);
+	test_case(test_divrem_overflow_signed_mod, " signed integer overflow: ");
 }
 
-#if defined(__cplusplus) && defined(__clang__) && (defined(__x86_64__) || defined(__i386__))
+#if defined(__cplusplus) && defined(__clang__) && defined(__x86_64__)
 UBSAN_TC(function_type_mismatch);
 UBSAN_TC_HEAD(function_type_mismatch, tc)
 {
@@ -242,19 +241,14 @@ static void
 test_function_type_mismatch(void)
 {
 
-	_exit(reinterpret_cast<int(*)(int)>
-	    (reinterpret_cast<uintptr_t>(fun_type_mismatch))(1));
-	// The above code shall generate SIGABRT, however if it will no occur,
-	// we call it manually here too.
-	raise(SIGABRT);
+	raise(reinterpret_cast<int(*)(int)>
+	    (reinterpret_cast<uintptr_t>(fun_type_mismatch))(1) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(function_type_mismatch, tc)
 {
 
-	test_case(test_function_type_mismatch,
-	          " call to function ",
-	          false, true);
+	test_case(test_function_type_mismatch, " call to function ");
 }
 #endif
 
@@ -273,15 +267,14 @@ test_invalid_builtin_##type(void)			\
 							\
 	volatile int a = atoi("0");			\
 	volatile int b = __builtin_##type(a);		\
-	_exit(b);					\
+	raise(SIGSEGV);					\
 }							\
 							\
 UBSAN_TC_BODY(invalid_builtin_##type, tc)		\
 {							\
 							\
 	test_case(test_invalid_builtin_##type,		\
-	          " passing zero to ", 			\
-	          false, true);				\
+	          " passing zero to ");			\
 }
 
 INVALID_BUILTIN(ctz)
@@ -305,12 +298,12 @@ test_load_invalid_value_bool(void)
 	volatile int a = atoi("10");
 	volatile bool b = *(REINTERPRET_CAST(volatile bool *, &a));
 
-	_exit(b ? 1 : 2);
+	raise(b ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(load_invalid_value_bool, tc)
 {
-	test_case(test_load_invalid_value_bool, " load of value ", true, false);
+	test_case(test_load_invalid_value_bool, " load of value ");
 }
 
 #if defined(__cplusplus) // ? && (defined(__x86_64__) || defined(__i386__))
@@ -328,13 +321,13 @@ test_load_invalid_value_enum(void)
 	volatile int a = atoi("10");
 	volatile enum e E = *(REINTERPRET_CAST(volatile enum e*, &a));
 
-	_exit((E == e1) ? 1 : 2);
+	raise((E == e1) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(load_invalid_value_enum, tc)
 {
 
-	test_case(test_load_invalid_value_enum, " load of value ", true, false);
+	test_case(test_load_invalid_value_enum, " load of value ");
 }
 #endif
 
@@ -366,7 +359,7 @@ UBSAN_TC_BODY(missing_return, tc)
 
 	test_case(test_missing_return,
 	          " execution reached the end of a value-returning function "
-	          "without returning a value", false, true);
+	          "without returning a value");
 }
 #endif
 
@@ -383,13 +376,13 @@ test_mul_overflow_signed(void)
 	volatile int a = INT_MAX;
 	volatile int b = atoi("2");
 
-	_exit((a * b) ? 1 : 2);
+	raise((a * b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(mul_overflow_signed, tc)
 {
 
-	test_case(test_mul_overflow_signed, " signed integer overflow: ", true, false);
+	test_case(test_mul_overflow_signed, " signed integer overflow: ");
 }
 
 #ifdef __clang__
@@ -406,13 +399,13 @@ test_mul_overflow_unsigned(void)
 	volatile unsigned int a = UINT_MAX;
 	volatile unsigned int b = atoi("2");
 
-	_exit((a * b) ? 1 : 2);
+	raise((a * b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(mul_overflow_unsigned, tc)
 {
 
-	test_case(test_mul_overflow_unsigned, " unsigned integer overflow: ", true, false);
+	test_case(test_mul_overflow_unsigned, " unsigned integer overflow: ");
 }
 #endif
 
@@ -429,13 +422,13 @@ test_negate_overflow_signed(void)
 {
 	volatile int a = INT_MIN;
 
-	_exit(-a ? 1 : 2);
+	raise(-a ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(negate_overflow_signed, tc)
 {
 
-	test_case(test_negate_overflow_signed, " negation of ", true, false);
+	test_case(test_negate_overflow_signed, " negation of ");
 }
 
 UBSAN_TC(negate_overflow_unsigned);
@@ -450,13 +443,13 @@ test_negate_overflow_unsigned(void)
 {
 	volatile unsigned int a = UINT_MAX;
 
-	_exit(-a ? 1 : 2);
+	raise(-a ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(negate_overflow_unsigned, tc)
 {
 
-	test_case(test_negate_overflow_unsigned, " negation of ", true, false);
+	test_case(test_negate_overflow_unsigned, " negation of ");
 }
 #endif
 
@@ -480,13 +473,13 @@ test_nonnull_arg(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	_exit(fun_nonnull_arg(REINTERPRET_CAST(void *, a)) ? 1 : 2);
+	raise(fun_nonnull_arg(REINTERPRET_CAST(void *, a)) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(nonnull_arg, tc)
 {
 
-	test_case(test_nonnull_arg, " null pointer passed as argument ", true, false);
+	test_case(test_nonnull_arg, " null pointer passed as argument ");
 }
 
 UBSAN_TC(nonnull_assign);
@@ -511,13 +504,13 @@ test_nonnull_assign(void)
 {
 	volatile intptr_t a = atoi("0");
 
-	_exit(fun_nonnull_assign(a) ? 1 : 2);
+	raise(fun_nonnull_assign(a) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(nonnull_assign, tc)
 {
 
-	test_case(test_nonnull_assign, " _Nonnull binding to null pointer of type ", true, false);
+	test_case(test_nonnull_assign, " _Nonnull binding to null pointer of type ");
 }
 
 UBSAN_TC(nonnull_return);
@@ -539,13 +532,13 @@ static void
 test_nonnull_return(void)
 {
 
-	_exit(fun_nonnull_return() ? 1 : 2);
+	raise(fun_nonnull_return() ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(nonnull_return, tc)
 {
 
-	test_case(test_nonnull_return, " null pointer returned from function ", true, false);
+	test_case(test_nonnull_return, " null pointer returned from function ");
 }
 #endif
 
@@ -562,13 +555,13 @@ test_out_of_bounds(void)
 	int A[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	volatile int a = atoi("10");
 
-	_exit(A[a] ? 1 : 2);
+	raise(A[a] ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(out_of_bounds, tc)
 {
 
-	test_case(test_out_of_bounds, " index 10 is out of range for type ", true, false);
+	test_case(test_out_of_bounds, " index 10 is out of range for type ");
 }
 
 #ifdef __clang__
@@ -586,13 +579,13 @@ test_pointer_overflow(void)
 	volatile uintptr_t b = atoi("1");
 	volatile int *ptr = REINTERPRET_CAST(int *, a);
 
-	_exit((ptr + b) ? 1 : 2);
+	raise((ptr + b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(pointer_overflow, tc)
 {
 
-	test_case(test_pointer_overflow, " pointer expression with base ", true, false);
+	test_case(test_pointer_overflow, " pointer expression with base ");
 }
 #endif
 
@@ -609,13 +602,13 @@ test_shift_out_of_bounds_signednessbit(void)
 {
 	volatile int32_t a = atoi("1");
 
-	_exit((a << 31) ? 1 : 2);
+	raise((a << 31) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(shift_out_of_bounds_signednessbit, tc)
 {
 
-	test_case(test_shift_out_of_bounds_signednessbit, " left shift of ", true, false);
+	test_case(test_shift_out_of_bounds_signednessbit, " left shift of ");
 }
 #endif
 
@@ -633,13 +626,13 @@ test_shift_out_of_bounds_signedoverflow(void)
 	volatile int32_t b = atoi("30");
 	a <<= b;
 
-	_exit((a << 10) ? 1 : 2);
+	raise((a << 10) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(shift_out_of_bounds_signedoverflow, tc)
 {
 
-	test_case(test_shift_out_of_bounds_signedoverflow, " left shift of ", true, false);
+	test_case(test_shift_out_of_bounds_signedoverflow, " left shift of ");
 }
 
 UBSAN_TC(shift_out_of_bounds_negativeexponent);
@@ -655,13 +648,13 @@ test_shift_out_of_bounds_negativeexponent(void)
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("-10");
 
-	_exit((a << b) ? 1 : 2);
+	raise((a << b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(shift_out_of_bounds_negativeexponent, tc)
 {
 
-	test_case(test_shift_out_of_bounds_negativeexponent, " shift exponent -", true, false);
+	test_case(test_shift_out_of_bounds_negativeexponent, " shift exponent -");
 }
 
 UBSAN_TC(shift_out_of_bounds_toolargeexponent);
@@ -677,13 +670,13 @@ test_shift_out_of_bounds_toolargeexponent(void)
 	volatile int32_t a = atoi("1");
 	volatile int32_t b = atoi("40");
 
-	_exit((a << b) ? 1 : 2);
+	raise((a << b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(shift_out_of_bounds_toolargeexponent, tc)
 {
 
-	test_case(test_shift_out_of_bounds_toolargeexponent, " shift exponent ", true, false);
+	test_case(test_shift_out_of_bounds_toolargeexponent, " shift exponent ");
 }
 
 #ifdef __clang__
@@ -700,13 +693,13 @@ test_sub_overflow_signed(void)
 	volatile int a = INT_MIN;
 	volatile int b = atoi("1");
 
-	_exit((a - b) ? 1 : 2);
+	raise((a - b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(sub_overflow_signed, tc)
 {
 
-	test_case(test_sub_overflow_signed, " signed integer overflow: ", true, false);
+	test_case(test_sub_overflow_signed, " signed integer overflow: ");
 }
 
 UBSAN_TC(sub_overflow_unsigned);
@@ -722,13 +715,13 @@ test_sub_overflow_unsigned(void)
 	volatile unsigned int a = atoi("0");
 	volatile unsigned int b = atoi("1");
 
-	_exit((a - b) ? 1 : 2);
+	raise((a - b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 {
 
-	test_case(test_sub_overflow_unsigned, " unsigned integer overflow: ", true, false);
+	test_case(test_sub_overflow_unsigned, " unsigned integer overflow: ");
 }
 #endif
 
@@ -756,7 +749,7 @@ test_type_mismatch_misaligned(void)
 UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 {
 
-	test_case(test_type_mismatch_misaligned, " load of misaligned address ", false, true);
+	test_case(test_type_mismatch_misaligned, " load of misaligned address ");
 }
 #endif
 
@@ -779,7 +772,7 @@ test_vla_bound_not_positive(void)
 UBSAN_TC_BODY(vla_bound_not_positive, tc)
 {
 
-	test_case(test_vla_bound_not_positive, " variable length array bound value ", false, true);
+	test_case(test_vla_bound_not_positive, " variable length array bound value ");
 }
 
 UBSAN_TC(integer_divide_by_zero);
@@ -795,13 +788,13 @@ test_integer_divide_by_zero(void)
 	volatile int a = atoi("-1");
 	volatile int b = atoi("0");
 
-	_exit((a / b) ? 1 : 2);
+	raise((a / b) ? SIGSEGV : SIGBUS);
 }
 
 UBSAN_TC_BODY(integer_divide_by_zero, tc)
 {
 
-	test_case(test_integer_divide_by_zero, " signed integer overflow: ", false, true);
+	test_case(test_integer_divide_by_zero, " signed integer overflow: ");
 }
 
 #ifdef __clang__
@@ -824,7 +817,7 @@ test_float_divide_by_zero(void)
 UBSAN_TC_BODY(float_divide_by_zero, tc)
 {
 
-	test_case(test_float_divide_by_zero, " unsigned integer overflow: ", false, true);
+	test_case(test_float_divide_by_zero, " unsigned integer overflow: ");
 }
 #endif
 
@@ -858,7 +851,7 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, divrem_overflow_signed_mod);
 //	UBSAN_TEST_CASE(tp, dynamic_type_cache_miss); // Not supported in uUBSan
 //	UBSAN_TEST_CASE(tp, float_cast_overflow);	// TODO
-#if defined(__cplusplus) && defined(__clang__) && (defined(__x86_64__) || defined(__i386__))
+#if defined(__cplusplus) && defined(__clang__) && defined(__x86_64__)
 	UBSAN_TEST_CASE(tp, function_type_mismatch);
 #endif
 #ifdef __clang__

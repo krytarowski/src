@@ -191,7 +191,7 @@ test_divrem_overflow_signed_div(void)
 	volatile int a = INT_MIN;
 	volatile int b = atoi("-1");
 
-	reaise((a / b) ? SIGSEGV : SIGBUS); // SIGFPE will be triggered before exiting
+	raise((a / b) ? SIGSEGV : SIGBUS); // SIGFPE will be triggered before exiting
 }
 
 UBSAN_TC_BODY(divrem_overflow_signed_div, tc)
@@ -267,7 +267,7 @@ test_invalid_builtin_##type(void)			\
 							\
 	volatile int a = atoi("0");			\
 	volatile int b = __builtin_##type(a);		\
-	raise(SIGSEGV);					\
+	raise(b ? SIGBUS : SIGSEGV);			\
 }							\
 							\
 UBSAN_TC_BODY(invalid_builtin_##type, tc)		\

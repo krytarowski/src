@@ -1124,7 +1124,7 @@ Report(bool isFatal, const char *pFormat, ...)
 
 	va_start(ap, pFormat);
 #if defined(_KERNEL)
-	if (ifFatal)
+	if (isFatal)
 		vpanic(pFormat, ap);
 	else
 		vprintf(pFormat, ap);

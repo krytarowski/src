@@ -108,7 +108,7 @@ CFLAGS+=	-fno-strict-aliasing
 CFLAGS+=	-fno-common
 .endif
 
-.if ${KUBSAN:U0} > 0
+.if defined(KUBSAN)
 CFLAGS+=	-fsanitize=undefined
 .endif
 

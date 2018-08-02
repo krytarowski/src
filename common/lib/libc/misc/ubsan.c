@@ -1142,17 +1142,28 @@ Report(bool isFatal, const char *pFormat, ...)
 		}
 	}
 
+	// The *v*print* functions can flush the va_list argument.
+	// Create a local copy for each call to prevent invalid read.
 	if (ISSET(ubsan_flags, UBSAN_STDOUT)) {
-		vprintf(pFormat, ap);
+		va_list tmp;
+		va_copy(tmp, ap);
+		vprintf(pFormat, tmp);
+		va_end(tmp);
 		fflush(stdout);
 	}
 	if (ISSET(ubsan_flags, UBSAN_STDERR)) {
-		vfprintf(stderr, pFormat, ap);
+		va_list tmp;
+		va_copy(tmp, ap);
+		vfprintf(stderr, pFormat, tmp);
+		va_end(tmp);
 		fflush(stderr);
 	}
 	if (ISSET(ubsan_flags, UBSAN_SYSLOG)) {
+		va_list tmp;
+		va_copy(tmp, ap);
 		struct syslog_data SyslogData = SYSLOG_DATA_INIT;
-		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &SyslogData, pFormat, ap);
+		ubsan_vsyslog(LOG_DEBUG | LOG_USER, &SyslogData, pFormat, tmp);
+		va_end(tmp);
 	}
 	if (isFatal || ISSET(ubsan_flags, UBSAN_ABORT)) {
 		abort();

@@ -730,6 +730,8 @@ UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 }
 #endif
 
+#ifndef __clang__
+// The Clang/LLVM code generation does not catch every misaligned access
 UBSAN_TC(type_mismatch_misaligned);
 UBSAN_TC_HEAD(type_mismatch_misaligned, tc)
 {
@@ -744,10 +746,7 @@ test_type_mismatch_misaligned(void)
 	volatile int *b;
 
 	memset(__UNVOLATILE(A), 0, sizeof(A));
-
 	b = REINTERPRET_CAST(volatile int *, &A[1]);
-
-	// If it survive misalignment access, trigger a signal manually
 	
 	raise((*b) ? SIGSEGV : SIGBUS);
 }
@@ -757,6 +756,7 @@ UBSAN_TC_BODY(type_mismatch_misaligned, tc)
 
 	test_case(test_type_mismatch_misaligned, " load of misaligned address ", false, true);
 }
+#endif
 
 UBSAN_TC(vla_bound_not_positive);
 UBSAN_TC_HEAD(vla_bound_not_positive, tc)
@@ -897,7 +897,9 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, sub_overflow_signed);
 	UBSAN_TEST_CASE(tp, sub_overflow_unsigned);
 #endif
+#ifndef __clang__
 	UBSAN_TEST_CASE(tp, type_mismatch_misaligned);
+#endif
 	UBSAN_TEST_CASE(tp, vla_bound_not_positive);
 	UBSAN_TEST_CASE(tp, integer_divide_by_zero);
 	UBSAN_TEST_CASE(tp, float_divide_by_zero);

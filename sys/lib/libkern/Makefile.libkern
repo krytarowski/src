@@ -98,7 +98,7 @@ SRCS+=	explicit_memset.c consttime_memequal.c
 SRCS+=	cdbr.c
 SRCS+=	mi_vector_hash.c
 
-.if defined(KUBSAN)
+.if !defined(KUBSAN)
 .PATH:	${NETBSDSRCDIR}/common/lib/libc/misc
 SRCS+=	ubsan.c
 .endif

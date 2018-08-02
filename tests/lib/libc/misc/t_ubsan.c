@@ -730,28 +730,6 @@ UBSAN_TC_BODY(sub_overflow_unsigned, tc)
 }
 #endif
 
-UBSAN_TC(type_mismatch_nullptrderef);
-UBSAN_TC_HEAD(type_mismatch_nullptrderef, tc)
-{
-        UBSAN_MD_VAR(tc, "descr",
-	    "Checks -fsanitize=null");
-}
-
-static void
-test_type_mismatch_nullptrderef(void)
-{
-	volatile intptr_t a = atoi("0");
-	volatile int *b = REINTERPRET_CAST(int *, a);
-
-	_exit((*b) ? 1 : 2); // SIGSEGV
-}
-
-UBSAN_TC_BODY(type_mismatch_nullptrderef, tc)
-{
-
-	test_case(test_type_mismatch_nullptrderef, " load of null pointer of type ", false, true);
-}
-
 UBSAN_TC(type_mismatch_misaligned);
 UBSAN_TC_HEAD(type_mismatch_misaligned, tc)
 {
@@ -919,7 +897,6 @@ UBSAN_CASES(tp)
 	UBSAN_TEST_CASE(tp, sub_overflow_signed);
 	UBSAN_TEST_CASE(tp, sub_overflow_unsigned);
 #endif
-	UBSAN_TEST_CASE(tp, type_mismatch_nullptrderef);
 	UBSAN_TEST_CASE(tp, type_mismatch_misaligned);
 	UBSAN_TEST_CASE(tp, vla_bound_not_positive);
 	UBSAN_TEST_CASE(tp, integer_divide_by_zero);

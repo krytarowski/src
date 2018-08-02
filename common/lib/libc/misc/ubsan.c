@@ -1225,12 +1225,16 @@ DeserializeUINT128(char *pBuffer, size_t zBUfferLength, struct CTypeDescriptor *
 {
 	char szBuf[3]; /* 'XX\0' */
 	char rgNumber[sizeof(ulongest)];
-	size_t zI;
+	ssize_t zI;
 
 	memcpy(rgNumber, &U128, sizeof(U128));
 
 	strlcpy(pBuffer, "Undecoded-128-bit-Integer-Type (0x", zBUfferLength);
+#if BYTE_ORDER == LITTLE_ENDIAN
+	for (zI = sizeof(ulongest) - 1; zI >= 0; zI--) {
+#else
 	for (zI = 0; zI < sizeof(ulongest); zI++) {
+#endif
 		snprintf(szBuf, sizeof(szBuf), "%02" PRIx8, rgNumber[zI]);
 		strlcat(pBuffer, szBuf, zBUfferLength);
 	}
@@ -1308,7 +1312,7 @@ DeserializeFloatOverPointer(char *pBuffer, size_t zBUfferLength, struct CTypeDes
 	/*
 	 * This function handles 64-bit number over a pointer on 32-bit CPUs.
 	 */
-	ASSERT((sizeof(*pNumber) * CHAR_BIT < WIDTH_64) && (zDeserializeTypeWidth(pType) == WIDTH_64));
+	ASSERT((sizeof(*pNumber) * CHAR_BIT < WIDTH_64) || (zDeserializeTypeWidth(pType) >= WIDTH_64));
 	ASSERT(sizeof(D) == sizeof(uint64_t));
 #ifdef __HAVE_LONG_DOUBLE
 	ASSERT(sizeof(LD) > sizeof(uint64_t));

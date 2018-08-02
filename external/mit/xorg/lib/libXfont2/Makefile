@@ -111,6 +111,8 @@ CPPFLAGS+=	-I${DESTDIR}${X11INCDIR}/X11/fonts
 CPPFLAGS+=	-I${DESTDIR}${X11INCDIR}/freetype2
 CPPFLAGS+=	-I${DESTDIR}${X11INCDIR}/freetype2/freetype
 
+CWARNFLAGS.clang+=	-Wno-format
+
 LIBDPLIBS=\
 	Xt	${.CURDIR}/../libXt \
 	SM	${.CURDIR}/../libSM \

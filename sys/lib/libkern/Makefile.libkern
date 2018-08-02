@@ -98,6 +98,11 @@ SRCS+=	explicit_memset.c consttime_memequal.c
 SRCS+=	cdbr.c
 SRCS+=	mi_vector_hash.c
 
+.if ${KUBSAN:U0} > 0
+.PATH:	${NETBSDSRCDIR}/common/lib/libc/misc
+SRCS+=	ubsan.c
+.endif
+
 #.PATH:	${NETBSDSRCDIR}/external/bsd/liblzf/dist
 #SRCS+=	lzf_c.c lzf_d.c
 

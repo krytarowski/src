@@ -218,3 +218,9 @@ file	miscfs/genfs/layer_vfsops.c	layerfs
 file	miscfs/genfs/layer_vnops.c	layerfs
 
 file	miscfs/specfs/spec_vnops.c	vfs
+
+defflag	KUBSAN
+prefix	../common/lib/libc/misc
+file	ubsan.c				kubsan
+prefix
+makeoptions	kubsan	CFLAGS+="-fsanitize=undefined"

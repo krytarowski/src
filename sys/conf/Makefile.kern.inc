@@ -108,10 +108,6 @@ CFLAGS+=	-fno-strict-aliasing
 CFLAGS+=	-fno-common
 .endif
 
-.if defined(KUBSAN)
-CFLAGS+=	-fsanitize=undefined
-.endif
-
 # Use the per-source COPTS variables to add -g to just those
 # files that match the shell patterns given in ${DEBUGLIST}
 #

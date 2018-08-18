@@ -5,7 +5,7 @@
 
 # other sources shared with the kernel
 .if ${MKLIBCSANITIZER:Uno} == "yes"
-SRCS+= ubsan.c
+SRCS+= asan.c ubsan.c
 .endif
 
 # constructor

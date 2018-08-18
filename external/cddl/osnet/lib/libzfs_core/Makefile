@@ -19,6 +19,8 @@ SRCS=	libzfs_core.c \
 
 SRCS+=	libzfs_compat.c
 
+COPTS.zfs_ioctl.c		+= ${${ACTIVE_CC} == "gcc" :? -Wno-maybe-uninitialized :}
+COPTS.zfs_ioctl_compat.c	+= ${${ACTIVE_CC} == "gcc" :? -Wno-maybe-uninitialized :}
+
 .include "../../Makefile.zfs"
 .include <bsd.lib.mk>
-

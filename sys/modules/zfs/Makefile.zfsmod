@@ -141,3 +141,5 @@ CPPFLAGS+=	-I${ZFSDIR}/dist/uts/common
 CPPFLAGS+=	-D_PROPLIB_ZFS_CONFLICT
 
 NEED_ISYSTEM=	# duplicate headers, depends on -isystem to build
+
+COPTS.zfs_ioctl.c	+= ${${ACTIVE_CC} == "gcc" :? -Wno-maybe-uninitialized :}

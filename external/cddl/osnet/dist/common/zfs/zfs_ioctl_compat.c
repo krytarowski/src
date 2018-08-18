@@ -333,7 +333,7 @@ zfs_cmd_compat_get(zfs_cmd_t *zc, caddr_t addr, const int cflag)
 		FIELD_COPY(zc_inject_record.zi_freq);
 		FIELD_COPY(zc_inject_record.zi_failfast);
 		strlcpy(zc->zc_inject_record.zi_func,
-		    zcdm_c->zc_inject_record.zi_func, MAXNAMELEN);
+		    resume_c->zc_inject_record.zi_func, MAXNAMELEN);
 		FIELD_COPY(zc_inject_record.zi_iotype);
 		FIELD_COPY(zc_inject_record.zi_duration);
 		FIELD_COPY(zc_inject_record.zi_timer);
@@ -617,7 +617,7 @@ zfs_cmd_compat_put(zfs_cmd_t *zc, caddr_t addr, const int request,
 		FIELD_COPY(zc_inject_record.zi_type);
 		FIELD_COPY(zc_inject_record.zi_freq);
 		FIELD_COPY(zc_inject_record.zi_failfast);
-		strlcpy(edbp_c->zc_inject_record.zi_func,
+		strlcpy(resume_c->zc_inject_record.zi_func,
 		    zc->zc_inject_record.zi_func, MAXNAMELEN);
 		FIELD_COPY(zc_inject_record.zi_iotype);
 		FIELD_COPY(zc_inject_record.zi_duration);
@@ -675,7 +675,7 @@ zfs_cmd_compat_put(zfs_cmd_t *zc, caddr_t addr, const int request,
 		FIELD_COPY(zc_inject_record.zi_type);
 		FIELD_COPY(zc_inject_record.zi_freq);
 		FIELD_COPY(zc_inject_record.zi_failfast);
-		strlcpy(zcmd_c->zc_inject_record.zi_func,
+		strlcpy(resume_c->zc_inject_record.zi_func,
 		    zc->zc_inject_record.zi_func, MAXNAMELEN);
 		FIELD_COPY(zc_inject_record.zi_iotype);
 		FIELD_COPY(zc_inject_record.zi_duration);
@@ -744,7 +744,7 @@ zfs_cmd_compat_put(zfs_cmd_t *zc, caddr_t addr, const int request,
 		FIELD_COPY(zc_inject_record.zi_type);
 		FIELD_COPY(zc_inject_record.zi_freq);
 		FIELD_COPY(zc_inject_record.zi_failfast);
-		strlcpy(zcdm_c->zc_inject_record.zi_func,
+		strlcpy(resume_c->zc_inject_record.zi_func,
 		    zc->zc_inject_record.zi_func, MAXNAMELEN);
 		FIELD_COPY(zc_inject_record.zi_iotype);
 		FIELD_COPY(zc_inject_record.zi_duration);

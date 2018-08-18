@@ -29,6 +29,7 @@ defflag opt_spectre.h	SPECTRE_V2_GCC_MITIGATION
 
 defflag			USER_LDT
 defflag			KASLR
+defflag			KASAN
 defflag eisa.h EISA
 
 # Start code
@@ -39,6 +40,7 @@ file	arch/amd64/amd64/spl.S			machdep
 
 file	arch/amd64/amd64/amd64func.S		machdep
 file	arch/amd64/amd64/amd64_trap.S		machdep
+file	arch/amd64/amd64/asan.c			kasan
 file	arch/amd64/amd64/autoconf.c		machdep
 file	arch/amd64/amd64/busfunc.S		machdep
 file	arch/amd64/amd64/cpu_in_cksum.S		(inet | inet6) & cpu_in_cksum

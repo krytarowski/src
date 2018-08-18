@@ -1,0 +1,8 @@
+# $NetBSD: GENERIC_KASLR,v 1.5 2018/07/21 06:30:27 maxv Exp $
+
+include "arch/amd64/conf/GENERIC"
+
+no options	SVS
+
+makeoptions 	KASAN=1		# Kernel Address Sanitizer
+options 	KASAN

@@ -65,6 +65,20 @@ void __asan_before_dynamic_init(const char *module_name);
 void __asan_register_globals(struct __asan_global *globals, size_t size);
 void __asan_unregister_globals(struct __asan_global *globals, size_t size);
 
+#define __ASAN_REPORT_PROTOTYPE(size)				\
+void __asan_report_load##size(intptr_t addr);			\
+void __asan_report_exp_load##size(intptr_t addr);		\
+void __asan_report_load##size_noabort(intptr_t addr);		\
+void __asan_report_store##size(intptr_t addr);			\
+void __asan_report_exp_store##size(intptr_t addr);		\
+void __asan_report_store##size_noabort(intptr_t addr);
+
+__ASAN_REPORT_PROTOTYPE(1)
+__ASAN_REPORT_PROTOTYPE(2)
+__ASAN_REPORT_PROTOTYPE(4)
+__ASAN_REPORT_PROTOTYPE(8)
+__ASAN_REPORT_PROTOTYPE(16)
+
 /*
 GCC 6.x
 
@@ -211,8 +225,51 @@ __asan_unregister_globals(struct __asan_global *globals, size_t size)
 }
 
 
-#define __ASAN_REPORT_LOAD(size)				\
+#define __ASAN_REPORT(size)					\
 void								\
-__asan_report_load##size(
+__asan_report_load##size(intptr_t addr)				\
+{								\
+								\
+	ReportOperating();					\
+}								\
+								\
+void								\
+__asan_report_exp_load##size(intptr_t addr)			\
+{								\
+								\
+	ReportOperating();					\
+}								\
+								\
+void								\
+__asan_report_load##size_noabort(intptr_t addr)			\
+{								\
+								\
+	ReportOperating();					\
+}								\
+								\
+void								\
+__asan_report_store##size(intptr_t addr)			\
+{								\
+								\
+	ReportOperating();					\
+}								\
+								\
+void								\
+__asan_report_exp_store##size(intptr_t addr)			\
+{								\
+								\
+	ReportOperating();					\
+}								\
+								\
+void								\
+__asan_report_store##size_noabort(intptr_t addr)		\
+{								\
+								\
+	ReportOperating();					\
+}
 
-__asan_report_load1
+__ASAN_REPORT(1)
+__ASAN_REPORT(2)
+__ASAN_REPORT(4)
+__ASAN_REPORT(8)
+__ASAN_REPORT(16)

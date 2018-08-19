@@ -79,6 +79,9 @@ __ASAN_REPORT_PROTOTYPE(4)
 __ASAN_REPORT_PROTOTYPE(8)
 __ASAN_REPORT_PROTOTYPE(16)
 
+#define __ASAN_STACK_PROTOTYPE(class)				\
+void __asan_stack_malloc_##size(intptr_t addr);
+
 /*
 GCC 6.x
 

@@ -44,10 +44,21 @@ __RCSID("$NetBSD$");
 #endif
 
 
+#if defined(__clang__) && (__clang_major__ - 0 >= 6)
+#define ASAN_ABI_VERSION 8
+#elif __GNUC_PREREQ__(7, 1) && !defined(__clang__)
+#define ASAN_ABI_VERSION 8
+#elif __GNUC_PREREQ__(6, 1) && !defined(__clang__)
+#define ASAN_ABI_VERSION 6
+#else
+#error Unsupported compiler version
+#endif
+
+
 void __asan_handle_no_return(void);
 
 /*
-GCC
+GCC 5.x
 
      1  `__asan_handle_no_return'
      2	`__asan_init_v4'
@@ -61,6 +72,22 @@ GCC
     10	`__asan_stack_malloc_1'
     11	`__asan_stack_malloc_2'
     12	`__asan_unregister_globals'
+
+GCC 6.x
+
+     1  __asan_handle_no_return
+     2  __asan_init
+     3  __asan_option_detect_stack_use_after_return
+     4  __asan_register_globals
+     5  __asan_report_load1
+     6  __asan_report_load2
+     7  __asan_report_load4
+     8  __asan_report_load8
+     9  __asan_report_store1
+    10  __asan_stack_malloc_1
+    11  __asan_stack_malloc_2
+    12  __asan_unregister_globals
+    13  __asan_version_mismatch_check_v6
 
 CLANG
 
@@ -140,6 +167,11 @@ Poison(void *base, size_t size)
 {
 }
 
+static void
+Unpoison(void *base, size_t size)
+{
+}
+
 void
 __asan_handle_no_return(void)
 {
@@ -149,4 +181,9 @@ __asan_handle_no_return(void)
 	GetStackBaseSize(&base, &size)
 
 	Poison(base, size);
+}
+
+void
+__asan_version_mismatch_check_v8()
+{
 }

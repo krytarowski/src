@@ -209,3 +209,10 @@ void
 __asan_unregister_globals(struct __asan_global *globals, size_t size)
 {
 }
+
+
+#define __ASAN_REPORT_LOAD(size)				\
+void								\
+__asan_report_load##size(
+
+__asan_report_load1

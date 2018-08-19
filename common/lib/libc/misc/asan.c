@@ -1,4 +1,4 @@
-/*	$NetBSD: ubsan.c,v 1.3 2018/08/03 16:31:04 kamil Exp $	*/
+/*	$NetBSD$	*/
 
 /*-
  * Copyright (c) 2018 The NetBSD Foundation, Inc.
@@ -62,6 +62,8 @@ void __asan_handle_no_return(void);
 void __asan_version_mismatch_check(void);
 void __asan_init(void);
 void __asan_before_dynamic_init(const char *module_name);
+void __asan_register_globals(struct __asan_global *globals, size_t size);
+void __asan_unregister_globals(struct __asan_global *globals, size_t size);
 
 /*
 GCC 6.x
@@ -196,4 +198,14 @@ __asan_before_dynamic_init(const char *module_name)
 	/* TODO ? */
 
 	return;
+}
+
+void
+__asan_register_globals(struct __asan_global *globals, size_t size)
+{
+}
+
+void
+__asan_unregister_globals(struct __asan_global *globals, size_t size)
+{
 }

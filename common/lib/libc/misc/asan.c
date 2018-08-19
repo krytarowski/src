@@ -54,25 +54,16 @@ __RCSID("$NetBSD$");
 #error Unsupported compiler version
 #endif
 
+#define __asan_version_mismatch_check __CONCAT(__asan_version_mismatch_check,ASAN_ABI_VERSION)
+
+int __asan_option_detect_stack_use_after_return = 1;
 
 void __asan_handle_no_return(void);
+void __asan_version_mismatch_check(void);
+void __asan_init(void);
+void __asan_before_dynamic_init(const char *module_name);
 
 /*
-GCC 5.x
-
-     1  `__asan_handle_no_return'
-     2	`__asan_init_v4'
-     3	`__asan_option_detect_stack_use_after_return'
-     4	`__asan_register_globals'
-     5	`__asan_report_load1'
-     6	`__asan_report_load2'
-     7	`__asan_report_load4'
-     8	`__asan_report_load8'
-     9	`__asan_report_store1'
-    10	`__asan_stack_malloc_1'
-    11	`__asan_stack_malloc_2'
-    12	`__asan_unregister_globals'
-
 GCC 6.x
 
      1  __asan_handle_no_return
@@ -184,6 +175,25 @@ __asan_handle_no_return(void)
 }
 
 void
-__asan_version_mismatch_check_v8()
+__asan_version_mismatch_check(void)
 {
+	/* A dummy function to check ASan ABI version */
+
+	return;
+}
+
+void
+__asan_init(void)
+{
+	/* Unimplemented activate ASan switch */
+
+	return;
+}
+
+void
+__asan_before_dynamic_init(const char *module_name)
+{
+	/* TODO ? */
+
+	return;
 }

@@ -1253,6 +1253,14 @@
 ./usr/include/uvm				base-c-usr
 ./usr/include/vm				base-obsolete		obsolete
 ./usr/lib					base-sys-usr		compatdir
+./usr/lib/clang					base-sys-usr
+./usr/lib/clang/7.0.0				base-sys-usr
+./usr/lib/clang/7.0.0/include			base-sys-usr
+./usr/lib/clang/7.0.0/include/sanitizer		base-sys-usr
+./usr/lib/clang/7.0.0/include/xray		base-sys-usr
+./usr/lib/clang/7.0.0/lib			base-sys-usr
+./usr/lib/clang/7.0.0/lib/netbsd		base-sys-usr
+./usr/lib/clang/7.0.0/share			base-sys-usr
 ./usr/lib/dtrace				base-sys-usr		dtrace
 ./usr/lib/dtrace/errno.d			base-sys-usr		dtrace
 ./usr/lib/dtrace/psinfo.d			base-sys-usr		dtrace

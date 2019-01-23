@@ -28,7 +28,7 @@ SUBDIR+= openldap
 SUBDIR+= libc++
 .endif
 .if (${MKLLVM} != "no")
-SUBDIR+= llvm
+SUBDIR+= llvm compiler_rt
 .endif
 .if (${MKNSD} != "no")
 SUBDIR+= nsd

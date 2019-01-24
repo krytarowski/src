@@ -43,6 +43,7 @@ SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_stoptheworld_mac.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_suppressions.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_tls_get_addr.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_thread_registry.cc
+SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_type_traits.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_win.cc
 
 # RTSanitizerCommon
@@ -220,6 +221,8 @@ UBSAN_SOURCES+=	ubsan_value.cc
 UBSAN_STANDALONE_SOURCES+=	ubsan_diag_standalone.cc
 UBSAN_STANDALONE_SOURCES+=	ubsan_init_standalone.cc
 UBSAN_STANDALONE_SOURCES+=	ubsan_signals_standalone.cc
+
+UBSAN_STANDALONE_SOURCES_STATIC+=	ubsan_init_standalone_preinit.cc
 
 UBSAN_CXXABI_SOURCES+=	ubsan_handlers_cxx.cc
 UBSAN_CXXABI_SOURCES+=	ubsan_type_hash.cc

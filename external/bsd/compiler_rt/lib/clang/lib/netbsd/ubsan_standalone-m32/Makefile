@@ -11,8 +11,16 @@ TOPDIR=	${NETBSDSRCDIR}/sys/external/bsd/compiler_rt/dist
 
 LIB=	libclang_rt.ubsan_standalone-i386
 
+.PATH: ${TOPDIR}/lib/sanitizer_common
+
+SRCS+=	${SANITIZER_SOURCES}
+SRCS+=	${SANITIZER_LIBCDEP_SOURCES}
+SRCS+=	${SANITIZER_COVERAGE_SOURCES}
+SRCS+=	${SANITIZER_SYMBOLIZER_SOURCES}
+
 .PATH: ${TOPDIR}/lib/ubsan
 
+SRCS+=	${UBSAN_SOURCES}
 SRCS+=	${UBSAN_STANDALONE_SOURCES}
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd

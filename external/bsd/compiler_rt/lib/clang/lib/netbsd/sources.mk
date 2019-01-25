@@ -257,3 +257,16 @@ XRAY_BASIC_MODE_SOURCES+=	xray_basic_logging.cc
 XRAY_PROFILING_MODE_SOURCES+=	xray_profile_collector.cc
 XRAY_PROFILING_MODE_SOURCES+=	xray_profiling.cc
 XRAY_PROFILING_MODE_SOURCES+=	xray_profiling_flags.cc
+
+LSAN_COMMON_SOURCES+=	lsan_common.cc
+LSAN_COMMON_SOURCES+=	lsan_common_linux.cc
+LSAN_COMMON_SOURCES+=	lsan_common_mac.cc
+
+LSAN_SOURCES+=		lsan.cc
+LSAN_SOURCES+=		lsan_allocator.cc
+LSAN_SOURCES+=		lsan_linux.cc
+LSAN_SOURCES+=		lsan_interceptors.cc
+LSAN_SOURCES+=		lsan_mac.cc
+LSAN_SOURCES+=		lsan_malloc_mac.cc
+LSAN_SOURCES+=		lsan_preinit.cc
+LSAN_SOURCES+=		lsan_thread.cc

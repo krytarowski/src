@@ -11,9 +11,30 @@ TOPDIR=	${NETBSDSRCDIR}/sys/external/bsd/compiler_rt/dist
 
 LIB=	libclang_rt.asan-i386
 
+.PATH: ${TOPDIR}/lib/interception
+
+SRCS+=	${INTERCEPTION_SOURCES}
+
 .PATH: ${TOPDIR}/lib/asan
 
+SRCS+=	${ASAN_PREINIT_SOURCES}
 SRCS+=	${ASAN_SOURCES}
+
+.PATH: ${TOPDIR}/lib/lsan
+
+SRCS+=	${LSAN_COMMON_SOURCES}
+
+.PATH: ${TOPDIR}/lib/ubsan
+
+SRCS+=	${UBSAN_SOURCES}
+
+.PATH: ${TOPDIR}/lib/sanitizer_common
+
+SRCS+=	${SANITIZER_COVERAGE_SOURCES}
+SRCS+=	${SANITIZER_SOURCES}
+SRCS+=	${SANITIZER_SYMBOLIZER_SOURCES}
+
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes

@@ -16,10 +16,12 @@ SUBDIR+=	msan-m64
 SUBDIR+=	msan_cxx-m64
 SUBDIR+=	safestack-m32
 SUBDIR+=	safestack-m64
-#SUBDIR+=	stats-m32
-#SUBDIR+=	stats-m64
-#SUBDIR+=	stats_client-m32
-#SUBDIR+=	stats_client-m64
+.if 0 # stats used in old version
+SUBDIR+=	stats-m32
+SUBDIR+=	stats-m64
+SUBDIR+=	stats_client-m32
+SUBDIR+=	stats_client-m64
+.endif
 SUBDIR+=	tsan-m64
 SUBDIR+=	tsan_cxx-m64
 SUBDIR+=	ubsan_minimal-m32

@@ -29,6 +29,8 @@ SRCS+=	${UBSAN_STANDALONE_SOURCES}
 
 SRCS+=	${UBSAN_STANDALONE_SOURCES_STATIC}
 
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
+
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes
 

@@ -15,6 +15,8 @@ LIB=	libclang_rt.ubsan_minimal-x86_64
 
 SRCS+=	${UBSAN_MINIMAL_SOURCES}
 
+CXXFLAGS+=	-fno-builtin -fno-exceptions -fno-stack-protector -fno-rtti
+
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes
 

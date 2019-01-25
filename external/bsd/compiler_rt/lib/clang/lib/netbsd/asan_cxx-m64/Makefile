@@ -13,7 +13,13 @@ LIB=	libclang_rt.asan_cxx-x86_64
 
 .PATH: ${TOPDIR}/lib/asan
 
-SRCS=	${ASAN_CXX_SOURCES}
+SRCS+=	${ASAN_CXX_SOURCES}
+
+.PATH: ${TOPDIR}/lib/ubsan
+
+SRCS+=	${UBSAN_CXXABI_SOURCES}
+
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes

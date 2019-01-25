@@ -13,7 +13,9 @@ LIB=	libclang_rt.asan-preinit-x86_64
 
 .PATH: ${TOPDIR}/lib/asan
 
-SRCS=	${ASAN_PREINIT_SOURCES}
+SRCS+=	${ASAN_PREINIT_SOURCES}
+
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes

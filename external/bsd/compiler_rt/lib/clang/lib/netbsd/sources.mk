@@ -43,7 +43,6 @@ SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_stoptheworld_mac.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_suppressions.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_tls_get_addr.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_thread_registry.cc
-SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_type_traits.cc
 SANITIZER_SOURCES_NOTERMINATION+=	sanitizer_win.cc
 
 # RTSanitizerCommon
@@ -52,6 +51,10 @@ SANITIZER_SOURCES+=	sanitizer_termination.cc
 
 # RTSanitizerCommonNoLibc
 SANITIZER_NOLIBC_SOURCES+=	sanitizer_common_nolibc.cc
+
+.for w in ${SANITIZER_NOLIBC_SOURCES}
+COPTS.${w}+=	-fno-rtti
+.endfor
 
 # RTSanitizerCommonLibc
 SANITIZER_LIBCDEP_SOURCES+=	sanitizer_common_libcdep.cc

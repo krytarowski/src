@@ -37,4 +37,9 @@ COPTS+=		-fPIC
 
 .include "../m64.mk"
 
+.include "../syms.mk"
+
+FILES=		libclang_rt.msan_cxx-x86_64.a.syms
+FILESDIR=	${LIBDIR}
+
 .include <bsd.lib.mk>

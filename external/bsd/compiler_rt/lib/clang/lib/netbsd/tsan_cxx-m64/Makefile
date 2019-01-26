@@ -36,4 +36,9 @@ CPPFLAGS+=	-I${TOPDIR}/lib
 
 .include "../m64.mk"
 
+.include "../syms.mk"
+
+FILES=		libclang_rt.tsan_cxx-x86_64.a.syms
+FILESDIR=	${LIBDIR}
+
 .include <bsd.lib.mk>

@@ -15,6 +15,8 @@ LIB=	libclang_rt.fuzzer_no_main-x86_64
 
 SRCS+=	${LIBFUZZER_SOURCES}
 
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
+
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes
 

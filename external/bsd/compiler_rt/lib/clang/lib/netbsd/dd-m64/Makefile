@@ -24,6 +24,8 @@ SRCS+=	${INTERCEPTION_SOURCES}
 SRCS+=	${SANITIZER_LIBCDEP_SOURCES}
 SRCS+=	${SANITIZER_SOURCES}
 
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
+
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes
 

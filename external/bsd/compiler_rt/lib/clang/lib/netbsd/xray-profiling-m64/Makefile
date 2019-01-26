@@ -15,6 +15,8 @@ LIB=	libclang_rt.xray-profiling-x86_64
 
 SRCS+=	${XRAY_PROFILING_MODE_SOURCES}
 
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
+
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes
 

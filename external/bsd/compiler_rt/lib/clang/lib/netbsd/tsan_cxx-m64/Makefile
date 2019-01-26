@@ -17,7 +17,7 @@ SRCS+=	${TSAN_CXX_SOURCES}
 
 .PATH: ${TOPDIR}/lib/ubsan
 
-SRCS+=	${UBSAN_SOURCES}
+SRCS+=	${UBSAN_CXX_SOURCES}
 
 CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
 

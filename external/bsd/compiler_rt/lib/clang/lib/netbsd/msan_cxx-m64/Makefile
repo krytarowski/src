@@ -13,7 +13,7 @@ LIB=	libclang_rt.msan_cxx-x86_64
 
 .PATH: ${TOPDIR}/lib/ubsan
 
-SRCS+=	${UBSAN_SOURCES}
+SRCS+=	${UBSAN_CXX_SOURCES}
 
 .PATH: ${TOPDIR}/lib/msan
 

@@ -19,6 +19,11 @@ SRCS+=	${SAFESTACK_SOURCES}
 
 SRCS+=  ${INTERCEPTION_SOURCES}
 
+.PATH: ${TOPDIR}/lib/sanitizer_common
+
+SRCS+=	${SANITIZER_SOURCES}
+SRCS+=	${SANITIZER_NOLIBC_SOURCES}
+
 CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd

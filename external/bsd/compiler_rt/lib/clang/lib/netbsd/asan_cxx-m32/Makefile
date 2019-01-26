@@ -19,7 +19,7 @@ SRCS+=	${ASAN_CXX_SOURCES}
 
 SRCS+=	${UBSAN_CXXABI_SOURCES}
 
-CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
+CXXFLAGS+=	-fno-exceptions -fno-builtin -fno-stack-protector # RTTI needed
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes

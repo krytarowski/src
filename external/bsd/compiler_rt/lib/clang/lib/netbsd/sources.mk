@@ -258,6 +258,33 @@ XRAY_PROFILING_MODE_SOURCES+=	xray_profile_collector.cc
 XRAY_PROFILING_MODE_SOURCES+=	xray_profiling.cc
 XRAY_PROFILING_MODE_SOURCES+=	xray_profiling_flags.cc
 
+XRAY_X86_64_SOURCES+=	xray_x86_64.cc
+XRAY_X86_64_SOURCES+=	xray_trampoline_x86_64.S
+
+XRAY_ARM_SOURCES+=	xray_arm.cc
+XRAY_ARM_SOURCES+=	xray_trampoline_arm.S
+
+XRAY_ARMHF_SOURCES+=	${XRAY_ARM_SOURCES}
+
+XRAY_AARCH64_SOURCES+=	xray_AArch64.cc
+XRAY_AARCH64_SOURCES+=	xray_trampoline_AArch64.S
+
+XRAY_MIPS_SOURCES+=	xray_mips.cc
+XRAY_MIPS_SOURCES+=	xray_trampoline_mips.S
+
+XRAY_MIPSEL_SOURCES+=	xray_mips.cc
+XRAY_MIPSEL_SOURCES+=	xray_trampoline_mips.S
+
+XRAY_MIPS64_SOURCES+=	xray_mips64.cc
+XRAY_MIPS64_SOURCES+=	xray_trampoline_mips64.S
+
+XRAY_MIPS64EL_SOURCES+=	xray_mips64.cc
+XRAY_MIPS64EL_SOURCES+=	xray_trampoline_mips64.S
+
+XRAY_POWERPC64LE_SOURCES+=	xray_powerpc64.cc
+XRAY_POWERPC64LE_SOURCES+=	xray_trampoline_powerpc64.cc
+XRAY_POWERPC64LE_SOURCES+=	xray_trampoline_powerpc64_asm.S
+
 LSAN_COMMON_SOURCES+=	lsan_common.cc
 LSAN_COMMON_SOURCES+=	lsan_common_linux.cc
 LSAN_COMMON_SOURCES+=	lsan_common_mac.cc

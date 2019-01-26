@@ -15,6 +15,12 @@ LIB=	libclang_rt.tsan_cxx-x86_64
 
 SRCS+=	${TSAN_CXX_SOURCES}
 
+.PATH: ${TOPDIR}/lib/ubsan
+
+SRCS+=	${UBSAN_SOURCES}
+
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
+
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes
 

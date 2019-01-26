@@ -11,18 +11,26 @@ TOPDIR=	${NETBSDSRCDIR}/sys/external/bsd/compiler_rt/dist
 
 LIB=	libclang_rt.msan-x86_64
 
+.PATH: ${TOPDIR}/lib/ubsan
+
+SRCS+=	${UBSAN_SOURCES}
+
 .PATH: ${TOPDIR}/lib/msan
 
 SRCS+=	${MSAN_RTL_SOURCES}
 
 .PATH: ${TOPDIR}/lib/interception
 
-SRCS+=  ${INTERCEPTION_SOURCES}
+SRCS+=	${INTERCEPTION_SOURCES}
 
 .PATH: ${TOPDIR}/lib/sanitizer_common
 
-SRCS+=  ${SANITIZER_LIBCDEP_SOURCES}
-SRCS+=  ${SANITIZER_SOURCES}
+SRCS+=	${SANITIZER_COVERAGE_SOURCES}
+SRCS+=	${SANITIZER_LIBCDEP_SOURCES}
+SRCS+=	${SANITIZER_SOURCES}
+SRCS+=	${SANITIZER_SYMBOLIZER_SOURCES}
+
+CXXFLAGS+=	-fno-rtti -fno-exceptions -fno-builtin -fno-stack-protector
 
 LIBDIR=		/usr/lib/clang/${CLANG_VER}/lib/netbsd
 LIBISCXX=	yes

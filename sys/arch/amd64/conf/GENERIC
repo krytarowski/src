@@ -130,6 +130,10 @@ options 	KDTRACE_HOOKS	# kernel DTrace hooks
 #makeoptions 	KLEAK=1
 #options 	KLEAK
 
+# Kernel Code Coverage Driver.
+makeoptions	KCOV=1
+options		KCOV
+
 # Compatibility options
 # x86_64 never shipped with a.out binaries; the two options below are
 # only relevant to 32-bit i386 binaries

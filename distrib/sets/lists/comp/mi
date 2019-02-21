@@ -3017,6 +3017,7 @@
 ./usr/include/sys/ipc.h				comp-c-include
 ./usr/include/sys/joystick.h			comp-c-include
 ./usr/include/sys/kcore.h			comp-c-include
+./usr/include/sys/kcov.h			comp-c-include
 ./usr/include/sys/kcpuset.h			comp-c-include
 ./usr/include/sys/kernel.h			comp-obsolete		obsolete
 ./usr/include/sys/keylock.h			comp-obsolete		obsolete

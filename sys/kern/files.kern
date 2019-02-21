@@ -121,6 +121,7 @@ file	kern/subr_iostat.c		kern
 file	kern/subr_ipi.c			kern
 file	kern/subr_kcpuset.c		kern
 file	kern/subr_kleak.c		kleak
+file	kern/subr_kcov.c		kcov
 defflag	opt_kmem.h			KMEM_GUARD
 					KMEM_SIZE
 defparam opt_kmem.h			KMEM_GUARD_DEPTH

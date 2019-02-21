@@ -11,6 +11,7 @@ COPTS.cpu.c+=		-fno-stack-protector
 .endif
 
 COPTS.subr_kleak.c+=	-fno-stack-protector
+COPTS.subr_kcov.c+=		-fno-stack-protector
 
 # The following files use alloca(3) or variable array allocations.
 # Their full name is noted as documentation.

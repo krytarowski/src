@@ -31,6 +31,7 @@ defflag opt_diagnostic.h	_DIAGNOSTIC
 defflag				GPROF
 defflag				KASAN
 defflag				KLEAK
+defflag				KCOV
 
 defparam opt_copy_symtab.h	makeoptions_COPY_SYMTAB
 

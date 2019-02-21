@@ -12,6 +12,7 @@ CPPFLAGS+=	-D_KERNTYPES
 # Atffile into it.
 TESTS_C=	t_modctl
 TESTS_C+=	t_builtin
+TESTS_C+=	t_kcov
 LDADD=		-lprop
 LDADD+=		-lrumpfs_kernfs -lrumpvfs -lrump -lrumpuser -lrump -lpthread
 

@@ -240,6 +240,14 @@ KLEAKFLAGS.${f}=	# empty
 CFLAGS+=	${KLEAKFLAGS.${.IMPSRC:T}:U${KLEAKFLAGS}}
 .endif
 
+.if ${KCOV:U0} > 0
+KCOVFLAGS=	-fsanitize-coverage=trace-pc
+.for f in subr_kcov.c subr_lwp_specificdata.c subr_specificdata.c
+KCOVFLAGS.${f}=		# empty
+.endfor
+CFLAGS+=	${KCOVFLAGS.${.IMPSRC:T}:U${KCOVFLAGS}}
+.endif
+
 .if !defined(NOPIE) && (!defined(LDSTATIC) || ${LDSTATIC} != "-static")
 # Position Independent Executable flags
 PIE_CFLAGS?=        -fPIE

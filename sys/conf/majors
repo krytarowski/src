@@ -79,3 +79,4 @@ device-major qemufwcfg char 342		   qemufwcfg
 device-major autofs    char 343		   autofs
 device-major gpiopps   char 344            gpiopps
 device-major nvmm      char 345            nvmm
+device-major kcov      char 346            kcov

@@ -36,6 +36,7 @@
 #include <sys/systm.h>
 #include <sys/kernel.h>
 
+#include <sys/atomic.h>
 #include <sys/conf.h>
 #include <sys/condvar.h>
 #include <sys/kmem.h>
@@ -233,7 +234,7 @@ kcov_ioctl(dev_t dev, u_long cmd, void *addr, int flag, struct lwp *l)
 static paddr_t
 kcov_mmap(dev_t dev, off_t offset, int prot)
 {
-	kcov_t *kd = proc_getspecific(curproc, kcov_lwp_key);
+	kcov_t *kd = proc_getspecific(curproc, kcov_proc_key);
 	paddr_t pa;
 	vaddr_t va;
 
@@ -312,13 +313,15 @@ const struct cdevsw kcov_cdevsw = {
 	.d_flag = D_OTHER | D_MPSAFE,
 };
 
-MODULE(MODULE_CLASS_MISC, kcov, NULL);
+MODULE(MODULE_CLASS_ANY, kcov, NULL);
 
 static void
 kcov_init(void)
 {
 	proc_specific_key_create(&kcov_proc_key, kcov_free);
 	lwp_specific_key_create(&kcov_lwp_key, kcov_free);
+
+	membar_sync();
 
 	initialized = true;
 }

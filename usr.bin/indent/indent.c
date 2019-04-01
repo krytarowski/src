@@ -48,7 +48,7 @@ static char sccsid[] = "@(#)indent.c	5.17 (Berkeley) 6/7/93";
 #if defined(__NetBSD__)
 __RCSID("$NetBSD$");
 #elif defined(__FreeBSD__)
-__FBSDID("$FreeBSD$");
+__FBSDID("$FreeBSD: head/usr.bin/indent/indent.c 340138 2018-11-04 19:24:49Z oshogbo $");
 #endif
 #endif
 

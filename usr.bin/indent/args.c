@@ -48,7 +48,7 @@ static char sccsid[] = "@(#)args.c	8.1 (Berkeley) 6/6/93";
 #if defined(__NetBSD__)
 __RCSID("$NetBSD$");
 #elif defined(__FreeBSD__)
-__FBSDID("$NetBSD: args.c,v 1.13 2016/02/22 21:20:29 ginsbach Exp $");
+__FBSDID("$FreeBSD: head/usr.bin/indent/args.c 336318 2018-07-15 21:04:21Z pstef $");
 #endif
 #endif
 

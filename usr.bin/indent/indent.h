@@ -32,7 +32,7 @@
 #if defined(__NetBSD__)
 __RCSID("$NetBSD$");
 #elif defined(__FreeBSD__)
-__FBSDID("$FreeBSD$");
+__FBSDID("$FreeBSD: head/usr.bin/indent/indent.h 336333 2018-07-16 05:46:50Z pstef $");
 #endif
 #endif
 

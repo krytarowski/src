@@ -1,3 +1,4 @@
+/*	$NetBSD$	*/
 /* $FreeBSD: head/usr.bin/indent/tests/comments.0.stdout 334563 2018-06-03 15:28:55Z pstef $ */
 typedef enum x {
 	aaaaaaaaaaaaaaaaaaaaaa = 1 << 0,	/* test a */

@@ -1,4 +1,4 @@
-/* $NetBSD: systrace_args.c,v 1.32 2018/08/10 21:47:16 pgoyette Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call argument to DTrace register array converstion.
@@ -2372,6 +2372,15 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		iarg[0] = SCARG(p, features); /* int */
 		uarg[1] = (intptr_t) SCARG(p, address); /* struct lwpctl ** */
 		*n_args = 2;
+		break;
+	}
+	/* sys_pinspect */
+	case 326: {
+		const struct sys_pinspect_args *p = params;
+		iarg[0] = SCARG(p, req); /* int */
+		uarg[1] = (intptr_t) SCARG(p, addr); /* void * */
+		iarg[2] = SCARG(p, data); /* int */
+		*n_args = 3;
 		break;
 	}
 	/* sys_sa_register */
@@ -7555,6 +7564,22 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
+	/* sys_pinspect */
+	case 326:
+		switch(ndx) {
+		case 0:
+			p = "int";
+			break;
+		case 1:
+			p = "void *";
+			break;
+		case 2:
+			p = "int";
+			break;
+		default:
+			break;
+		};
+		break;
 	/* sys_sa_register */
 	case 330:
 		switch(ndx) {
@@ -11258,6 +11283,11 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		break;
 	/* sys__lwp_ctl */
 	case 325:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys_pinspect */
+	case 326:
 		if (ndx == 0 || ndx == 1)
 			p = "int";
 		break;

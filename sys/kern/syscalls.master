@@ -658,8 +658,10 @@
 				char *name, size_t len); }
 325	STD 		{ int|sys||_lwp_ctl(int features, \
 				struct lwpctl **address); }
-; Syscalls 326-339 reserved for LWP syscalls.
-326	UNIMPL
+326	STD 	MODULAR pinspect	\
+			{ int|sys||pinspect(int req, void *addr, \
+			    int data); }
+; Syscalls 327-339 reserved for LWP syscalls.
 327	UNIMPL
 328	UNIMPL
 329	UNIMPL

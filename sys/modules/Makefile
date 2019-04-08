@@ -286,6 +286,7 @@ SUBDIR+=	compat_netbsd32_60	compat_netbsd32_80
 SUBDIR+=	compat_netbsd32_43
 SUBDIR+=	compat_netbsd32_mqueue
 SUBDIR+=	compat_netbsd32_nfssrv
+SUBDIR+=	compat_netbsd32_pinspect
 SUBDIR+=	compat_netbsd32_ptrace
 SUBDIR+=	compat_netbsd32_sysvipc
 SUBDIR+=	compat_netbsd32_sysvipc_10

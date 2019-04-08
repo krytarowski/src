@@ -33,7 +33,7 @@
 __KERNEL_RCSID(0, "$NetBSD$");
 
 #ifdef _KERNEL_OPT
-#include "opt_ptrace.h"
+#include "opt_pinspect.h"
 #include "opt_compat_netbsd32.h"
 #endif
 
@@ -47,14 +47,30 @@ __KERNEL_RCSID(0, "$NetBSD$");
 
 #ifdef PINSPECT
 int
-pinspect_getcontext(void *addr, lwpid_t lid)
+pinspect_getcontext(struct proc *p, ucontext_t *ucp, lwpid_t lid)
 {
+	ucontext_t uc;
+	struct lwp *lt;
+
+	memset(&uc, 0, sizeof(uc));
+
+	mutex_enter(p->p_lock);
+	lt = lwp_find(p, lid);
+	if (lt == NULL) {
+		mutex_exit(p->p_lock);
+		return ESRCH;
+	}
+	getucontext(lt, &uc);
+	mutex_exit(p->p_lock);
+
+	return copyout(&uc, ucp, sizeof(*ucp));
 }
 
 int
 do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
     void *addr, int data, register_t *retval)
 {
+	struct proc *p = l->l_proc;
 	int error;
 
 	case (req) {
@@ -63,9 +79,9 @@ do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
 	case PI_DISABLE:
 		break;
 	case PI_GETCONTEXT:
-		if ((error = ptm->ptm_getcontext(addr, data)) != 0)
-			break;
-		break;
+		return ptm->ptm_getcontext(p, addr, data);
+	default:
+		return EINVAL;
 	}
 
 	return error;

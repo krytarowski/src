@@ -34,6 +34,10 @@
 
 #include <sys/cdefs.h>
 
+#define PI_ENABLE	0	/* stop the world */
+#define PI_DISABLE	1	/* start the world */
+#define PI_GETCONTEXT	2	/* get ucontext_t of LWP */
+
 __BEGIN_DECLS
 int pinspect(int _request, void *_addr, int _data);
 __END_DECLS

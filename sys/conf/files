@@ -21,6 +21,7 @@ defparam opt_param.h		MAXUSERS
 defflag				INSECURE
 defflag				KTRACE
 defflag				MBUFTRACE
+defflag	opt_pinspect.h		PINSPECT
 defflag	opt_ptrace.h		PTRACE PTRACE_HOOKS
 defflag				COREDUMP
 defflag	opt_modular.h		MODULAR

@@ -27,6 +27,7 @@ options	VMSWAP		# Swap device/file support
 options	BUFQ_FCFS	# First-come First-serve strategy
 options	BUFQ_DISKSORT	# Traditional min seek sort strategy
 options	RFC2292		# Previous version of Adv. Sockets API for IPv6 
+options	PINSPECT	# Include pinspect(2) syscall
 options	PTRACE		# Include ptrace(2) syscall
 options	PTRACE_HOOKS	# Include ptrace hooks
 options	COREDUMP	# allow processes to coredump.

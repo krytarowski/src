@@ -29,54 +29,60 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+__KERNEL_RCSID(0, "$NetBSD$");
+
+#ifdef _KERNEL_OPT
+#include "opt_ptrace.h"
+#include "opt_compat_netbsd32.h"
+#endif
+
+#if defined(__HAVE_COMPAT_NETBSD32) && !defined(COMPAT_NETBSD32) \
+    && !defined(_RUMPKERNEL)
+#define COMPAT_NETBSD32
+#endif
 
 #include <sys/param.h>
-#include <sys/types.h>
-#include <sys/syscallargs.h>
-#include <sys/syscallvar.h>
-#include <sys/syscall.h>
-#include <sys/module.h>
+#include <sys/systm.h>
 
-static struct pinspect_methods native_ptm = {
-	.ptm_getcontext = pinspect_getcontext,
-};
-
-static const struct syscall_package pinspect_syscalls[] = {
-	{ SYS_pinspect, 0, (sy_call_t *)sys_pinspect },
-	{ 0, 0, NULL },
-};
-
-/*
- * Process self INTro SPECTion system call.
- */
+#ifdef PINSPECT
 int
-sys_pinspect(struct lwp *l, const struct sys_ptrace_args *uap, register_t *retval)
+do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
+    void *addr, int data, register_t *retval)
 {
-	/* {
-		syscallarg(int) req;
-		syscallarg(void *) addr;
-		syscallarg(int) data;
-	} */
 
-	return do_pinspect(&native_ptm, l, SCARG(uap, req), SCARG(uap, addr),
-	    SCARG(uap, data), retval);
+	case (req) {
+	}
 }
 
-MODULE(MODULE_CLASS_EXEC, pinspect, "pinspect_common");
+int
+pinspect_init(void)
+{
+}
+
+int
+pinspect_fini(void)
+{
+}
+
+#endif /* PINSPECT */
+
+MODULE(MODULE_CLASS_EXEC, ptrace_common, "");
 
 static int
-pinspect_modcmd(modcmd_t cmd, void *arg)
+ptrace_common_modcmd(modcmd_t cmd, void *arg)
 {
 	int error;
-	
+
 	switch (cmd) {
 	case MODULE_CMD_INIT:
-		error = syscall_establish(&emul_netbsd, pinspect_syscalls);
+		error = pinspect_init();
 		break;
 	case MODULE_CMD_FINI:
-		error = syscall_disestablish(&emul_netbsd, pinspect_syscalls);
+		error = pinspect_fini();
 		break;
 	default:
+		ptrace_hooks();
 		error = ENOTTY;
 		break;
 	}

@@ -1,4 +1,4 @@
-/* $NetBSD: netbsd32_systrace_args.c,v 1.30 2019/01/27 02:08:40 pgoyette Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call argument to DTrace register array converstion.
@@ -2316,6 +2316,15 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		iarg[0] = SCARG(p, features); /* int */
 		uarg[1] = (intptr_t) SCARG(p, address).i32; /* netbsd32_pointer_t */
 		*n_args = 2;
+		break;
+	}
+	/* netbsd32_pinspect */
+	case 326: {
+		const struct netbsd32_pinspect_args *p = params;
+		iarg[0] = SCARG(p, req); /* int */
+		uarg[1] = (intptr_t) SCARG(p, addr).i32; /* netbsd32_voidp */
+		iarg[2] = SCARG(p, data); /* int */
+		*n_args = 3;
 		break;
 	}
 	/* netbsd32___sigaction_sigtramp */
@@ -7282,6 +7291,22 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
+	/* netbsd32_pinspect */
+	case 326:
+		switch(ndx) {
+		case 0:
+			p = "int";
+			break;
+		case 1:
+			p = "netbsd32_voidp";
+			break;
+		case 2:
+			p = "int";
+			break;
+		default:
+			break;
+		};
+		break;
 	/* netbsd32___sigaction_sigtramp */
 	case 340:
 		switch(ndx) {
@@ -10763,6 +10788,11 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		break;
 	/* netbsd32__lwp_ctl */
 	case 325:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* netbsd32_pinspect */
+	case 326:
 		if (ndx == 0 || ndx == 1)
 			p = "int";
 		break;

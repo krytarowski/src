@@ -261,6 +261,7 @@ extern int		maxlwp __read_mostly;	/* max number of lwps */
 #define	LP_TIMEINTR	0x00010000 /* Time this soft interrupt */
 #define	LP_PREEMPTING	0x00020000 /* mi_switch called involuntarily */
 #define	LP_RUNNING	0x20000000 /* Active on a CPU */
+#define	LP_INSPECTOR	0x40000000 /* Inspector LWP in pinspect(2) */
 #define	LP_BOUND	0x80000000 /* Bound to a CPU */
 
 /* The third set is kept in l_prflag. */

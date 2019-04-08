@@ -46,24 +46,79 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 
 #ifdef PINSPECT
-int
+static int
+pinspect_enable(struct proc *p, struct lwp *l)
+{
+	int error = 0;
+
+	KASSERT(l == curlwp)
+
+	mutex_enter(p->p_lock);
+	if (ISSET(p->p_sflag, PS_INSPECTING)) {
+		error = EBUSY;
+		goto err;
+	}
+
+	KASSERT(!ISSET(l->l_pflag, LP_INSPECTOR));
+
+	SET(p->p_sflag, PS_INSPECTING);
+	SET(l->l_pflag, LP_INSPECTOR);
+
+err:
+	mutex_exit(p->p_lock);
+	return error;
+}
+
+static int
+pinspect_disable(struct proc *p, struct lwp *l)
+{
+	int error = 0;
+
+	KASSERT(l == curlwp)
+
+	mutex_enter(p->p_lock);
+	if (!ISSET(p->p_sflag, PS_INSPECTING)) {
+		error = EINVAL;
+		goto err;
+	}
+
+	KASSERT(ISSET(l->l_pflag, LP_INSPECTOR));
+
+	CLR(p->p_sflag, PS_INSPECTING);
+	CLR(l->l_pflag, LP_INSPECTOR);
+
+err:
+	mutex_exit(p->p_lock);
+
+	return error;
+}
+
+static int
 pinspect_getcontext(struct proc *p, ucontext_t *ucp, lwpid_t lid)
 {
 	ucontext_t uc;
 	struct lwp *lt;
+	int error;
 
 	memset(&uc, 0, sizeof(uc));
 
 	mutex_enter(p->p_lock);
+	if (!ISSET(p->p_sflag, PS_INSPECTING)) {
+		error = EINVAL;
+		goto err;
+	}
 	lt = lwp_find(p, lid);
 	if (lt == NULL) {
-		mutex_exit(p->p_lock);
-		return ESRCH;
+		error = ESRCH;
+		goto err;
 	}
 	getucontext(lt, &uc);
 	mutex_exit(p->p_lock);
 
 	return copyout(&uc, ucp, sizeof(*ucp));
+err:
+	mutex_exit(p->p_lock);
+	return error;
 }
 
 int
@@ -71,36 +126,20 @@ do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
     void *addr, int data, register_t *retval)
 {
 	struct proc *p = l->l_proc;
-	int error;
+
+	*retval = 0;
 
 	case (req) {
 	case PI_ENABLE:
-		break;
+		return pinspect_enable(p, l);
 	case PI_DISABLE:
-		break;
+		return pinspect_disable(p, l);
 	case PI_GETCONTEXT:
 		return ptm->ptm_getcontext(p, addr, data);
 	default:
 		return EINVAL;
 	}
-
-	return error;
 }
-
-int
-pinspect_init(void)
-{
-
-	return 0;
-}
-
-int
-pinspect_fini(void)
-{
-
-	return 0;
-}
-
 #endif /* PINSPECT */
 
 MODULE(MODULE_CLASS_EXEC, pinspect_common, "");
@@ -108,19 +147,12 @@ MODULE(MODULE_CLASS_EXEC, pinspect_common, "");
 static int
 pinspect_common_modcmd(modcmd_t cmd, void *arg)
 {
-	int error;
 
 	switch (cmd) {
 	case MODULE_CMD_INIT:
-		error = pinspect_init();
-		break;
 	case MODULE_CMD_FINI:
-		error = pinspect_fini();
-		break;
+		return 0;
 	default:
-		error = ENOTTY;
-		break;
+		return ENOTTY;
 	}
-
-	return error;
 }

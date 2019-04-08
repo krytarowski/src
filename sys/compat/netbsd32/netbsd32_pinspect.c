@@ -52,14 +52,14 @@ __KERNEL_RCSID(0, "$NetBSD$");
  */
 
 static int
-netbsd32_getcontext(struct proc *p, ucontext_t *ucp, lwpid_t lid)
+netbsd32_getcontext(struct proc *p, ucontext32_t *ucp, lwpid_t lid)
 {
-        ucontext_t uc;
+        ucontext32_t uc;
         struct lwp *lt;
         int error;
-        
+
         memset(&uc, 0, sizeof(uc));
-        
+
         mutex_enter(p->p_lock);
         if (!ISSET(p->p_sflag, PS_INSPECTING)) {
                 error = EINVAL;
@@ -71,8 +71,8 @@ netbsd32_getcontext(struct proc *p, ucontext_t *ucp, lwpid_t lid)
                 goto err;
         }
         getucontext(lt, &uc);
-        mutex_exit(p->p_lock); 
-                
+        mutex_exit(p->p_lock);
+
         return copyout(&uc, ucp, sizeof(*ucp));
 err:
         mutex_exit(p->p_lock);
@@ -87,14 +87,14 @@ int
 netbsd32_pinspect(struct lwp *l, const struct netbsd32_pinspect_args *uap,
     register_t *retval)
 {
-        /* {
-                syscallarg(int) req;
-                syscallarg(netbsd32_voidp *) addr;
-                syscallarg(int) data;
-        } */
+	/* {
+		syscallarg(int) req;
+		syscallarg(netbsd32_voidp *) addr;
+		syscallarg(int) data;
+	} */
 
 	return do_pinspect(&netbsd32_ptm, l, SCARG(uap, req),
-            SCARG_P32(uap, addr), SCARG(uap, data), retval);
+	    SCARG_P32(uap, addr), SCARG(uap, data), retval);
 }
 
 static const struct syscall_package compat_pinspect_syscalls[] = {

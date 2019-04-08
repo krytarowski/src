@@ -50,7 +50,7 @@ static void
 pinspect_ipi(void *arg)
 {
 
-	return; /* Nothing to do */
+	/* Nothing to do, just summon the LWP back to te kernel. */
 }
 
 static int

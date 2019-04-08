@@ -56,16 +56,19 @@ pinspect_ipi(void *arg)
 static int
 pinspect_enable(struct proc *p, struct lwp *l)
 {
-	ipi_msg_t msg = { .func = pinspect_ipi, .arg = NULL };
 	struct lwp *lt;
 	struct cpu_info *ci;
 	int s;
 	int error = 0;
+	u_int ipi_id;
 
 	KASSERT(l == curlwp)
 
-	s = splcpu();
+	if ((ipi_id = ipi_register(pinspect_ipi, NULL)) == 0)
+		return ENOMEM;
 
+	s = splcpu();
+	kpreempt_disable();
 	mutex_enter(p->p_lock);
 	if (ISSET(p->p_sflag, PS_INSPECTING)) {
 		error = EBUSY;
@@ -77,21 +80,29 @@ pinspect_enable(struct proc *p, struct lwp *l)
 	SET(p->p_sflag, PS_INSPECTING);
 	SET(l->l_pflag, LP_INSPECTOR);
 
+	/*
+	 * Send IPI to all other LWPs running on CPU, so they will return
+	 * to the kernel and block in userret().
+	 */
 	LIST_FOREACH(lt, &p->p_lwps, l_sibling) {
+		/* Do not inspect self */
 		if (lt == l)
 			continue;
+
 		lwp_lock(lt);
 		if (lt->l_stat == LSONPROC) {
 			ci = lwp_getcpu(lt);
-			ipi_unicast(&msg, ci);
-			ipi_wait(&ipi_msg);
+			ipi_trigger(ipi_id, ci);
 		}
 		lwp_unlock(lt);
 	}
 
 err:
 	mutex_exit(p->p_lock);
+	kpreempt_enable();
 	splx(s);
+
+	ipi_unregister(ipi_id);
 
 	return error;
 }

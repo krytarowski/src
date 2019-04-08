@@ -52,6 +52,77 @@ __KERNEL_RCSID(0, "$NetBSD$");
  */
 
 static int
-netbsd32_getcontext()
+netbsd32_getcontext(struct proc *p, ucontext_t *ucp, lwpid_t lid)
 {
+        ucontext_t uc;
+        struct lwp *lt;
+        int error;
+        
+        memset(&uc, 0, sizeof(uc));
+        
+        mutex_enter(p->p_lock);
+        if (!ISSET(p->p_sflag, PS_INSPECTING)) {
+                error = EINVAL;
+                goto err;
+        }
+        lt = lwp_find(p, lid);
+        if (lt == NULL) {
+                error = ESRCH;
+                goto err;
+        }
+        getucontext(lt, &uc);
+        mutex_exit(p->p_lock); 
+                
+        return copyout(&uc, ucp, sizeof(*ucp));
+err:
+        mutex_exit(p->p_lock);
+        return error;
+}
+
+static struct pinspect_methods netbsd32_ptm = {
+	.ptm_getcontext = netbsd32_getcontext
+};
+
+int
+netbsd32_pinspect(struct lwp *l, const struct netbsd32_pinspect_args *uap,
+    register_t *retval)
+{
+        /* {
+                syscallarg(int) req;
+                syscallarg(netbsd32_voidp *) addr;
+                syscallarg(int) data;
+        } */
+
+	return do_pinspect(&netbsd32_ptm, l, SCARG(uap, req),
+            SCARG_P32(uap, addr), SCARG(uap, data), retval);
+}
+
+static const struct syscall_package compat_pinspect_syscalls[] = {
+	{ NETBSD32_SYS_netbsd32_pinspect, 0, (sy_call_t *)netbsd32_pinspect },
+	{ 0, 0, NULL },
+};
+
+#define DEPS "compat_netbsd32,pinspect_common"
+
+MODULE(MODULE_CLASS_EXEC, compat_netbsd32_pinspect, DEPS);
+
+static int
+compat_netbsd32_pinspect_modcmd(modcmd_t cmd, void *arg)
+{
+	int error;
+
+	switch (cmd) {
+	case MODULE_CMD_INIT:
+		error = syscall_establish(&emul_netbsd32,
+		    compat_pinspect_syscalls);
+		break;
+	case MODULE_CMD_FINI:
+		error = syscall_disestablish(&emul_netbsd32,
+		    compat_pinspect_syscalls);
+		break;
+	default:
+		error = ENOTTY;
+		break;
+	}
+	return error;
 }

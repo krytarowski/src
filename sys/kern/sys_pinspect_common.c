@@ -58,19 +58,23 @@ do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
 int
 pinspect_init(void)
 {
+
+	return 0;
 }
 
 int
 pinspect_fini(void)
 {
+
+	return 0;
 }
 
 #endif /* PINSPECT */
 
-MODULE(MODULE_CLASS_EXEC, ptrace_common, "");
+MODULE(MODULE_CLASS_EXEC, pinspect_common, "");
 
 static int
-ptrace_common_modcmd(modcmd_t cmd, void *arg)
+pinspect_common_modcmd(modcmd_t cmd, void *arg)
 {
 	int error;
 
@@ -82,9 +86,9 @@ ptrace_common_modcmd(modcmd_t cmd, void *arg)
 		error = pinspect_fini();
 		break;
 	default:
-		ptrace_hooks();
 		error = ENOTTY;
 		break;
 	}
+
 	return error;
 }

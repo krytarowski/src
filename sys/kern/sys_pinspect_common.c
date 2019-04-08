@@ -64,6 +64,8 @@ pinspect_enable(struct proc *p, struct lwp *l)
 	SET(p->p_sflag, PS_INSPECTING);
 	SET(l->l_pflag, LP_INSPECTOR);
 
+	// IPI
+
 err:
 	mutex_exit(p->p_lock);
 	return error;
@@ -87,6 +89,7 @@ pinspect_disable(struct proc *p, struct lwp *l)
 	CLR(p->p_sflag, PS_INSPECTING);
 	CLR(l->l_pflag, LP_INSPECTOR);
 
+	cv_broadcast(&p->p_lwpcv);
 err:
 	mutex_exit(p->p_lock);
 

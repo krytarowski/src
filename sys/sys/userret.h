@@ -75,6 +75,8 @@
 static __inline void
 mi_userret(struct lwp *l)
 {
+	struct proc *p;
+
 #ifndef __HAVE_PREEMPTION
 	struct cpu_info *ci;
 #endif
@@ -83,6 +85,15 @@ mi_userret(struct lwp *l)
 #ifndef __HAVE_PREEMPTION
 	KASSERT(curcpu()->ci_biglock_count == 0);
 #endif
+
+	/*
+	 * Handle Stop The World - Process self INtro SPECTion
+	 */
+	mutex_enter(p->p_lock);
+	while (ISSET(p->p_sflag, PS_INSPECTING) &&
+	       !ISSET(l->l_pflag, LP_INSPECTOR))
+		cv_wait(&p1->p_lwpcv, p->p_lock);
+	mutex_exit(p->p_lock);
 
 	/*
 	 * Handle "exceptional" events: pending signals, stop/exit actions,

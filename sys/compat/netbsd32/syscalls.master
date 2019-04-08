@@ -746,7 +746,9 @@
 				netbsd32_charp name, netbsd32_size_t len); }
 325	STD 		{ int|netbsd32||_lwp_ctl(int features, \
 				netbsd32_pointer_t address); }
-326	UNIMPL
+326	STD MODULAR compat_netbsd32_pinspect \
+			{ int|netbsd32||pinspect(int req, \
+			    netbsd32_voidp addr, int data); }
 327	UNIMPL
 328	UNIMPL
 329	UNIMPL

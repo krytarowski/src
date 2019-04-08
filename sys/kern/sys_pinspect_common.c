@@ -46,12 +46,25 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 
 #ifdef PINSPECT
+static void
+pinspect_ipi(void *arg)
+{
+
+	return; /* Nothing to do */
+}
+
 static int
 pinspect_enable(struct proc *p, struct lwp *l)
 {
+	ipi_msg_t msg = { .func = pinspect_ipi, .arg = NULL };
+	struct lwp *lt;
+	struct cpu_info *ci;
+	int s;
 	int error = 0;
 
 	KASSERT(l == curlwp)
+
+	s = splcpu();
 
 	mutex_enter(p->p_lock);
 	if (ISSET(p->p_sflag, PS_INSPECTING)) {
@@ -64,10 +77,22 @@ pinspect_enable(struct proc *p, struct lwp *l)
 	SET(p->p_sflag, PS_INSPECTING);
 	SET(l->l_pflag, LP_INSPECTOR);
 
-	// IPI
+	LIST_FOREACH(lt, &p->p_lwps, l_sibling) {
+		if (lt == l)
+			continue;
+		lwp_lock(lt);
+		if (lt->l_stat == LSONPROC) {
+			ci = lwp_getcpu(lt);
+			ipi_unicast(&msg, ci);
+			ipi_wait(&ipi_msg);
+		}
+		lwp_unlock(lt);
+	}
 
 err:
 	mutex_exit(p->p_lock);
+	splx(s);
+
 	return error;
 }
 

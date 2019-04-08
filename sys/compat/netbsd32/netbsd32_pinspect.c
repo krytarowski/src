@@ -5,7 +5,7 @@
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
- * by Kamil Rytarowski
+ * by Kamil Rytarowski.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,23 +29,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_PINSPECT_H_
-#define _SYS_PINSPECT_H_
-
 #include <sys/cdefs.h>
+__KERNEL_RCSID(0, "$NetBSD$");
 
-#define PI_ENABLE	0	/* stop the world */
-#define PI_DISABLE	1	/* start the world */
-#define PI_GETCONTEXT	2	/* get ucontext_t of LWP */
-
-__BEGIN_DECLS
-int pinspect(int _request, void *_addr, int _data);
-__END_DECLS
-
-#ifdef _KERNEL
-struct pinspect_methods {
-	int (*ptm_getcontext)(struct lwp *, struct lwp *, struct uio *);
-};
+#if defined(_KERNEL_OPT)
+#include "opt_pinspect.h"
+#include "opt_compat_netbsd.h"
 #endif
 
-#endif /* !_SYS_PINSPECT_H_ */
+#include <sys/param.h>
+#include <sys/module.h>
+#include <sys/pinspect.h>
+#include <sys/syscallvar.h>
+
+#include <compat/netbsd32/netbsd32.h>
+#include <compat/netbsd32/netbsd32_syscall.h>
+#include <compat/netbsd32/netbsd32_syscallargs.h>
+#include <compat/netbsd32/netbsd32_conv.h>
+
+/*
+ * PINSPECT methods
+ */
+
+static int
+netbsd32_getcontext()
+{
+}

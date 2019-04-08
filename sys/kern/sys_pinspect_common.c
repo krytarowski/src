@@ -47,12 +47,28 @@ __KERNEL_RCSID(0, "$NetBSD$");
 
 #ifdef PINSPECT
 int
+pinspect_getcontext(void *addr, lwpid_t lid)
+{
+}
+
+int
 do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
     void *addr, int data, register_t *retval)
 {
+	int error;
 
 	case (req) {
+	case PI_ENABLE:
+		break;
+	case PI_DISABLE:
+		break;
+	case PI_GETCONTEXT:
+		if ((error = ptm->ptm_getcontext(addr, data)) != 0)
+			break;
+		break;
 	}
+
+	return error;
 }
 
 int

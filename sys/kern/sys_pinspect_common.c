@@ -47,6 +47,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/intr.h>
 #include <sys/ipi.h>
 #include <sys/lwp.h>
+#include <sys/module.h>
 #include <sys/mutex.h>
 #include <sys/pinspect.h>
 #include <sys/proc.h>
@@ -140,7 +141,7 @@ err:
 	return error;
 }
 
-static int
+int
 pinspect_getcontext(struct proc *p, void *addr, lwpid_t lid)
 {
 	ucontext_t uc;

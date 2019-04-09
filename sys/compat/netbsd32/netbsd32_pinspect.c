@@ -70,7 +70,7 @@ netbsd32_pinspect_getcontext(struct proc *p, ucontext32_t *ucp, lwpid_t lid)
                 error = ESRCH;
                 goto err;
         }
-        getucontext(lt, &uc);
+        getucontext32(lt, &uc);
         mutex_exit(p->p_lock);
 
         return copyout(&uc, ucp, sizeof(*ucp));

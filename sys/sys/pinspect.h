@@ -44,7 +44,7 @@ __END_DECLS
 
 #ifdef _KERNEL
 struct pinspect_methods {
-	int (*ptm_getcontext)(struct proc *, ucontext_t *, lwpid_t);
+	int (*ptm_getcontext)(struct proc *, void *, lwpid_t);
 };
 
 int	do_pinspect(struct pinspect_methods *, struct lwp *, int, void *,

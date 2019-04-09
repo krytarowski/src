@@ -134,9 +134,10 @@ err:
 }
 
 static int
-pinspect_getcontext(struct proc *p, ucontext_t *ucp, lwpid_t lid)
+pinspect_getcontext(struct proc *p, void *ucp, lwpid_t lid)
 {
 	ucontext_t uc;
+	ucontext_t *ucp = (ucontext_t *)addr;
 	struct lwp *lt;
 	int error;
 

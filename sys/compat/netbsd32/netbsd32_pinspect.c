@@ -55,31 +55,32 @@ __KERNEL_RCSID(0, "$NetBSD$");
  */
 
 static int
-netbsd32_pinspect_getcontext(struct proc *p, ucontext32_t *ucp, lwpid_t lid)
+netbsd32_pinspect_getcontext(struct proc *p, void *addr, lwpid_t lid)
 {
-        ucontext32_t uc;
-        struct lwp *lt;
-        int error;
+	ucontext32_t uc;
+	ucontext32_t *ucp = (ucontext32_t *)addr;
+	struct lwp *lt;
+	int error;
 
-        memset(&uc, 0, sizeof(uc));
+	memset(&uc, 0, sizeof(uc));
 
-        mutex_enter(p->p_lock);
-        if (!ISSET(p->p_sflag, PS_INSPECTING)) {
-                error = EINVAL;
-                goto err;
-        }
-        lt = lwp_find(p, lid);
-        if (lt == NULL) {
-                error = ESRCH;
-                goto err;
-        }
-        getucontext32(lt, &uc);
-        mutex_exit(p->p_lock);
+	mutex_enter(p->p_lock);
+	if (!ISSET(p->p_sflag, PS_INSPECTING)) {
+		error = EINVAL;
+		goto err;
+	}
+	lt = lwp_find(p, lid);
+	if (lt == NULL) {
+		error = ESRCH;
+		goto err;
+	}
+	getucontext32(lt, &uc);
+	mutex_exit(p->p_lock);
 
-        return copyout(&uc, ucp, sizeof(*ucp));
+	return copyout(&uc, ucp, sizeof(*ucp));
 err:
-        mutex_exit(p->p_lock);
-        return error;
+	mutex_exit(p->p_lock);
+	return error;
 }
 
 static struct pinspect_methods netbsd32_ptm = {

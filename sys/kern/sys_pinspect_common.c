@@ -44,6 +44,11 @@ __KERNEL_RCSID(0, "$NetBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/intr.h>
+#include <sys/ipi.h>
+#include <sys/lwp.h>
+#include <sys/mutex.h>
+#include <sys/pinspect.h>
 
 #ifdef PINSPECT
 static void
@@ -62,7 +67,7 @@ pinspect_enable(struct proc *p, struct lwp *l)
 	int error = 0;
 	u_int ipi_id;
 
-	KASSERT(l == curlwp)
+	KASSERT(l == curlwp);
 
 	if ((ipi_id = ipi_register(pinspect_ipi, NULL)) == 0)
 		return ENOMEM;

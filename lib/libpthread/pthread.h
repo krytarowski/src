@@ -243,6 +243,12 @@ int	pthread_rwlock_rdheld_np(pthread_rwlock_t *);
 int	pthread_cond_has_waiters_np(pthread_cond_t *);
 #endif	/* _NETBSD_SOURCE */
 
+/* Process self INtro SPECTion */
+#if defined(_NETBSD_SOURCE)
+int	pthread_stop_world_np(pthread_t * __restrict, size_t * __restrict);
+int	pthread_start_world_np(void);
+int	pthread_getcontext_np(pthread_t, ucontext_t *);
+#endif	/* _NETBSD_SOURCE */
 __END_DECLS
 
 #define	PTHREAD_CREATE_JOINABLE	0

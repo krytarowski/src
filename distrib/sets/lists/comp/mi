@@ -3055,6 +3055,7 @@
 ./usr/include/sys/optstr.h			comp-obsolete		obsolete
 ./usr/include/sys/param.h			comp-c-include
 ./usr/include/sys/pcu.h				comp-c-include
+./usr/include/sys/pinspect.h			comp-c-include
 ./usr/include/sys/pipe.h			comp-c-include
 ./usr/include/sys/pmc.h				comp-obsolete		obsolete
 ./usr/include/sys/pmf.h				comp-c-include

@@ -130,7 +130,7 @@ ASM=	access.S acct.S \
 		munmap.S \
 	nfssvc.S __ntp_gettime50.S \
 	openat.S \
-	pathconf.S pipe2.S \
+	pathconf.S pinspect.S pipe2.S \
 		__posix_chown.S __posix_fchown.S __posix_lchown.S \
 		__posix_rename.S profil.S \
 	__quotactl.S \

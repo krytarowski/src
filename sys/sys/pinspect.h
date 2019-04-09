@@ -46,6 +46,9 @@ __END_DECLS
 struct pinspect_methods {
 	int (*ptm_getcontext)(struct lwp *, struct lwp *, struct uio *);
 };
+
+int	do_pinspect(struct ptrace_methods *, struct lwp *, void *,
+	    int, register_t *);
 #endif
 
 #endif /* !_SYS_PINSPECT_H_ */

@@ -47,7 +47,7 @@ struct pinspect_methods {
 	int (*ptm_getcontext)(struct proc *, ucontext_t *, lwpid_t);
 };
 
-int	do_pinspect(struct pinspect_methods *, struct lwp *, void *,
+int	do_pinspect(struct pinspect_methods *, struct lwp *, int, void *,
 	    int, register_t *);
 #endif
 

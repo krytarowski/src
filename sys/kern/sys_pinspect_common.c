@@ -49,6 +49,8 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/lwp.h>
 #include <sys/mutex.h>
 #include <sys/pinspect.h>
+#include <sys/proc.h>
+#include <sys/ucontext.h>
 
 #ifdef PINSPECT
 static void
@@ -72,7 +74,7 @@ pinspect_enable(struct proc *p, struct lwp *l)
 	if ((ipi_id = ipi_register(pinspect_ipi, NULL)) == 0)
 		return ENOMEM;
 
-	s = splcpu();
+	s = splhigh();
 	kpreempt_disable();
 	mutex_enter(p->p_lock);
 	if (ISSET(p->p_sflag, PS_INSPECTING)) {
@@ -118,7 +120,7 @@ pinspect_disable(struct proc *p, struct lwp *l)
 {
 	int error = 0;
 
-	KASSERT(l == curlwp)
+	KASSERT(l == curlwp);
 
 	mutex_enter(p->p_lock);
 	if (!ISSET(p->p_sflag, PS_INSPECTING)) {
@@ -139,7 +141,7 @@ err:
 }
 
 static int
-pinspect_getcontext(struct proc *p, void *ucp, lwpid_t lid)
+pinspect_getcontext(struct proc *p, void *addr, lwpid_t lid)
 {
 	ucontext_t uc;
 	ucontext_t *ucp = (ucontext_t *)addr;
@@ -175,7 +177,7 @@ do_pinspect(struct pinspect_methods *ptm, struct lwp *l, int req,
 
 	*retval = 0;
 
-	case (req) {
+	switch (req) {
 	case PI_ENABLE:
 		return pinspect_enable(p, l);
 	case PI_DISABLE:

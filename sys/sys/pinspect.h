@@ -43,12 +43,16 @@ int pinspect(int _request, void *_addr, int _data);
 __END_DECLS
 
 #ifdef _KERNEL
+
+
 struct pinspect_methods {
 	int (*ptm_getcontext)(struct proc *, void *, lwpid_t);
 };
 
 int	do_pinspect(struct pinspect_methods *, struct lwp *, int, void *,
 	    int, register_t *);
+
+int	pinspect_getcontext(struct proc *, void *, lwpid_t);
 #endif
 
 #endif /* !_SYS_PINSPECT_H_ */

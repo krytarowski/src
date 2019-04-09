@@ -38,9 +38,12 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #endif
 
 #include <sys/param.h>
+#include <sys/lwp.h>
 #include <sys/module.h>
 #include <sys/pinspect.h>
+#include <sys/proc.h>
 #include <sys/syscallvar.h>
+#include <sys/ucontext.h>
 
 #include <compat/netbsd32/netbsd32.h>
 #include <compat/netbsd32/netbsd32_syscall.h>

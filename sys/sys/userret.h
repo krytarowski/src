@@ -75,7 +75,7 @@
 static __inline void
 mi_userret(struct lwp *l)
 {
-	struct proc *p;
+	struct proc *p = l->l_proc;
 
 #ifndef __HAVE_PREEMPTION
 	struct cpu_info *ci;
@@ -92,7 +92,7 @@ mi_userret(struct lwp *l)
 	mutex_enter(p->p_lock);
 	while (ISSET(p->p_sflag, PS_INSPECTING) &&
 	       !ISSET(l->l_pflag, LP_INSPECTOR))
-		cv_wait(&p1->p_lwpcv, p->p_lock);
+		cv_wait(&p->p_lwpcv, p->p_lock);
 	mutex_exit(p->p_lock);
 
 	/*

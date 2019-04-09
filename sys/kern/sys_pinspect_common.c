@@ -81,8 +81,9 @@ pinspect_enable(struct proc *p, struct lwp *l)
 	SET(l->l_pflag, LP_INSPECTOR);
 
 	/*
-	 * Send IPI to all other LWPs running on CPU, so they will return
-	 * to the kernel and block in userret().
+	 * Send IPI to all other LWPs running on CPU,
+	 * so they will return to the kernel and block
+	 * in userret().
 	 */
 	LIST_FOREACH(lt, &p->p_lwps, l_sibling) {
 		/* Do not inspect self */

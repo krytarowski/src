@@ -52,7 +52,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
  */
 
 static int
-netbsd32_getcontext(struct proc *p, ucontext32_t *ucp, lwpid_t lid)
+netbsd32_pinspect_getcontext(struct proc *p, ucontext32_t *ucp, lwpid_t lid)
 {
         ucontext32_t uc;
         struct lwp *lt;
@@ -80,7 +80,7 @@ err:
 }
 
 static struct pinspect_methods netbsd32_ptm = {
-	.ptm_getcontext = netbsd32_getcontext
+	.ptm_getcontext = netbsd32_pinspect_getcontext
 };
 
 int

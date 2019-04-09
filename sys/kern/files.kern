@@ -157,6 +157,8 @@ file	kern/sys_generic.c		kern
 file	kern/sys_module.c		kern
 file	kern/sys_mqueue.c		mqueue
 file	kern/sys_lwp.c			kern
+file	kern/sys_pinspect.c		pinspect
+file	kern/sys_pinspect_common.c	pinspect
 file	kern/sys_pipe.c			!pipe_socketpair
 file	kern/sys_process.c		ptrace_hooks | ktrace
 file	kern/sys_ptrace.c		ptrace

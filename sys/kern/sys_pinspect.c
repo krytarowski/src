@@ -36,6 +36,7 @@
 #include <sys/syscallvar.h>
 #include <sys/syscall.h>
 #include <sys/module.h>
+#include <sys/pinspect.h>
 
 static struct pinspect_methods native_ptm = {
 	.ptm_getcontext = pinspect_getcontext,
@@ -50,7 +51,7 @@ static const struct syscall_package pinspect_syscalls[] = {
  * Process self INTro SPECTion system call.
  */
 int
-sys_pinspect(struct lwp *l, const struct sys_ptrace_args *uap, register_t *retval)
+sys_pinspect(struct lwp *l, const struct sys_pinspect_args *uap, register_t *retval)
 {
 	/* {
 		syscallarg(int) req;

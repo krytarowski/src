@@ -5,7 +5,7 @@
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
- * by 
+ * by Kamil Rytarowski.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,3 +28,66 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <sys/cdefs.h>
+__RCSID("$NetBSD$");
+
+#include <sys/types.h>
+#include <sys/pinspect.h>
+
+#include "pthread.h"
+#include "pthread_int.h"
+
+/*
+ * Process self INtro SPECTion
+ */
+
+int
+pthread_stop_world_np(pthread_t * __restrict threads, size_t * __restrict num)
+{
+	pthread_t thr;
+	int error = 0;
+	size_t rnum = 0;
+
+	/* Ensure integrity of the POSIX threads internals */
+	pthread_rwlock_rdlock(&pthread__alltree_lock);
+
+	/* Stap all other threads in this process */
+	if ((error = pinspect(PI_ENABLE, NULL, 0)) != 0)
+		goto err;
+
+	if (threads || num) {
+		RB_TREE_FOREACH(thr, &pthread__alltree) {
+			/* skip dead and zombie threads */
+			if (thr && thr->pt_state == PT_STATE_RUNNING) {
+				if (threads)
+					threads[rnum] = thr;
+				++rnum;
+			}
+		}
+		if (num)
+			*num = rnum;
+	}
+
+err:
+	pthread_rwlock_unlock(&pthread__alltree_lock);
+
+	return error;
+}
+
+int
+pthread_start_world_np(void)
+{
+
+	return pinspect(PI_DISABLE, NULL, 0);
+}
+
+int
+pthread_getcontext_np(pthread_t thread, ucontext_t *uc)
+{
+
+	if (pthread__find(thread) != 0)
+		return ESRCH;
+
+	return pinspect(PI_GETCONTEXT, uc, thread->pt_lid);
+}

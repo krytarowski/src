@@ -54,6 +54,8 @@ COPTS.h_thread_local_dtor.cpp+=	-std=c++11
 # Deal with questionable warning and header quality in libstdc++.
 COPTS.h_thread_local_dtor.cpp+=	 ${${ACTIVE_CC} == "gcc" :?  -Wno-ctor-dtor-privacy -Wno-sign-compare -Wno-shadow :}
 
+TESTS_C+=	t_call_once t_mtx t_cnd t_thrd t_tss # C11 threads(3)
+
 FILESDIR=	${TESTSDIR}
 FILES=		d_mach
 

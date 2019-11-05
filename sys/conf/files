@@ -1452,6 +1452,8 @@ defpseudo ipsecif:	ifnet		# avoid to confuse ipsec itself option
 defpseudo sequencer
 defpseudo clockctl
 
+include "external/gpl2/msfs/conf/files.msfs"
+
 #
 # Accept filters.  XXX should use another registration/initialization method.
 #

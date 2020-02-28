@@ -411,18 +411,18 @@ Obj_Entry *_rtld_load_library(const char *, const Obj_Entry *, int);
 
 /* symbol.c */
 unsigned long _rtld_elf_hash(const char *);
-const Elf_Sym *_rtld_symlook_obj(const char *, unsigned long,
+const Elf_Sym *_rtld_symlook_obj(const char *,
     const Obj_Entry *, u_int, const Ver_Entry *);
 const Elf_Sym *_rtld_find_symdef(unsigned long, const Obj_Entry *,
     const Obj_Entry **, u_int);
 const Elf_Sym *_rtld_find_plt_symdef(unsigned long, const Obj_Entry *,
     const Obj_Entry **, bool);
 
-const Elf_Sym *_rtld_symlook_list(const char *, unsigned long,
+const Elf_Sym *_rtld_symlook_list(const char *,
     const Objlist *, const Obj_Entry **, u_int, const Ver_Entry *, DoneList *);
-const Elf_Sym *_rtld_symlook_default(const char *, unsigned long,
+const Elf_Sym *_rtld_symlook_default(const char *,
     const Obj_Entry *, const Obj_Entry **, u_int, const Ver_Entry *);
-const Elf_Sym *_rtld_symlook_needed(const char *, unsigned long,
+const Elf_Sym *_rtld_symlook_needed(const char *,
     const Needed_Entry *, const Obj_Entry **, u_int, const Ver_Entry *,
     DoneList *, DoneList *);
 

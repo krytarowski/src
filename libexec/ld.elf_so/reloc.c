@@ -67,7 +67,6 @@ _rtld_do_copy_relocation(const Obj_Entry *dstobj, const Elf_Rela *rela)
 	void           *dstaddr = (void *)(dstobj->relocbase + rela->r_offset);
 	const Elf_Sym  *dstsym = dstobj->symtab + ELF_R_SYM(rela->r_info);
 	const char     *name = dstobj->strtab + dstsym->st_name;
-	unsigned long   hash = _rtld_elf_hash(name);
 	size_t          size = dstsym->st_size;
 	const void     *srcaddr;
 	const Elf_Sym  *srcsym = NULL;
@@ -90,7 +89,7 @@ _rtld_do_copy_relocation(const Obj_Entry *dstobj, const Elf_Rela *rela)
 	}
 
 	for (srcobj = dstobj->next; srcobj != NULL; srcobj = srcobj->next) {
-		srcsym = _rtld_symlook_obj(name, hash, srcobj, 0,
+		srcsym = _rtld_symlook_obj(name, srcobj, 0,
 		    _rtld_fetch_ventry(dstobj, ELF_R_SYM(rela->r_info)));
 		if (srcsym != NULL)
 			break;

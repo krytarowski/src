@@ -176,6 +176,7 @@ typedef struct Struct_Obj_Entry {
 	Elf_Word        gotsym;		/* First dynamic symbol in GOT */
 #endif
 
+	/* ELF Hash fields */
 	const Elf_Symindx *buckets;	/* Hash table buckets array */
 	unsigned long	unused1;	/* Used to be nbuckets */
 	const Elf_Symindx *chains;	/* Hash table chain array */
@@ -216,7 +217,9 @@ typedef struct Struct_Obj_Entry {
 			tls_done:1,	/* True if static TLS offset
 					 * has been allocated */
 #endif
-			ref_nodel:1;	/* Refcount increased to prevent dlclose */
+			ref_nodel:1,	/* Refcount increased to prevent dlclose */
+			elf_hash:1,	/* ELF Hash available */
+			gnu_hash:1;	/* GNU Hash available */
 
 	struct link_map linkmap;	/* for GDB */
 
@@ -229,10 +232,25 @@ typedef struct Struct_Obj_Entry {
 
 	void		*ehdr;
 
+	/* ELF Hash fields */
 	uint32_t        nbuckets;	/* Number of buckets */
 	uint32_t        nbuckets_m;	/* Precomputed for fast remainder */
 	uint8_t         nbuckets_s1;
 	uint8_t         nbuckets_s2;
+
+	/* GNU Hash fields */
+	const uint32_t *buckets_gnu;	/* Hash table buckets array */
+	uint32_t	nbuckets_gnu;	/* Number of GNU hash buckets */
+	uint32_t	nbuckets_m_gnu;	/* Precomputed for fast remainder */
+	uint8_t		nbuckets_s1_gnu;
+	uint8_t		nbuckets_s2_gnu;
+	const uint32_t *chains_gnu;	/* Hash table chain array */
+#define nchains_gnu	nchains		/* Number of symbols, shared with ELF Hash */
+	const Elf_addr *bloom_gnu;
+	uint32_t	symndx_gnu;	/* First accessible symbol on dynsym table */
+	uint32_t	mask_bm_gnu;	/* Bloom filter words - 1 (bitmask) */
+	uint32_t	shift2_gnu;	/* Bloom filter shift count */
+
 	size_t		pathlen;	/* Pathname length */
 	SIMPLEQ_HEAD(, Struct_Name_Entry) names; /* List of names for this
 						  * object we know about. */

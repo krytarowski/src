@@ -103,6 +103,22 @@ _rtld_elf_hash(const char *name)
 	return (h);
 }
 
+/*
+ * Hash function for symbol table lookup.  Don't even think about changing
+ * this.  It is specified by the GNU toolchain ABI.
+ */
+static unsigned long
+_rtld_gnu_hash(const char *name)
+{
+	uint_fast32_t h;
+	unsigned char c;
+
+	h = 5381;
+	for (c = *name; c != '\0'; c = *++name)
+		h = h * 33 + c;
+	return (unsigned long)h;
+}
+
 const Elf_Sym *
 _rtld_symlook_list(const char *name, const Objlist *objlist,
     const Obj_Entry **defobj_out, u_int flags, const Ver_Entry *ventry,
@@ -310,9 +326,11 @@ _rtld_symlook_obj_matched_symbol(const char *name, unsigned long hash,
  * Search the symbol table of a single shared object for a symbol of
  * the given name.  Returns a pointer to the symbol, or NULL if no
  * definition was found.
+ *
+ * ELF Hash version.
  */
-const Elf_Sym *
-_rtld_symlook_obj(const char *name,
+static const Elf_Sym *
+_rtld_symlook_obj_elf(const char *name,
     const Obj_Entry *obj, u_int flags, const Ver_Entry *ventry)
 {
 	unsigned long symnum;
@@ -334,6 +352,80 @@ _rtld_symlook_obj(const char *name,
 	if (vcount == 1)
 		return vsymp;
 	return NULL;
+}
+
+/*
+ * Search the symbol table of a single shared object for a symbol of
+ * the given name.  Returns a pointer to the symbol, or NULL if no
+ * definition was found.
+ *
+ * GNU Hash version.
+ */
+static const Elf_Sym *
+_rtld_symlook_obj_gnu(const char *name,
+    const Obj_Entry *obj, u_int flags, const Ver_Entry *ventry)
+{
+	unsigned long symnum;
+	const Elf_Sym *vsymp = NULL;
+	const Elf32_Word *hashval;
+	Elf_Addr bloom_word;
+	Elf32_Word bucket;
+	unsigned long hash = _rtld_gnu_hash(name);
+	int vcount = 0;
+	unsigned int h1, h2;
+
+	/* Pick right bitmask word from Bloom filter array */
+	bloom_word = obj->bloom_gnu[(hash / ELFSIZE) & obj->mask_bm_gnu];
+
+	/* Calculate modulus word size of gnu hash and its derivative */
+	h1 = hash & (ELFSIZE - 1);
+	h2 = ((hash >> obj->shift2_gnu) & (ELFSIZE - 1));
+
+	/* Filter out the "definitely not in set" queries */
+	if (((bloom_word >> h1) & (bloom_word >> h2) & 1) == 0)
+		return NULL;
+
+	/* Locate hash chain and corresponding value element*/
+	bucket = obj->buckets_gnu[fast_remainder32(hash, obj->nbuckets_gnu,
+	     obj->nbuckets_m_gnu, obj->nbuckets_s1_gnu, obj->nbuckets_s2_gnu)];
+	if (bucket == 0)
+		return NULL;
+
+	hashval = &obj->chains_gnu[bucket];
+	do {
+		if (((*hashval ^ hash) >> 1) == 0) {
+			symnum = hashval - obj->chains_gnu;
+
+			if (_rtld_symlook_obj_matched_symbol(name, hash, obj, flags,
+			    ventry, symnum, &vsymp, &vcount)) {
+				return vsymp;
+			}
+		}
+	} while ((*hashval++ & 1) == 0);
+	if (vcount == 1)
+		return vsymp;
+	return NULL;
+}
+
+/*
+ * Search the symbol table of a single shared object for a symbol of
+ * the given name.  Returns a pointer to the symbol, or NULL if no
+ * definition was found.
+ *
+ * Redirect to either GNU Hash (whenever available) or ELF Hash.
+ */
+const Elf_Sym *
+_rtld_symlook_obj(const char *name,
+    const Obj_Entry *obj, u_int flags, const Ver_Entry *ventry)
+{
+
+	assert(obj->elf_hash || obj->gnu_hash);
+
+	/* Always prefer the GNU Hash as it is faster. */
+	if (obj->gnu_hash)
+		return _rtld_symlook_obj_gnu(name, obj, flags, ventry);
+	else
+		return _rtld_symlook_obj_elf(name, obj, flags, ventry);
 }
 
 /*

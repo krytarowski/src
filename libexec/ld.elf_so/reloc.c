@@ -170,9 +170,8 @@ _rtld_relocate_objects(Obj_Entry *first, bool bind_now)
 	int ok = 1;
 
 	for (obj = first; obj != NULL; obj = obj->next) {
-		if (obj->nbuckets == 0 || obj->nchains == 0 ||
-		    obj->buckets == NULL || obj->symtab == NULL ||
-		    obj->strtab == NULL) {
+		if ((!obj->elf_hash && !obj->gnu_hash) ||
+		    obj->symtab == NULL || obj->strtab == NULL) {
 			_rtld_error("%s: Shared object has no run-time"
 			    " symbol table", obj->path);
 			return -1;
